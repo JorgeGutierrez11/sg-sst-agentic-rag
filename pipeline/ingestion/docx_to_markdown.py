@@ -6,6 +6,11 @@ from pathlib import Path
 # pyrefly: ignore [missing-import]
 import pypandoc
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_INPUT_DIR = PROJECT_ROOT / "data" / "raw"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "interim"
+TABLES_OUTPUT_DIR_NAME = "tables"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
@@ -13,33 +18,35 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Captura bloques <table>…</table> multilinea generados por pandoc.
 _TABLE_PATTERN = re.compile(r"<table[\s\S]*?</table>", flags=re.DOTALL | re.IGNORECASE)
 
 
 @dataclass
 class TableData:
+    """HTML table extracted from a converted DOCX document."""
+
     index: int
-    html_source: str        # Cadena de texto que contiene el código HTML de la tabla.
-    placeholder: str        # "<!-- TABLE_N -->" insertado en el MD
-    document_stem: str      # Nombre del archivo DOCX sin extensión.
-    llm_summary: str = ""   # Resumen generado por el LLM.
-    metadata: dict = field(default_factory=dict)  # Metadatos adicionales.
+    html_source: str
+    placeholder: str
+    document_stem: str
+    llm_summary: str = ""
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
 class ParsedDocument:
-    source_path: str             
-    filename: str                
-    stem: str                                               # Nombre del archivo DOCX sin extensión.
-    markdown_content: str = ""                              # Contenido del archivo DOCX en formato Markdown.
-    tables: list[TableData] = field(default_factory=list)   # Lista de tablas extraídas.
-    metadata: dict = field(default_factory=dict)            # Metadatos adicionales.
+    """Result of converting a DOCX document to Markdown."""
+
+    source_path: str
+    filename: str
+    stem: str
+    markdown_content: str = ""
+    tables: list[TableData] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
     parsing_errors: list[str] = field(default_factory=list)
 
-# Función para extraer tablas del Markdown y reemplazarlas con marcadores de posición
-def _extract_and_replace_tables(markdown_raw: str, document_stem: str) -> tuple[str, list[TableData]]:
 
+def _extract_and_replace_tables(markdown_raw: str, document_stem: str) -> tuple[str, list[TableData]]:
     matches = list(_TABLE_PATTERN.finditer(markdown_raw))
 
     if not matches:
@@ -55,15 +62,16 @@ def _extract_and_replace_tables(markdown_raw: str, document_stem: str) -> tuple[
         real_index = len(matches) - 1 - i
         html_source = match.group(0)
 
-        # Placeholder que queda en el MD. Sintaxis de comentario HTML
         placeholder = f"<!-- TABLE_{real_index} -->"
 
-        tables.append(TableData(
-            index=real_index,
-            html_source=html_source,
-            placeholder=placeholder,
-            document_stem=document_stem,
-        ))
+        tables.append(
+            TableData(
+                index=real_index,
+                html_source=html_source,
+                placeholder=placeholder,
+                document_stem=document_stem,
+            )
+        )
 
         start, end = match.start(), match.end()
         markdown = markdown[:start] + placeholder + markdown[end:]
@@ -71,8 +79,10 @@ def _extract_and_replace_tables(markdown_raw: str, document_stem: str) -> tuple[
     tables.sort(key=lambda t: t.index)
     return markdown, tables
 
-# Función para convertir un DOCX a Markdown limpio + lista de TableData.
+
 def parse_docx_to_markdown(docx_path: Path) -> ParsedDocument:
+    """Convert a DOCX file to Markdown and extract embedded HTML tables."""
+
     doc = ParsedDocument(
         source_path=str(docx_path),
         filename=docx_path.name,
@@ -102,9 +112,11 @@ def parse_docx_to_markdown(docx_path: Path) -> ParsedDocument:
 
     return doc
 
-# Función para ejecutar la fase 1
-def run_phase1(input_dir: Path, output_dir: Path) -> list[ParsedDocument]:
-    output_dir.mkdir(parents=True, exist_ok=True) # Crea el directorio de salida
+
+def convert_docx_directory_to_markdown(input_dir: Path, output_dir: Path) -> list[ParsedDocument]:
+    """Convert every DOCX file in a directory to Markdown files."""
+
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     docx_files = sorted(input_dir.glob("*.docx"))
     if not docx_files:
@@ -122,11 +134,11 @@ def run_phase1(input_dir: Path, output_dir: Path) -> list[ParsedDocument]:
             md_path.write_text(doc.markdown_content, encoding="utf-8")
 
             if doc.tables:
-                tables_dir = output_dir / f"{doc.stem}_tables"
-                tables_dir.mkdir(exist_ok=True)
+                tables_dir = output_dir / TABLES_OUTPUT_DIR_NAME / doc.stem
+                tables_dir.mkdir(parents=True, exist_ok=True)
                 for table in doc.tables:
-                    tpath = tables_dir / f"table_{table.index}.html"
-                    tpath.write_text(table.html_source, encoding="utf-8")
+                    table_path = tables_dir / f"table_{table.index}.html"
+                    table_path.write_text(table.html_source, encoding="utf-8")
 
             logger.info(
                 f"  ✅ {doc.stem}.md | "
@@ -147,12 +159,18 @@ def run_phase1(input_dir: Path, output_dir: Path) -> list[ParsedDocument]:
 
     return results
 
-# Punto de entrada del script
-if __name__ == "__main__":
-    INPUT_DIR = Path("data/raw")
-    OUTPUT_DIR = Path("data/processed")
 
-    docs = run_phase1(INPUT_DIR, OUTPUT_DIR)
+def run_phase1(input_dir: Path, output_dir: Path) -> list[ParsedDocument]:
+    """Backward-compatible alias for convert_docx_directory_to_markdown."""
+
+    return convert_docx_directory_to_markdown(input_dir, output_dir)
+
+
+if __name__ == "__main__":
+    INPUT_DIR = DEFAULT_INPUT_DIR
+    OUTPUT_DIR = DEFAULT_OUTPUT_DIR
+
+    docs = convert_docx_directory_to_markdown(INPUT_DIR, OUTPUT_DIR)
 
     sample = next((d for d in docs if not d.parsing_errors), None)
     if sample:
@@ -163,6 +181,6 @@ if __name__ == "__main__":
             print(f"\n{'='*60}\nTABLA 0 — primeros 400 chars\n{'='*60}")
             print(sample.tables[0].html_source[:400])
         else:
-            print("\n⚠️  Sin tablas detectadas. Verifica el .md en data/processed/")
+            print("\n⚠️  Sin tablas detectadas. Verifica el .md en data/interim/")
             print("Si la tabla aparece como +---+---+ es grid_table: el flag no aplicó.")
             

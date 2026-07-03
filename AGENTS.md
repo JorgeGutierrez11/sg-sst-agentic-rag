@@ -27,9 +27,9 @@ This is not a git repo and no project-level dependency, test, lint, or typecheck
 
 ## Current executable entrypoints
 
-- `pipeline/ingestion/fase1_parser.py` reads DOCX files from `data/raw` and writes markdown plus extracted HTML tables to `data/processed`.
-- `pipeline/cleaning/fase2_cleaner.py` has an outdated `__main__` input path (`../fase1_parsing/data/processed`); update or pass paths through code before using it in the new structure.
-- `pipeline/ingestion/fase1_parser.py` imports `pypandoc` and depends on Pandoc availability, but no dependency manifest is present.
+- `pipeline/ingestion/docx_to_markdown.py` reads DOCX files from `data/raw` and writes markdown plus extracted HTML tables to `data/interim`.
+- `pipeline/cleaning/markdown_cleaner.py` has an outdated `__main__` input path (`../fase1_parsing/data/processed`); update or pass paths through code before using it in the new structure.
+- `pipeline/ingestion/docx_to_markdown.py` imports `pypandoc` and depends on Pandoc availability, but no dependency manifest is present.
 
 ## Agent implementation conventions
 
