@@ -1,0 +1,19 @@
+# datos confidenciales de usuarios reales (Fase 5)
+evaluation/resultados_usuarios/*
+!evaluation/resultados_usuarios/README.md
+
+# entornos
+.venv/
+__pycache__/
+node_modules/
+.env
+*.pyc
+
+# vector store / índices — regenerable desde data/processed/
+**/vector_store/
+**/*.index
+
+# IDE / tooling metadata
+.atl/
+.idea/
+.vscode/
