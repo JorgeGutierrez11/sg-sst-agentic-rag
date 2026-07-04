@@ -1,0 +1,562 @@
+[
+  {
+    "ID": "B001",
+    "Categoría": "Clasificación de Riesgos",
+    "Escenario": "Empresa que quiere confirmar a quién le aplica la normativa de clasificación de riesgos.",
+    "Pregunta": "¿A quién aplica el Decreto 768 de 2022?",
+    "Norma principal": "Decreto 768 de 2022"
+  },
+  {
+    "ID": "B002",
+    "Categoría": "Clasificación de Riesgos",
+    "Escenario": "Empresa con dos sucursales que realizan actividades económicas distintas.",
+    "Pregunta": "Si mis dos sedes tienen actividades diferentes, ¿pueden tener clases de riesgo distintas?",
+    "Norma principal": "Decreto 768 de 2022"
+  },
+  {
+    "ID": "B003",
+    "Categoría": "Clasificación de Riesgos",
+    "Escenario": "Empresa cuya actividad económica no aparece en la tabla CIIU del decreto.",
+    "Pregunta": "¿Qué pasa si mi actividad económica no está en la tabla de clasificación de riesgos?",
+    "Norma principal": "Decreto 768 de 2022"
+  },
+  {
+    "ID": "B004",
+    "Categoría": "Clasificación de Riesgos",
+    "Escenario": "Empresa a la que le cambió la clase de riesgo tras una actualización de la tabla.",
+    "Pregunta": "Si actualizan la tabla y cambia mi clase de riesgo, ¿debo cotizar distinto de inmediato?",
+    "Norma principal": "Decreto 768 de 2022"
+  },
+  {
+    "ID": "B005",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Dueño de MiPyme que no entiende el concepto técnico de SST.",
+    "Pregunta": "¿Qué es la Seguridad y Salud en el Trabajo (SST)?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B006",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que confunde el SG-SST con un simple documento.",
+    "Pregunta": "¿Qué es el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST)?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B007",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que ya redactó su política de SST pero no definió objetivos.",
+    "Pregunta": "¿Qué objetivos debe incluir mi política de SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B008",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "MiPyme que no sabe qué apoyo puede exigirle a su ARL.",
+    "Pregunta": "¿Qué obligaciones tiene mi ARL frente a mi SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B009",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que quiere involucrar a sus trabajadores en el SG-SST.",
+    "Pregunta": "¿Qué responsabilidades tienen mis trabajadores frente al SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B010",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que no sabe cómo archivar los documentos de su SG-SST.",
+    "Pregunta": "¿Cómo debo conservar los documentos y registros del SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B011",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que nunca ha informado a sus trabajadores sobre el SG-SST.",
+    "Pregunta": "¿Qué debo comunicar a mis trabajadores sobre el SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B012",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que va a implementar el SG-SST por primera vez.",
+    "Pregunta": "¿En qué consiste la evaluación inicial del SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B013",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que ya hizo su evaluación inicial y no sabe el siguiente paso.",
+    "Pregunta": "¿Cómo debo planificar mi SG-SST después de la evaluación inicial?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B014",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que quiere medir el avance de su SG-SST.",
+    "Pregunta": "¿Qué indicadores debo definir para evaluar mi SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B015",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que identificó un riesgo mecánico en un puesto de trabajo.",
+    "Pregunta": "¿Qué tipo de medidas debo priorizar frente a un peligro identificado?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B016",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "MiPyme ubicada en una zona con riesgo de sismos o incendios.",
+    "Pregunta": "¿Debo tener un plan de prevención y respuesta ante emergencias?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B017",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que lleva un año con su SG-SST implementado.",
+    "Pregunta": "¿Debo hacer una auditoría anual de mi SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B018",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Dueño de MiPyme que delega todo el SG-SST en un empleado.",
+    "Pregunta": "¿Quién debe revisar el SG-SST y con qué frecuencia?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B019",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que quiere mejorar continuamente su SG-SST.",
+    "Pregunta": "¿Qué debo hacer para mejorar continuamente mi SG-SST?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B020",
+    "Categoría": "Generalidades SG-SST",
+    "Escenario": "Empresa que acaba de nombrar un responsable de SST.",
+    "Pregunta": "¿Mi responsable de SST debe tomar algún curso obligatorio?",
+    "Norma principal": "Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6"
+  },
+  {
+    "ID": "B021",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa de riesgo I que creció de 8 a 15 trabajadores.",
+    "Pregunta": "Si mi empresa crece a 15 trabajadores, ¿qué estándares mínimos debo cumplir ahora?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B022",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa de 20 trabajadores sin persona asignada al SG-SST.",
+    "Pregunta": "¿Quién puede diseñar el SG-SST en una empresa de 20 trabajadores?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B023",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa de 30 trabajadores que busca apoyo externo para su SG-SST.",
+    "Pregunta": "¿Qué apoyo puede recibir mi empresa de 30 trabajadores para el SG-SST?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B024",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que va a contratar un proveedor externo.",
+    "Pregunta": "¿Puedo exigirle a mi proveedor que cumpla los estándares mínimos de SST?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B025",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que alcanzó 80 trabajadores.",
+    "Pregunta": "¿Qué estándares mínimos debe cumplir una empresa de más de 50 trabajadores?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B026",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "MiPyme que cree que los estándares mínimos son iguales para todas las empresas.",
+    "Pregunta": "¿Los estándares mínimos se ajustan según el tamaño de mi empresa?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B027",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que ya diseñó su SG-SST con estándares mínimos.",
+    "Pregunta": "¿Qué debe liderar el empleador frente al cumplimiento de los estándares mínimos?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B028",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa con excelente desempeño en SST que quiere destacarse.",
+    "Pregunta": "¿Puede mi empresa obtener un reconocimiento oficial por su desempeño en SST?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B029",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa con trabajadores independientes y en misión además de los de planta.",
+    "Pregunta": "¿Debo contar a los trabajadores independientes y en misión en mis indicadores de SST?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B030",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que afilia a sus trabajadores a través de una agremiación.",
+    "Pregunta": "¿Es válido afiliar a mis trabajadores a riesgos laborales por medio de una agremiación?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B031",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que está implementando su SG-SST por fases.",
+    "Pregunta": "¿En qué consisten las fases de adecuación y transición del SG-SST?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B032",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que se autoevaluó en sus estándares mínimos.",
+    "Pregunta": "¿Cómo se califican los estándares mínimos en la autoevaluación?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B033",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa cuya autoevaluación de estándares mínimos salió con bajo puntaje.",
+    "Pregunta": "Si el resultado de mi autoevaluación no es satisfactorio, ¿qué debo hacer?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B034",
+    "Categoría": "Estándares Mínimos",
+    "Escenario": "Empresa que quiere saber qué debe medir cada año en SST.",
+    "Pregunta": "¿Qué indicadores mínimos de SST debo registrar cada año?",
+    "Norma principal": "Resolución 0312 de 2019"
+  },
+  {
+    "ID": "B035",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Cooperativa de trabajo asociado con un accidente de un trabajador cooperado.",
+    "Pregunta": "¿Esta resolución aplica a las cooperativas de trabajo asociado?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B036",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Una máquina falla pero nadie resulta lesionado ni hay daños.",
+    "Pregunta": "¿Ese hecho se considera un incidente de trabajo?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B037",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa que aún no ha conformado su equipo investigador.",
+    "Pregunta": "¿Qué debo hacer antes de que ocurra un accidente, respecto al equipo investigador?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B038",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa que no tiene un formato definido para investigar accidentes.",
+    "Pregunta": "¿Debo usar un formato específico para investigar los accidentes de trabajo?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B039",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "La ARL recomienda medidas correctivas tras un accidente.",
+    "Pregunta": "¿Estoy obligado a implementar las medidas correctivas que recomiende la ARL?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B040",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa pequeña sin metodología propia de investigación de accidentes.",
+    "Pregunta": "¿La ARL debe darme una metodología para investigar accidentes?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B041",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa que quiere adaptar su propia metodología de investigación.",
+    "Pregunta": "¿Puedo usar mi propia metodología para investigar accidentes de trabajo?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B042",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Un trabajador en misión de una empresa temporal sufre un accidente en la empresa usuaria.",
+    "Pregunta": "¿Quién es responsable de investigar ese accidente?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B043",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa terminando el informe de un accidente de trabajo.",
+    "Pregunta": "¿Qué información debe contener el informe de investigación del accidente?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B044",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Investigación de un accidente ya realizada por la empresa.",
+    "Pregunta": "¿Qué debo identificar como causas del accidente en el informe?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B045",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa documentando formalmente su investigación de un accidente.",
+    "Pregunta": "¿Qué datos debe registrar el informe sobre la investigación misma (lugar, fecha, investigadores)?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B046",
+    "Categoría": "Accidentes de Trabajo",
+    "Escenario": "Empresa que no investigó un accidente grave ocurrido en sus instalaciones.",
+    "Pregunta": "¿Qué consecuencia tiene no cumplir con esta resolución?",
+    "Norma principal": "Resolución 1401 de 2007"
+  },
+  {
+    "ID": "B047",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Trabajador víctima de comentarios ofensivos reiterados por parte de un compañero.",
+    "Pregunta": "¿Qué busca proteger la Ley 1010 de 2006?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B048",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un jefe que acosó pero corrigió su conducta y se disculpó.",
+    "Pregunta": "¿Existen atenuantes si el acoso laboral ya está probado?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B049",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un directivo de alto cargo que acosa a un subordinado.",
+    "Pregunta": "¿Se agrava la sanción si el acosador tiene un cargo jerárquico alto?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B050",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un compañero de trabajo, sin ser jefe, acosa a otro trabajador.",
+    "Pregunta": "¿Puede un compañero de trabajo ser sujeto activo de acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B051",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un jefe le asigna cargas de trabajo excesivas de forma reiterada buscando que renuncie.",
+    "Pregunta": "¿Esa conducta corresponde a una modalidad específica de acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B052",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un compañero oculta documentos necesarios para que otro no pueda cumplir su labor.",
+    "Pregunta": "¿Esa conducta constituye una modalidad de acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B053",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un trabajador que denunció acoso laboral teme represalias de su jefe.",
+    "Pregunta": "¿Qué garantías tengo si denuncio acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B054",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Se va a sancionar un caso de acoso laboral ya acreditado.",
+    "Pregunta": "¿Qué procedimiento se sigue para sancionar el acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B055",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un trabajador presenta una queja de acoso laboral sin fundamento real.",
+    "Pregunta": "¿Qué pasa si mi queja de acoso laboral resulta infundada?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B056",
+    "Categoría": "Convivencia Laboral",
+    "Escenario": "Un trabajador quiere denunciar un acoso ocurrido hace dos años.",
+    "Pregunta": "¿Cuánto tiempo tengo para denunciar el acoso laboral?",
+    "Norma principal": "Ley 1010 de 2006"
+  },
+  {
+    "ID": "B057",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa con trabajadores vinculados por contrato de prestación de servicios.",
+    "Pregunta": "¿Quiénes están obligados a afiliarse al Sistema General de Riesgos Laborales?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B058",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Trabajador diagnosticado con una enfermedad laboral.",
+    "Pregunta": "¿Cómo se calcula el ingreso base para pagarle por una enfermedad laboral?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B059",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Trabajador incapacitado mientras se decide si el origen es laboral o común.",
+    "Pregunta": "¿Quién me paga la incapacidad mientras se define el origen laboral o común?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B060",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa que contrata a un trabajador independiente por prestación de servicios.",
+    "Pregunta": "¿También debo cotizar riesgos laborales por un contratista independiente?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B061",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa que se atrasó en el pago de aportes a su ARL.",
+    "Pregunta": "Si me atraso en el pago de aportes, ¿pierdo automáticamente la afiliación de mis trabajadores?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B062",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "La ARL debe reportar sus resultados de prevención al Ministerio del Trabajo.",
+    "Pregunta": "¿Qué debe reportar mi ARL sobre sus actividades de promoción y prevención?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B063",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa que quiere saber qué debe darle su ARL en materia de prevención.",
+    "Pregunta": "¿Qué servicios mínimos de promoción y prevención debe prestarme mi ARL?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B064",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa que incumple normas del Sistema de Riesgos Laborales.",
+    "Pregunta": "¿Qué sanciones prevé la ley por incumplir el Sistema de Riesgos Laborales?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B065",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Autoridad que realiza visitas de verificación de estándares en la empresa.",
+    "Pregunta": "¿Pueden hacerme visitas de verificación del cumplimiento en riesgos laborales?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B066",
+    "Categoría": "Riesgos Laborales",
+    "Escenario": "Empresa clasificada de alto riesgo que se pregunta si recibe trato distinto a una de riesgo I.",
+    "Pregunta": "¿Reciben las empresas de alto riesgo una supervisión distinta a las de riesgo I?",
+    "Norma principal": "Ley 1562 de 2012"
+  },
+  {
+    "ID": "B067",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Empresa con dos sucursales que quiere organizar comités separados.",
+    "Pregunta": "¿Puedo conformar un Comité distinto para cada sede de mi empresa?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B068",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Empresa que va a conformar su primer Comité Paritario.",
+    "Pregunta": "¿Cómo se eligen los representantes del Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B069",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Reunión del Comité con solo la mitad de sus miembros presentes.",
+    "Pregunta": "¿Con cuántos miembros puede sesionar válidamente el Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B070",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Comité recién conformado que aún no ha nombrado presidente.",
+    "Pregunta": "¿Quién designa al Presidente del Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B071",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Un trabajador quiere llevar una queja disciplinaria al Comité.",
+    "Pregunta": "¿El Comité puede resolver asuntos disciplinarios o contractuales de los trabajadores?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B072",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Comité ya conformado que quiere conocer el alcance de sus funciones.",
+    "Pregunta": "¿Cuáles son las funciones del Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B073",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Empresa que ya tiene su Comité conformado.",
+    "Pregunta": "¿Qué obligaciones tiene el empleador frente al Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B074",
+    "Categoría": "Comités Paritarios",
+    "Escenario": "Trabajadores que son miembros del Comité.",
+    "Pregunta": "¿Qué obligaciones tienen los trabajadores frente al Comité?",
+    "Norma principal": "Resolución 2013 de 1986"
+  },
+  {
+    "ID": "B075",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "Empresa que no sabe cuántos tipos de evaluación médica ocupacional existen.",
+    "Pregunta": "¿Qué tipos de evaluaciones médicas ocupacionales debo realizar?",
+    "Norma principal": "Resolución 2346 de 2007"
+  },
+  {
+    "ID": "B076",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "Trabajador que lleva tres años en el mismo puesto sin cambiar de cargo.",
+    "Pregunta": "¿Debo hacerle exámenes médicos periódicos aunque no cambie de cargo?",
+    "Norma principal": "Resolución 2346 de 2007"
+  },
+  {
+    "ID": "B077",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "Empresa que va a contratar el servicio de evaluaciones médicas ocupacionales.",
+    "Pregunta": "¿Quién puede realizar las evaluaciones médicas ocupacionales de mis trabajadores?",
+    "Norma principal": "Resolución 2346 de 2007"
+  },
+  {
+    "ID": "B078",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "Trabajador expuesto a ruido o sustancias químicas en su labor.",
+    "Pregunta": "¿Debo hacerle exámenes médicos específicos según el riesgo al que está expuesto?",
+    "Norma principal": "Resolución 2346 de 2007"
+  },
+  {
+    "ID": "B079",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "Trabajador con varios exámenes ocupacionales realizados durante su vida laboral.",
+    "Pregunta": "¿Qué es la historia clínica ocupacional?",
+    "Norma principal": "Resolución 2346 de 2007"
+  },
+  {
+    "ID": "B080",
+    "Categoría": "Salud Ocupacional",
+    "Escenario": "El empleador quiere revisar la historia clínica de un trabajador.",
+    "Pregunta": "¿Puedo como empleador acceder a la historia clínica ocupacional de mis trabajadores?",
+    "Norma principal": "Resolución 2346 de 2007"
+  }
+]
