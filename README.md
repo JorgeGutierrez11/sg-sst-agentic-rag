@@ -16,3 +16,6 @@ Sistema RAG para asistencia y diagnóstico normativo SG-SST (MiPymes riesgo I).
 | Los datos crudos / procesados             | `data/`                      |
 | Qué fase de la tesis es cada carpeta      | `docs/mapa-fases-tesis.md`   |
 
+## Instaladores ARES
+
+pip install ares-ai
