@@ -25,10 +25,30 @@ This is not a git repo and no project-level dependency, test, lint, or typecheck
 - `.gitignore` ignores all `data/raw/`, `data/interim/`, and `data/processed/` except `.gitkeep`, so do not assume local DOCX or generated corpus files are versioned.
 - `scripts/` is for one-off operational utilities or migrations; the two current processing scripts live under `pipeline/`, not `scripts/`.
 
+## Design principles for this project
+
+- Apply YAGNI: do not create abstractions, wrappers, interfaces, DTOs, or helper layers for hypothetical future needs. Build only what the current phase requires.
+- Apply KISS: prefer the clearest linear implementation over academically elegant but fragmented code. If cohesive logic is readable in one module, do not split it across multiple files.
+- Prefer local cohesion over absolute modular separation: keep tightly related functions together when splitting them would make debugging or traceability harder.
+- Balance coupling and readability: do not apply Clean Code dogmatically. If decoupling requires redundant mappers, DTOs, or indirection that hides the flow, choose a compact locally coupled design.
+- Prefer feature-driven structure over technical micro-packages. Group code by the workflow/domain relationship first, then by technical concern only when it clearly improves readability.
+
+## Pipeline architecture decisions
+
+- `pipeline/chunking/` uses a compact feature-driven layout:
+  - `core/` for local infrastructure such as CLI, config, and JSONL persistence.
+  - `structural_analysis/` for normative structure detection, legal regex patterns, boundaries, and metadata inference.
+  - `hierarchical_splitter/` for parent/child chunk domain models, parent building, token counting, and future child splitting.
+- Keep `pipeline/chunking/main.py` as the chunking entrypoint and orchestrator. Current Phase 1 behavior exposes `build-parents` only.
+- Do not reintroduce a dedicated Markdown/legal pattern analysis module unless repeated automated analysis becomes necessary; inspect cleaned Markdown directly and keep regex simple and evidence-based.
+- Metadata extraction is deterministic: optional source manifest for controlled document metadata, regex over cleaned Markdown for structural metadata, and pipeline-calculated offsets/token counts. Do not use an LLM as the primary metadata extractor.
+- Child chunking strategies are future phases. Do not add strategy abstractions or placeholders until there is real behavior to implement.
+
 ## Current executable entrypoints
 
 - `pipeline/ingestion/docx_to_markdown.py` reads DOCX files from `data/raw` and writes markdown plus extracted HTML tables to `data/interim`.
 - `pipeline/cleaning/markdown_cleaner.py` has an outdated `__main__` input path (`../fase1_parsing/data/processed`); update or pass paths through code before using it in the new structure.
+- `python -m pipeline.chunking.main build-parents` builds parent chunks from cleaned Markdown for the chunking Phase 1 pipeline.
 - `pipeline/ingestion/docx_to_markdown.py` imports `pypandoc` and depends on Pandoc availability, but no dependency manifest is present.
 
 ## Agent implementation conventions

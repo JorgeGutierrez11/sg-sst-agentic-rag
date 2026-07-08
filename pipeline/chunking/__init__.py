@@ -1,1 +1,1 @@
-"""Deterministic parent-child chunking for the SG-SST normative corpus."""
+"""Chunking primitives for the SG-SST normative corpus."""
