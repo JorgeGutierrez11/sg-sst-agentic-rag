@@ -21,26 +21,26 @@ class SourceDocument:
 class ParentChunk:
     """A legal-boundary parent chunk built before child chunking strategies run."""
 
-    chunk_id: str
-    source_document_id: str
-    source_path: str
-    parent_index: int
-    text: str
-    start_char: int
-    end_char: int
-    token_count: int
-    metadata: JsonDict = field(default_factory=dict)
+    chunk_id: str               # ID unico del chunk
+    source_document_id: str     # ID del documento del cual proviene
+    source_path: str            # Ruta del documento
+    parent_index: int           # Indice del chunk
+    text: str                   # Texto del chunk
+    start_char: int             # Indice de inicio
+    end_char: int               # Indice de fin
+    token_count: int            # Cantidad de tokens
+    metadata: JsonDict = field(default_factory=dict) # Metadatos adicionales
 
 
 @dataclass(frozen=True)
 class ChildChunk:
     """Shared data contract for child chunking strategy outputs."""
 
-    chunk_id: str
-    parent_id: str
-    source_document_id: str
-    text: str
-    start_char: int
-    end_char: int
-    token_count: int
-    metadata: JsonDict = field(default_factory=dict)
+    chunk_id: str               # ID unico del chunk
+    parent_id: str              # ID del parent chunk del cual proviene
+    source_document_id: str     # ID del documento del cual proviene
+    text: str                   # Texto del chunk
+    start_char: int             # Indice de inicio
+    end_char: int               # Indice de fin
+    token_count: int            # Cantidad de tokens
+    metadata: JsonDict = field(default_factory=dict) # Metadatos adicionales

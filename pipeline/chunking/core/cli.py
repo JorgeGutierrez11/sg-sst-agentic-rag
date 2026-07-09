@@ -1,4 +1,4 @@
-"""Command line interface for Phase 1 chunking operations."""
+"""Command line interface for chunking operations."""
 
 import argparse
 import sys
@@ -6,10 +6,17 @@ import sys
 from pipeline.chunking.core.config import (
     DEFAULT_CLEANED_MARKDOWN_DIR,
     DEFAULT_PARENT_CHUNKS_PATH,
+    DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP,
+    DEFAULT_SLIDING_WINDOW_CHUNK_SIZE,
+    DEFAULT_SLIDING_WINDOW_CHUNKS_PATH,
     DEFAULT_SOURCE_MANIFEST_PATH,
     resolve_project_path,
 )
+from pipeline.chunking.hierarchical_splitter.child_splitter import write_sliding_window_child_output
 from pipeline.chunking.hierarchical_splitter.parent_builder import write_parent_chunk_output
+
+
+# Entrypoint and parser
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,7 +27,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "build-parents":
             return run_build_parents(args)
-    except (FileNotFoundError, ValueError) as error:
+        if args.command == "build-sliding-window":
+            return run_build_sliding_window(args)
+    except (FileNotFoundError, RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     raise ValueError(f"Unsupported command: {args.command}")
@@ -29,10 +38,14 @@ def main(argv: list[str] | None = None) -> int:
 def build_parser() -> argparse.ArgumentParser:
     """Create the top-level CLI parser."""
 
-    parser = argparse.ArgumentParser(description="SG-SST Phase 1 chunking utilities.")
+    parser = argparse.ArgumentParser(description="SG-SST chunking utilities.")
     subparsers = parser.add_subparsers(dest="command", required=True)
     add_build_parents_parser(subparsers)
+    add_build_sliding_window_parser(subparsers)
     return parser
+
+
+# Parent chunk command
 
 
 def add_build_parents_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -53,4 +66,44 @@ def run_build_parents(args: argparse.Namespace) -> int:
         manifest_path=resolve_project_path(args.manifest_path),
     )
     print(f"Built {result.chunk_count} parent chunks from {result.source_count} sources: {result.output_path}")
+    return 0
+
+
+# Sliding-window command
+
+
+def add_build_sliding_window_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    """Register the build-sliding-window subcommand."""
+
+    parser = subparsers.add_parser("build-sliding-window", help="Build sliding-window child chunks from parents.")
+    parser.add_argument("--input-path", default=str(DEFAULT_PARENT_CHUNKS_PATH), help="Parent JSONL input path.")
+    parser.add_argument(
+        "--output-path",
+        default=str(DEFAULT_SLIDING_WINDOW_CHUNKS_PATH),
+        help="Sliding-window child JSONL output path.",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=DEFAULT_SLIDING_WINDOW_CHUNK_SIZE,
+        help="Maximum token window size for child chunks.",
+    )
+    parser.add_argument(
+        "--chunk-overlap",
+        type=int,
+        default=DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP,
+        help="Token overlap between adjacent child chunks.",
+    )
+
+
+def run_build_sliding_window(args: argparse.Namespace) -> int:
+    """Execute sliding-window child chunk generation and print a compact summary."""
+
+    result = write_sliding_window_child_output(
+        input_path=resolve_project_path(args.input_path),
+        output_path=resolve_project_path(args.output_path),
+        chunk_size=args.chunk_size,
+        chunk_overlap=args.chunk_overlap,
+    )
+    print(f"Built {result.chunk_count} sliding-window child chunks from {result.parent_count} parents: {result.output_path}")
     return 0

@@ -1,1 +1,3 @@
+langchain-text-splitters==1.1.2
 pypandoc==1.17
+tiktoken==0.13.0

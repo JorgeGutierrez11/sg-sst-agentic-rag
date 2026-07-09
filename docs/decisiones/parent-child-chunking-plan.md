@@ -13,13 +13,13 @@ Este documento define el plan para reconstruir el módulo de chunking del corpus
 | Salidas | Separar resultados por estrategia en `data/processed/chunks/<strategy>/`. |
 | Comparación | Generar reportes en `data/processed/chunks/comparison/`. |
 
-## Dependencias propuestas
+## Dependencias por fase
 
 ```bash
-pip install langchain-text-splitters langchain-experimental langchain-huggingface sentence-transformers tiktoken
+pip install langchain-text-splitters tiktoken
 ```
 
-Después de instalar, actualizar `requirements.txt`.
+Fase 2 instala y registra solo `langchain-text-splitters` y `tiktoken`. Las dependencias de semantic chunking (`langchain-experimental`, `langchain-huggingface`, `sentence-transformers`) se agregan únicamente cuando se implemente la Fase 3.
 
 ### PRINCIPIOS DE DISEÑO COMPLEMENTARIOS (CRÍTICO)
 
@@ -51,18 +51,24 @@ pipeline/chunking/
 └── hierarchical_splitter/   # Feature 2: split jerárquico e ingestión
     ├── __init__.py
     ├── parent_builder.py    # Construcción de parent chunks
-    ├── child_splitter.py    # Entrada mínima reservada para child chunks
+    ├── child_splitter.py    # Sliding-window child chunks de Fase 2
     ├── models.py            # Contratos de datos
     └── tokenization.py      # Estimación determinística de tokens
 ```
 
-El uso de Fase 1 queda centrado en `main.py` con un único subcomando explícito:
+El uso de Fase 1 queda centrado en `main.py` con un subcomando explícito:
 
 ```bash
 python -m pipeline.chunking.main build-parents
 ```
 
-Los comandos con `--strategy` y las implementaciones concretas de sliding window, semantic chunking y regex-constrained semantic son adiciones futuras de Fases 2, 3 y 4; no son comportamiento presente de Fase 1. Cualquier contrato futuro debe permanecer mínimo y justificado por uso real.
+Fase 2 agrega un segundo subcomando explícito, sin `--strategy` genérico ni abstracciones futuras:
+
+```bash
+python -m pipeline.chunking.main build-sliding-window
+```
+
+Semantic chunking y regex-constrained semantic siguen siendo adiciones futuras de Fases 3 y 4. Cualquier contrato futuro debe permanecer mínimo y justificado por uso real.
 
 ---
 
@@ -177,7 +183,7 @@ RecursiveCharacterTextSplitter.from_tiktoken_encoder(
 data/processed/chunks/sliding_window/chunks.jsonl
 ```
 
-Implementación futura:
+Implementado en Fase 2:
 
 ```txt
 pipeline/chunking/hierarchical_splitter/child_splitter.py
@@ -198,6 +204,8 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 ## Resultado esperado
 
 La fase termina cuando se puedan generar child chunks con tamaño y overlap controlados, preservando `parent_id`, offsets y metadata heredada.
+
+Estado: **implementado** como baseline mecánico con `RecursiveCharacterTextSplitter.from_tiktoken_encoder`, salida en `data/processed/chunks/sliding_window/chunks.jsonl`, validación de `chunk_size`/`chunk_overlap` y errores CLI controlados.
 
 ---
 
@@ -386,13 +394,13 @@ Hipótesis inicial:
 
 # Checklist de implementación
 
-- [ ] Instalar dependencias de estrategias futuras.
-- [ ] Actualizar `requirements.txt` cuando se agreguen dependencias de estrategias.
+- [x] Instalar dependencias de Fase 2 (`langchain-text-splitters`, `tiktoken`).
+- [x] Actualizar `requirements.txt` cuando se agreguen dependencias de estrategias.
 - [x] Borrar scripts actuales de `pipeline/chunking/` y mantener el raíz limpio.
 - [x] Crear estructura nueva por responsabilidad para Fase 1.
 - [x] Implementar metadata determinística para parent chunks.
 - [x] Ajustar patrones legales mediante inspección directa del Markdown limpio.
-- [ ] Implementar sliding window con LangChain.
+- [x] Implementar sliding window con LangChain.
 - [ ] Implementar semantic chunking con `intfloat/multilingual-e5-base`.
 - [ ] Implementar híbrido con regex + semantic + recursive fallback.
 - [ ] Generar salidas por estrategia.
@@ -405,7 +413,8 @@ Hipótesis inicial:
 python -m compileall "pipeline/chunking" "pipeline/tests"
 python -m unittest discover -s pipeline/tests
 python -m pipeline.chunking.main --help
+python -m pipeline.chunking.main build-sliding-window --help
 python -m pipeline.chunking.main build-parents
 ```
 
-Los comandos `--strategy` se agregarán en las fases de child chunking, no en Fase 1.
+No se usa un comando genérico `--strategy`: cada fase agrega solo el comando concreto que necesita.
