@@ -1,16 +1,21 @@
 from pathlib import Path
+from dotenv import load_dotenv
 from ares import ARES
 
-ROOT = Path(__file__).resolve().parents[2]  # sube de evaluation/ares/ a la raíz del repo
+load_dotenv()
+
+ROOT = Path(__file__).resolve().parents[2]
 GOLD_TSV = str(ROOT / "evaluation/datasets/conjunto_a_gold/conjunto_a_gold.tsv")
 
 ppi_config = {
-    "evaluation_datasets": [GOLD_TSV], # Cuando exista el agente, cambias solo evaluation_datasets por sus respuestas.
-    "few_shot_examples_filepath": GOLD_TSV,
+    "evaluation_datasets": [GOLD_TSV],
+    "few_shot_examples_filepath": str(ROOT / "evaluation/datasets/conjunto_a_gold/fewshot_subset.tsv"),
     "checkpoints": [],
-    "llm_judge": "gpt-4o",
     "labels": ["Context_Relevance_Label", "Answer_Faithfulness_Label", "Answer_Relevance_Label"],
-    "gold_label_path": GOLD_TSV,
+    "gold_label_paths": [GOLD_TSV],
+    "llm_judge": "claude-haiku-4-5-20251001",
+    "model_choice": "claude-haiku-4-5-20251001",
+    "rag_type": "question_answering",
 }
 
 ares = ARES(ppi=ppi_config)
