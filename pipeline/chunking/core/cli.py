@@ -5,6 +5,9 @@ import sys
 
 from pipeline.chunking.core.config import (
     DEFAULT_CLEANED_MARKDOWN_DIR,
+    DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
+    DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
+    DEFAULT_SEMANTIC_CHUNKS_PATH,
     DEFAULT_PARENT_CHUNKS_PATH,
     DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP,
     DEFAULT_SLIDING_WINDOW_CHUNK_SIZE,
@@ -12,7 +15,10 @@ from pipeline.chunking.core.config import (
     DEFAULT_SOURCE_MANIFEST_PATH,
     resolve_project_path,
 )
-from pipeline.chunking.hierarchical_splitter.child_splitter import write_sliding_window_child_output
+from pipeline.chunking.hierarchical_splitter.child_splitter import (
+    write_semantic_child_output,
+    write_sliding_window_child_output,
+)
 from pipeline.chunking.hierarchical_splitter.parent_builder import write_parent_chunk_output
 
 
@@ -29,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
             return run_build_parents(args)
         if args.command == "build-sliding-window":
             return run_build_sliding_window(args)
+        if args.command == "build-semantic":
+            return run_build_semantic(args)
     except (FileNotFoundError, RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -42,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     add_build_parents_parser(subparsers)
     add_build_sliding_window_parser(subparsers)
+    add_build_semantic_parser(subparsers)
     return parser
 
 
@@ -106,4 +115,43 @@ def run_build_sliding_window(args: argparse.Namespace) -> int:
         chunk_overlap=args.chunk_overlap,
     )
     print(f"Built {result.chunk_count} sliding-window child chunks from {result.parent_count} parents: {result.output_path}")
+    return 0
+
+
+# Semantic chunking command
+
+
+def add_build_semantic_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    """Register the build-semantic subcommand."""
+
+    parser = subparsers.add_parser("build-semantic", help="Build semantic child chunks from parents.")
+    parser.add_argument("--input-path", default=str(DEFAULT_PARENT_CHUNKS_PATH), help="Parent JSONL input path.")
+    parser.add_argument(
+        "--output-path",
+        default=str(DEFAULT_SEMANTIC_CHUNKS_PATH),
+        help="Semantic child JSONL output path.",
+    )
+    parser.add_argument(
+        "--breakpoint-threshold-type",
+        default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
+        help="SemanticChunker breakpoint threshold type.",
+    )
+    parser.add_argument(
+        "--breakpoint-threshold-amount",
+        type=float,
+        default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
+        help="SemanticChunker breakpoint threshold amount.",
+    )
+
+
+def run_build_semantic(args: argparse.Namespace) -> int:
+    """Execute semantic child chunk generation and print a compact summary."""
+
+    result = write_semantic_child_output(
+        input_path=resolve_project_path(args.input_path),
+        output_path=resolve_project_path(args.output_path),
+        breakpoint_threshold_type=args.breakpoint_threshold_type,
+        breakpoint_threshold_amount=args.breakpoint_threshold_amount,
+    )
+    print(f"Built {result.chunk_count} semantic child chunks from {result.parent_count} parents: {result.output_path}")
     return 0

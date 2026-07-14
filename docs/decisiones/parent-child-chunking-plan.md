@@ -16,10 +16,10 @@ Este documento define el plan para reconstruir el módulo de chunking del corpus
 ## Dependencias por fase
 
 ```bash
-pip install langchain-text-splitters tiktoken
+pip install langchain-text-splitters tiktoken langchain-experimental langchain-huggingface sentence-transformers
 ```
 
-Fase 2 instala y registra solo `langchain-text-splitters` y `tiktoken`. Las dependencias de semantic chunking (`langchain-experimental`, `langchain-huggingface`, `sentence-transformers`) se agregan únicamente cuando se implemente la Fase 3.
+Fase 2 instaló y registró solo `langchain-text-splitters` y `tiktoken`. Fase 3 agrega `langchain-experimental`, `langchain-huggingface` y `sentence-transformers` para semantic chunking con embeddings multilingües.
 
 ### PRINCIPIOS DE DISEÑO COMPLEMENTARIOS (CRÍTICO)
 
@@ -68,7 +68,13 @@ Fase 2 agrega un segundo subcomando explícito, sin `--strategy` genérico ni ab
 python -m pipeline.chunking.main build-sliding-window
 ```
 
-Semantic chunking y regex-constrained semantic siguen siendo adiciones futuras de Fases 3 y 4. Cualquier contrato futuro debe permanecer mínimo y justificado por uso real.
+Fase 3 agrega un tercer subcomando explícito:
+
+```bash
+python -m pipeline.chunking.main build-semantic
+```
+
+Regex-constrained semantic sigue siendo una adición futura de Fase 4. Cualquier contrato futuro debe permanecer mínimo y justificado por uso real.
 
 ---
 
@@ -217,7 +223,7 @@ Implementar semantic chunking real usando embeddings multilingües.
 
 ## Backend semántico
 
-Agregar backend semántico solo cuando se implemente la Fase 3. No mantener contratos, wrappers ni constantes semánticas antes de que exista uso real.
+El backend semántico se agrega en Fase 3 dentro del mismo `child_splitter.py`, sin módulo de backend, factory ni framework genérico de estrategias.
 
 ```python
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -226,7 +232,10 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-base"
 
 
 def create_embeddings() -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    return HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        encode_kwargs={"normalize_embeddings": True},
+    )
 ```
 
 Usar `SemanticChunker`:
@@ -247,7 +256,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 data/processed/chunks/semantic_chunking/chunks.jsonl
 ```
 
-Implementación futura:
+Implementado en Fase 3:
 
 ```txt
 pipeline/chunking/hierarchical_splitter/child_splitter.py
@@ -267,6 +276,14 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 ## Resultado esperado
 
 La fase termina cuando se puedan generar chunks por cambios semánticos y comparar su recuperación contra sliding window.
+
+Estado: **implementado** con `SemanticChunker` de `langchain-experimental`, embeddings `intfloat/multilingual-e5-base` mediante `langchain-huggingface`, normalización de embeddings, salida en `data/processed/chunks/semantic_chunking/chunks.jsonl`, thresholds configurables por CLI y errores controlados para JSONL o dependencias/modelo.
+
+Notas de evaluación y pruebas:
+
+- Las pruebas unitarias monkeypatchean la creación del splitter semántico para evitar descargas pesadas del modelo durante `unittest`.
+- El smoke real requiere que las dependencias estén instaladas y que el modelo esté disponible en caché o pueda descargarse sin bloquear el entorno.
+- Las métricas comparativas siguen pendientes para Fase 5: número de chunks, distribución de tokens, trazabilidad normativa, context relevance, answer faithfulness, answer relevance y citation accuracy.
 
 ---
 
@@ -401,7 +418,7 @@ Hipótesis inicial:
 - [x] Implementar metadata determinística para parent chunks.
 - [x] Ajustar patrones legales mediante inspección directa del Markdown limpio.
 - [x] Implementar sliding window con LangChain.
-- [ ] Implementar semantic chunking con `intfloat/multilingual-e5-base`.
+- [x] Implementar semantic chunking con `intfloat/multilingual-e5-base`.
 - [ ] Implementar híbrido con regex + semantic + recursive fallback.
 - [ ] Generar salidas por estrategia.
 - [ ] Generar reporte comparativo.
@@ -414,6 +431,7 @@ python -m compileall "pipeline/chunking" "pipeline/tests"
 python -m unittest discover -s pipeline/tests
 python -m pipeline.chunking.main --help
 python -m pipeline.chunking.main build-sliding-window --help
+python -m pipeline.chunking.main build-semantic --help
 python -m pipeline.chunking.main build-parents
 ```
 

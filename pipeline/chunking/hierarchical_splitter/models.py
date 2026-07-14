@@ -40,7 +40,7 @@ class ChildChunk:
     parent_id: str              # ID del parent chunk del cual proviene
     source_document_id: str     # ID del documento del cual proviene
     text: str                   # Texto del chunk
-    start_char: int             # Indice de inicio
-    end_char: int               # Indice de fin
+    start_char: int | None      # Indice de inicio
+    end_char: int | None        # Indice de fin
     token_count: int            # Cantidad de tokens
     metadata: JsonDict = field(default_factory=dict) # Metadatos adicionales

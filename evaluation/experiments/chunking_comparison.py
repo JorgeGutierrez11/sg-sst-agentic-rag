@@ -12,7 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from pipeline.chunking.core.config import (
-    DEFAULT_CHUNKS_DIR,
+    DEFAULT_COMPARISON_DIR,
     DEFAULT_MAX_TOKENS,
     DEFAULT_MIN_TOKENS,
     STRATEGY_OUTPUTS,
@@ -22,7 +22,6 @@ from pipeline.chunking.hierarchical_splitter.models import ChildChunk
 
 
 JsonDict = dict[str, Any]
-DEFAULT_COMPARISON_DIR = DEFAULT_CHUNKS_DIR / "comparison"
 
 
 def main() -> None:

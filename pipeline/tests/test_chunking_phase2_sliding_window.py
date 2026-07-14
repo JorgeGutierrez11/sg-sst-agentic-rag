@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pipeline.chunking.core.cli import build_parser, main
 from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.hierarchical_splitter.child_splitter.shared import child_offsets
 from pipeline.chunking.hierarchical_splitter.models import ParentChunk
 
 
@@ -71,8 +72,36 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             output_path = build_one_parent_fixture(Path(temp_dir))
             inherited = read_records(output_path)[0]["metadata"]["inherited"]
 
-            self.assertEqual(inherited["source_name"], "Decreto 1072 de 2015")
-            self.assertEqual(inherited["hierarchy"]["article"], "2.2.4.6.8")
+        self.assertEqual(inherited["source_name"], "Decreto 1072 de 2015")
+        self.assertEqual(inherited["hierarchy"]["article"], "2.2.4.6.8")
+
+    def test_children_offsets_stay_within_parent_and_match_exact_substrings(self) -> None:
+        parent = make_parent_chunk(
+            text=(
+                "Artículo 1. El empleador debe identificar peligros, evaluar riesgos y documentar controles. "
+                "Artículo 1. El empleador debe identificar peligros, evaluar riesgos y documentar controles. "
+                "Las evidencias verificables deben conservarse para auditoría y seguimiento."
+            )
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = build_parent_fixture(Path(temp_dir), parent)
+
+            previous_start = parent.start_char - 1
+            for child in read_records(output_path):
+                start_char = child["start_char"]
+                end_char = child["end_char"]
+                self.assertGreaterEqual(start_char, parent.start_char)
+                self.assertGreater(start_char, previous_start)
+                self.assertLessEqual(end_char, parent.end_char)
+                relative_start = start_char - parent.start_char
+                relative_end = end_char - parent.start_char
+                self.assertEqual(parent.text[relative_start:relative_end], child["text"])
+                previous_start = start_char
+
+    def test_child_offsets_returns_unresolved_when_text_does_not_match(self) -> None:
+        parent = make_parent_chunk(text="Artículo 1. Texto normativo verificable.")
+
+        self.assertEqual(child_offsets(parent, "texto ausente", 0), (None, None))
 
     def test_invalid_overlap_rejected_without_traceback(self) -> None:
         stderr = io.StringIO()
@@ -123,9 +152,13 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
 
 
 def build_one_parent_fixture(workspace: Path) -> Path:
+    return build_parent_fixture(workspace, make_parent_chunk())
+
+
+def build_parent_fixture(workspace: Path, parent: ParentChunk) -> Path:
     input_path = workspace / "parents.jsonl"
     output_path = workspace / "chunks.jsonl"
-    write_parent_chunks([make_parent_chunk()], input_path)
+    write_parent_chunks([parent], input_path)
     with redirect_stdout(io.StringIO()):
         exit_code = main(
             [

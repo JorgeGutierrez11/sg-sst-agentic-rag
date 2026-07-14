@@ -1,5 +1,23 @@
 """Build legal-boundary parent chunks from cleaned Markdown sources."""
 
+'''
+discover_markdown_sources()          # encuentra *.md, excluye generados y ocultos
+    ↓
+load_source_manifest()               # carga metadata (tu corpus_manifest.csv, asumo)
+    ↓
+build_parent_chunks_from_sources()   # por cada archivo: lee texto, arma SourceDocument
+    ↓
+build_parent_chunks_for_document()   # decide los spans de un documento
+    ↓
+article_spans()                      # busca fronteras "ARTÍCULO N" y arma (start, end, boundary)
+    ↓
+create_parent_chunk()                # recorta texto, ajusta offsets tras strip(), arma ParentChunk
+    ↓
+stable_parent_chunk_id()             # SHA1(doc_id:index:start:end) → id determinista
+    ↓
+write_parent_chunks()                # serializa a JSONL
+'''
+
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
