@@ -110,6 +110,7 @@ def strategy_metrics(chunks: list[ChildChunk], min_tokens: int, max_tokens: int,
         "chunks_too_small": sum(1 for count in token_counts if count < min_tokens),
         "chunks_too_large": sum(1 for count in token_counts if count > max_tokens),
         "overlap_count": sum(1 for chunk in chunks if chunk.metadata.get("chunk", {}).get("overlap_tokens", 0) > 0),
+        "unresolved_offset_count": sum(1 for chunk in chunks if chunk.start_char is None or chunk.end_char is None),
         "percentage_with_article_metadata": _percentage(article_count, len(chunks)),
         "percentage_with_source_metadata": _percentage(source_count, len(chunks)),
         "orphan_child_chunks": sum(1 for chunk in chunks if not chunk.parent_id),
@@ -127,6 +128,7 @@ def summarize(strategy_results: JsonDict) -> JsonDict:
         "available_strategies": len(available),
         "most_chunks": max(available, key=lambda name: available[name]["total_chunks"]),
         "fewest_oversized_chunks": min(available, key=lambda name: available[name]["chunks_too_large"]),
+        "fewest_unresolved_offsets": min(available, key=lambda name: available[name]["unresolved_offset_count"]),
         "best_article_metadata_coverage": max(
             available,
             key=lambda name: available[name]["percentage_with_article_metadata"],
@@ -140,18 +142,19 @@ def render_report(metrics: JsonDict) -> str:
     lines = [
         "# Chunking Strategy Comparison",
         "",
-        "| Strategy | Chunks | Avg tokens | Too small | Too large | Article metadata | Source metadata |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| Strategy | Chunks | Avg tokens | Too small | Too large | Unresolved offsets | Article metadata | Source metadata |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for strategy, data in metrics["strategies"].items():
         lines.append(
             "| {strategy} | {total_chunks} | {avg_token_count} | {chunks_too_small} | "
-            "{chunks_too_large} | {article}% | {source}% |".format(
+            "{chunks_too_large} | {unresolved_offset_count} | {article}% | {source}% |".format(
                 strategy=strategy,
                 total_chunks=data["total_chunks"],
                 avg_token_count=data["avg_token_count"],
                 chunks_too_small=data["chunks_too_small"],
                 chunks_too_large=data["chunks_too_large"],
+                unresolved_offset_count=data["unresolved_offset_count"],
                 article=data["percentage_with_article_metadata"],
                 source=data["percentage_with_source_metadata"],
             )

@@ -12,10 +12,6 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
 
-# pyrefly: ignore [missing-import]
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-
 # Pipeline orchestration
 
 
@@ -94,11 +90,17 @@ def validate_sliding_window_options(chunk_size: int, chunk_overlap: int) -> None
 def create_sliding_window_splitter(chunk_size: int, chunk_overlap: int):
     """Create the LangChain splitter lazily so CLI help stays dependency-light."""
 
-    return RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        add_start_index=True,
-    )
+    try:
+        # pyrefly: ignore [missing-import]
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+        return RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            add_start_index=True,
+        )
+    except (ImportError, TypeError, ValueError, RuntimeError, OSError) as error:
+        raise RuntimeError(f"Could not initialize sliding-window backend: {error}") from error
 
 
 # Sliding child construction

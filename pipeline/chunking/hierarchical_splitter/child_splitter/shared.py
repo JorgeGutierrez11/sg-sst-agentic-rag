@@ -13,6 +13,22 @@ SEMANTIC_BACKEND = "langchain_semantic_chunker"
 SEMANTIC_SPLIT_REASON = "semantic_breakpoint"
 
 
+def embedding_kwargs_for_model(embedding_model: str) -> dict[str, dict[str, object]]:
+    """Return embedding options required by each supported model family."""
+
+    normalized_model = embedding_model.lower()
+    if "e5" in normalized_model:
+        return {
+            "encode_kwargs": {"normalize_embeddings": True, "prompt": "passage: "},
+            "query_encode_kwargs": {"normalize_embeddings": True, "prompt": "query: "},
+        }
+
+    return {
+        "encode_kwargs": {"normalize_embeddings": True},
+        "query_encode_kwargs": {"normalize_embeddings": True},
+    }
+
+
 # Build result model
 
 

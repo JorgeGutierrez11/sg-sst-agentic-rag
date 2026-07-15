@@ -5,6 +5,9 @@ import sys
 
 from pipeline.chunking.core.config import (
     DEFAULT_CLEANED_MARKDOWN_DIR,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_MIN_TOKENS,
+    DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
     DEFAULT_SEMANTIC_CHUNKS_PATH,
@@ -16,6 +19,7 @@ from pipeline.chunking.core.config import (
     resolve_project_path,
 )
 from pipeline.chunking.hierarchical_splitter.child_splitter import (
+    write_regex_constrained_semantic_child_output,
     write_semantic_child_output,
     write_sliding_window_child_output,
 )
@@ -37,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
             return run_build_sliding_window(args)
         if args.command == "build-semantic":
             return run_build_semantic(args)
+        if args.command == "build-regex-constrained-semantic":
+            return run_build_regex_constrained_semantic(args)
     except (FileNotFoundError, RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -51,6 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_build_parents_parser(subparsers)
     add_build_sliding_window_parser(subparsers)
     add_build_semantic_parser(subparsers)
+    add_build_regex_constrained_semantic_parser(subparsers)
     return parser
 
 
@@ -154,4 +161,66 @@ def run_build_semantic(args: argparse.Namespace) -> int:
         breakpoint_threshold_amount=args.breakpoint_threshold_amount,
     )
     print(f"Built {result.chunk_count} semantic child chunks from {result.parent_count} parents: {result.output_path}")
+    return 0
+
+
+# Regex-constrained semantic command
+
+
+def add_build_regex_constrained_semantic_parser(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
+    """Register the build-regex-constrained-semantic subcommand."""
+
+    parser = subparsers.add_parser(
+        "build-regex-constrained-semantic",
+        help="Build source-preserving semantic child chunks from parents.",
+    )
+    parser.add_argument("--input-path", default=str(DEFAULT_PARENT_CHUNKS_PATH), help="Parent JSONL input path.")
+    parser.add_argument(
+        "--output-path",
+        default=str(DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH),
+        help="Regex-constrained semantic child JSONL output path.",
+    )
+    parser.add_argument(
+        "--breakpoint-threshold-type",
+        default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
+        help="Semantic breakpoint threshold type.",
+    )
+    parser.add_argument(
+        "--breakpoint-threshold-amount",
+        type=float,
+        default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
+        help="Semantic breakpoint threshold amount.",
+    )
+    parser.add_argument(
+        "--min-tokens",
+        type=int,
+        default=DEFAULT_MIN_TOKENS,
+        help="Minimum target token size after semantic splitting.",
+    )
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=DEFAULT_MAX_TOKENS,
+        help="Maximum target token size after semantic splitting.",
+    )
+
+
+def run_build_regex_constrained_semantic(args: argparse.Namespace) -> int:
+    """Execute regex-constrained semantic child chunk generation and print a compact summary."""
+
+    result = write_regex_constrained_semantic_child_output(
+        input_path=resolve_project_path(args.input_path),
+        output_path=resolve_project_path(args.output_path),
+        breakpoint_threshold_type=args.breakpoint_threshold_type,
+        breakpoint_threshold_amount=args.breakpoint_threshold_amount,
+        min_tokens=args.min_tokens,
+        max_tokens=args.max_tokens,
+    )
+    print(
+        "Built "
+        f"{result.chunk_count} regex-constrained semantic child chunks from {result.parent_count} parents: "
+        f"{result.output_path}"
+    )
     return 0

@@ -12,6 +12,7 @@ DEFAULT_CHUNKS_DIR = DATA_DIR / "processed" / "chunks"
 DEFAULT_PARENT_CHUNKS_PATH = DEFAULT_CHUNKS_DIR / "parents.jsonl"
 DEFAULT_SLIDING_WINDOW_CHUNKS_PATH = DEFAULT_CHUNKS_DIR / "sliding_window" / "chunks.jsonl"
 DEFAULT_SEMANTIC_CHUNKS_PATH = DEFAULT_CHUNKS_DIR / "semantic_chunking" / "chunks.jsonl"
+DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH = DEFAULT_CHUNKS_DIR / "regex_constrained_semantic" / "chunks.jsonl"
 DEFAULT_COMPARISON_DIR = DEFAULT_CHUNKS_DIR / "comparison"
 DEFAULT_SOURCE_MANIFEST_PATH = DATA_DIR / "processed" / "metadata" / "source_manifest.json"
 
@@ -32,6 +33,7 @@ GENERATED_OUTPUT_DIRS = (DEFAULT_CHUNKS_DIR,)
 STRATEGY_OUTPUTS = {
     "sliding_window": DEFAULT_SLIDING_WINDOW_CHUNKS_PATH,
     "semantic_chunking": DEFAULT_SEMANTIC_CHUNKS_PATH,
+    "regex_constrained_semantic": DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH,
 }
 
 

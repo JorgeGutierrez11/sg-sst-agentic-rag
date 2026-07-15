@@ -10,6 +10,7 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SEMANTIC_SPLIT_REASON,
     ChildBuildResult,
     build_child_chunk,
+    embedding_kwargs_for_model,
     next_child_start,
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
@@ -18,7 +19,6 @@ from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChu
 from langchain_experimental.text_splitter import SemanticChunker
 # pyrefly: ignore [missing-import]
 from langchain_huggingface import HuggingFaceEmbeddings
-
 
 # Pipeline orchestration
 
@@ -112,40 +112,19 @@ def create_semantic_splitter(
     breakpoint_threshold_amount: float,
 ) -> Any:
     """Create LangChain's SemanticChunker with multilingual normalized embeddings."""
-
-    try:
-        embedding_kwargs = embedding_kwargs_for_model(embedding_model)
-        embeddings = HuggingFaceEmbeddings(
-            model_name=embedding_model,
-            **embedding_kwargs,
-        )
-        return SemanticChunker(
-            embeddings,
-            breakpoint_threshold_type=breakpoint_threshold_type,
-            breakpoint_threshold_amount=breakpoint_threshold_amount,
-        )
-    except (TypeError, ValueError, RuntimeError, OSError) as error:
-        raise RuntimeError(f"Could not initialize semantic chunking backend: {error}") from error
-
-
-def embedding_kwargs_for_model(embedding_model: str) -> dict[str, dict[str, object]]:
-    """Return embedding options required by each supported model family."""
-
-    normalized_model = embedding_model.lower()
-    if "e5" in normalized_model:
-        return {
-            "encode_kwargs": {"normalize_embeddings": True, "prompt": "passage: "},
-            "query_encode_kwargs": {"normalize_embeddings": True, "prompt": "query: "},
-        }
-
-    return {
-        "encode_kwargs": {"normalize_embeddings": True},
-        "query_encode_kwargs": {"normalize_embeddings": True},
-    }
+    embedding_kwargs = embedding_kwargs_for_model(embedding_model)
+    embeddings = HuggingFaceEmbeddings(
+        model_name=embedding_model,
+        **embedding_kwargs,
+    )
+    return SemanticChunker(
+        embeddings,
+        breakpoint_threshold_type=breakpoint_threshold_type,
+        breakpoint_threshold_amount=breakpoint_threshold_amount,
+    )
 
 
 # Semantic child construction
-
 
 def create_semantic_child_chunk(
     parent: ParentChunk,                
