@@ -1,14 +1,15 @@
 # Plan de implementación: Parent-Child Chunking
 
-Este documento define el plan para reconstruir el módulo de chunking del corpus normativo SG-SST con una arquitectura más clara, moderna y evaluable. El objetivo es comparar dos estrategias base y una estrategia híbrida diseñada para documentos normativos colombianos.
+Este documento define el estado actual del módulo de chunking del corpus normativo SG-SST con una arquitectura clara, moderna y evaluable. El objetivo operativo actual es comparar `sliding_window` como baseline mecánico contra `regex_constrained_semantic` como estrategia híbrida trazable; `semantic_chunking` puro queda como línea experimental/base, no como candidato principal por sus problemas de offsets no resueltos.
 
 ## Decisión técnica
 
 | Área | Decisión |
 |---|---|
 | Sliding window | Usar `langchain-text-splitters`. |
-| Semantic chunking | Usar embeddings con `intfloat/multilingual-e5-base`. |
-| Hybrid chunking | Combinar regex legal, semantic chunking y fallback recursivo. |
+| Semantic chunking | Mantener `SemanticChunker` como baseline experimental, no como técnica principal de tesis. |
+| Regex-constrained semantic | Usar unidades textuales con offsets exactos, embeddings sobre unidades y chunks finales extraídos desde `parent.text`. |
+| Modelo/tokenización | Usar `Qwen/Qwen3-Embedding-0.6B` como modelo por defecto y `AutoTokenizer` para conteo/offsets de tokens. |
 | Metadata | Extraerla antes del child chunking mediante manifest, regex estructural y offsets calculados. |
 | Salidas | Separar resultados por estrategia en `data/processed/chunks/<strategy>/`. |
 | Comparación | Generar reportes en `data/processed/chunks/comparison/`. |
@@ -16,10 +17,10 @@ Este documento define el plan para reconstruir el módulo de chunking del corpus
 ## Dependencias por fase
 
 ```bash
-pip install langchain-text-splitters tiktoken langchain-experimental langchain-huggingface sentence-transformers
+pip install langchain-text-splitters tiktoken langchain-experimental langchain-huggingface sentence-transformers transformers
 ```
 
-Fase 2 instaló y registró solo `langchain-text-splitters` y `tiktoken`. Fase 3 agrega `langchain-experimental`, `langchain-huggingface` y `sentence-transformers` para semantic chunking con embeddings multilingües.
+Fase 2 usa `langchain-text-splitters` y `tiktoken`. Fase 3 usa `langchain-experimental`, `langchain-huggingface` y `sentence-transformers` para semantic chunking con embeddings. Fase 4 agrega dependencia efectiva sobre `transformers` porque el conteo de tokens y los offsets de ventanas se hacen con `AutoTokenizer`.
 
 ### PRINCIPIOS DE DISEÑO COMPLEMENTARIOS (CRÍTICO)
 
@@ -40,8 +41,8 @@ pipeline/chunking/
 ├── main.py                  # Orquestador principal del pipeline de chunking
 ├── core/                    # Infraestructura local compartida
 │   ├── __init__.py
-│   ├── config.py            # Configuración de rutas y defaults
-│   ├── cli.py               # CLI de Fase 1
+│   ├── config.py            # Configuración de rutas, defaults y salidas por estrategia
+│   ├── cli.py               # CLI con subcomandos explícitos por fase
 │   └── io_jsonl.py          # Serialización JSONL
 ├── structural_analysis/     # Feature 1: detección de estructura normativa/metadata
 │   ├── __init__.py
@@ -50,10 +51,15 @@ pipeline/chunking/
 │   └── metadata_infer.py    # Inferencia determinística de metadata
 └── hierarchical_splitter/   # Feature 2: split jerárquico e ingestión
     ├── __init__.py
-    ├── parent_builder.py    # Construcción de parent chunks
-    ├── child_splitter.py    # Sliding-window child chunks de Fase 2
-    ├── models.py            # Contratos de datos
-    └── tokenization.py      # Estimación determinística de tokens
+    ├── parent_builder.py       # Construcción de parent chunks
+    ├── child_splitter/         # Child chunks por técnica implementada
+    │   ├── __init__.py         # API pública y wrappers lazy para dependencias opcionales
+    │   ├── shared.py           # Helpers compartidos de child chunks
+    │   ├── sliding_window.py   # Baseline mecánico de Fase 2
+    │   ├── semantic.py         # SemanticChunker puro de Fase 3
+    │   └── regex_constrained_semantic.py # Híbrido trazable de Fase 4
+    ├── models.py               # Contratos de datos
+    └── tokenization.py         # AutoTokenizer para conteo y offsets de tokens
 ```
 
 El uso de Fase 1 queda centrado en `main.py` con un subcomando explícito:
@@ -68,13 +74,19 @@ Fase 2 agrega un segundo subcomando explícito, sin `--strategy` genérico ni ab
 python -m pipeline.chunking.main build-sliding-window
 ```
 
-Fase 3 agrega un tercer subcomando explícito:
+Fase 3 agrega un tercer subcomando explícito para el baseline semántico puro:
 
 ```bash
 python -m pipeline.chunking.main build-semantic
 ```
 
-Regex-constrained semantic sigue siendo una adición futura de Fase 4. Cualquier contrato futuro debe permanecer mínimo y justificado por uso real.
+Fase 4 agrega el subcomando explícito de la estrategia híbrida trazable:
+
+```bash
+python -m pipeline.chunking.main build-regex-constrained-semantic
+```
+
+No se usa un comando genérico `--strategy`: cada técnica implementada tiene su subcomando concreto para mantener depuración simple.
 
 ---
 
@@ -132,10 +144,14 @@ Formato esperado:
     },
     "chunk": {
       "strategy": "regex_constrained_semantic",
-      "backend": "langchain_semantic_chunker",
-      "embedding_model": "intfloat/multilingual-e5-base",
+      "backend": "custom_regex_constrained_semantic",
+      "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
       "chunk_index": 3,
-      "split_reason": "semantic_split_inside_legal_boundary"
+      "offset_status": "resolved",
+      "unit_count": 4,
+      "unit_types": ["paragraph", "sentence"],
+      "size_adjustment": "none",
+      "split_reason": "semantic_breakpoint_with_regex_constraints"
     }
   }
 }
@@ -192,7 +208,7 @@ data/processed/chunks/sliding_window/chunks.jsonl
 Implementado en Fase 2:
 
 ```txt
-pipeline/chunking/hierarchical_splitter/child_splitter.py
+pipeline/chunking/hierarchical_splitter/child_splitter/sliding_window.py
 ```
 
 ## Metadata específica
@@ -223,12 +239,12 @@ Implementar semantic chunking real usando embeddings multilingües.
 
 ## Backend semántico
 
-El backend semántico se agrega en Fase 3 dentro del mismo `child_splitter.py`, sin módulo de backend, factory ni framework genérico de estrategias.
+El backend semántico se agrega en Fase 3 dentro del paquete `child_splitter/`, sin factory ni framework genérico de estrategias.
 
 ```python
 from langchain_huggingface import HuggingFaceEmbeddings
 
-EMBEDDING_MODEL = "intfloat/multilingual-e5-base"
+EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
 
 
 def create_embeddings() -> HuggingFaceEmbeddings:
@@ -259,7 +275,7 @@ data/processed/chunks/semantic_chunking/chunks.jsonl
 Implementado en Fase 3:
 
 ```txt
-pipeline/chunking/hierarchical_splitter/child_splitter.py
+pipeline/chunking/hierarchical_splitter/child_splitter/semantic.py
 ```
 
 ## Metadata específica
@@ -268,7 +284,7 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 {
   "strategy": "semantic_chunking",
   "backend": "langchain_semantic_chunker",
-  "embedding_model": "intfloat/multilingual-e5-base",
+  "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
   "split_reason": "semantic_breakpoint"
 }
 ```
@@ -277,7 +293,9 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 
 La fase termina cuando se puedan generar chunks por cambios semánticos y comparar su recuperación contra sliding window.
 
-Estado: **implementado** con `SemanticChunker` de `langchain-experimental`, embeddings `intfloat/multilingual-e5-base` mediante `langchain-huggingface`, normalización de embeddings, salida en `data/processed/chunks/semantic_chunking/chunks.jsonl`, thresholds configurables por CLI y errores controlados para JSONL o dependencias/modelo.
+Estado: **implementado** con `SemanticChunker` de `langchain-experimental`, embeddings configurables mediante `langchain-huggingface`, modelo por defecto `Qwen/Qwen3-Embedding-0.6B`, salida en `data/processed/chunks/semantic_chunking/chunks.jsonl`, thresholds configurables por CLI y errores controlados para JSONL o dependencias/modelo.
+
+Nota crítica de evaluación: `SemanticChunker` reconstruye texto internamente y puede producir chunks que no son substring exacto de `parent.text`. Por eso `offset_status: unresolved` en esta estrategia debe tratarse como falla de trazabilidad, no como éxito. Esta limitación motivó la Fase 4.
 
 Notas de evaluación y pruebas:
 
@@ -291,51 +309,31 @@ Notas de evaluación y pruebas:
 
 ## Objetivo
 
-Construir la estrategia híbrida propuesta para el corpus normativo SG-SST.
+Construir la estrategia híbrida principal para el corpus normativo SG-SST: una técnica semántica que preserve trazabilidad exacta para citación normativa.
 
-Esta fase no debe partir de regex genéricos. Los patrones deben ajustarse mediante inspección directa de los `.md` limpios del corpus, manteniendo regex simples y legibles en el código.
+La decisión clave es NO usar `SemanticChunker.create_documents()` para emitir chunks finales. En su lugar, el código detecta unidades textuales con offsets, calcula cortes semánticos sobre esas unidades y emite chunks cortando directamente desde `parent.text`.
 
-## Paso 1: inspección directa de Markdown limpio
-
-Revisar directamente los `.md` procesados para identificar patrones como:
-
-- artículos;
-- capítulos;
-- secciones;
-- parágrafos;
-- numerales;
-- literales;
-- tablas;
-- encabezados Markdown;
-- saltos o formatos irregulares.
-
-No existe un módulo ni comando dedicado para este análisis; la evidencia se obtiene leyendo muestras del corpus limpio y ajustando `structural_analysis/patterns.py` cuando sea necesario.
-
-## Paso 2: regex estructural
-
-Actualizar `structural_analysis/patterns.py` y `structural_analysis/boundaries.py` con patrones basados en evidencia del corpus.
-
-Ejemplos iniciales, sujetos a validación:
-
-```python
-ARTICLE_PATTERN = r"(?i)^#+\s*art[ií]culo\s+([\d\.]+)"
-PARAGRAPH_PATTERN = r"(?i)^\s*par[aá]grafo"
-NUMERAL_PATTERN = r"(?m)^\s*\d+[\.)]\s+"
-LITERAL_PATTERN = r"(?m)^\s*[a-z]\)\s+"
-```
-
-## Paso 3: estrategia híbrida
+## Estrategia implementada
 
 Flujo:
 
 ```txt
 parent text
-→ detectar bloques legales con regex
-→ si el bloque es pequeño: mantenerlo completo
-→ si el bloque es grande: dividirlo con SemanticChunker
-→ si aún queda demasiado grande: usar RecursiveCharacterTextSplitter
-→ agregar metadata legal y técnica
+→ extraer unidades exactas con regex/texto preservando offsets
+→ calcular embeddings por unidad
+→ medir distancia semántica entre unidades consecutivas
+→ definir breakpoints por percentile/gradient
+→ agrupar unidades contiguas
+→ ajustar chunks pequeños y grandes por tokens reales de AutoTokenizer
+→ emitir cada child chunk como parent.text[start:end]
 ```
+
+Reglas de trazabilidad:
+
+- todo chunk emitido debe tener `offset_status: resolved`;
+- `child.text` debe ser exactamente igual a `parent.text[start:end]`;
+- si una unidad queda demasiado grande, el fallback usa offsets del `AutoTokenizer`, no regex token matching;
+- los tokens se cuentan con `AutoTokenizer.from_pretrained(DEFAULT_EMBEDDING_MODEL, use_fast=True)` sin special tokens.
 
 ## Salida
 
@@ -343,10 +341,10 @@ parent text
 data/processed/chunks/regex_constrained_semantic/chunks.jsonl
 ```
 
-Implementación futura:
+Implementado en Fase 4:
 
 ```txt
-pipeline/chunking/hierarchical_splitter/child_splitter.py
+pipeline/chunking/hierarchical_splitter/child_splitter/regex_constrained_semantic.py
 ```
 
 ## Metadata específica
@@ -354,12 +352,15 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 ```json
 {
   "strategy": "regex_constrained_semantic",
-  "legal_boundary_detected": true,
-  "boundary_type": "article",
-  "semantic_backend": "langchain_semantic_chunker",
-  "embedding_model": "intfloat/multilingual-e5-base",
-  "fallback_splitter": "langchain_recursive_character_text_splitter",
-  "split_reason": "semantic_split_inside_legal_boundary"
+  "backend": "custom_regex_constrained_semantic",
+  "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+  "breakpoint_threshold_type": "gradient",
+  "breakpoint_threshold_amount": 95,
+  "offset_status": "resolved",
+  "unit_count": 4,
+  "unit_types": ["paragraph", "sentence"],
+  "size_adjustment": "none",
+  "split_reason": "semantic_breakpoint_with_regex_constraints"
 }
 ```
 
@@ -367,13 +368,15 @@ pipeline/chunking/hierarchical_splitter/child_splitter.py
 
 La fase termina cuando la estrategia híbrida pueda preservar estructura jurídica y, al mismo tiempo, dividir bloques extensos por coherencia semántica.
 
+Estado: **implementado** con estrategia `regex_constrained_semantic`, salida en `data/processed/chunks/regex_constrained_semantic/chunks.jsonl`, subcomando `build-regex-constrained-semantic`, tests de offsets resueltos, slicing exacto contra `parent.text`, merge de chunks pequeños, split de chunks grandes y errores CLI controlados.
+
 ---
 
 # Fase 5: Comparación y decisión
 
 ## Objetivo
 
-Comparar las tres estrategias con métricas técnicas, normativas y de RAG.
+Comparar las estrategias con métricas técnicas, normativas y de RAG. La comparación principal actual debe priorizar `sliding_window` vs `regex_constrained_semantic`; `semantic_chunking` puro puede conservarse como baseline experimental para demostrar la limitación de trazabilidad.
 
 ## Entradas
 
@@ -395,7 +398,7 @@ data/processed/chunks/comparison/
 
 | Tipo | Métricas |
 |---|---|
-| Técnicas | total de chunks, tokens promedio, chunks pequeños, chunks grandes, overlap |
+| Técnicas | total de chunks, tokens promedio, chunks pequeños, chunks grandes, overlap, offsets no resueltos |
 | Normativas | porcentaje con artículo, fuente, parent válido, frontera legal preservada |
 | RAG | context relevance, answer faithfulness, answer relevance, citation accuracy |
 
@@ -406,6 +409,8 @@ La estrategia ganadora no debe elegirse por intuición. Debe seleccionarse con b
 Hipótesis inicial:
 
 > `regex_constrained_semantic` debería ofrecer mejor equilibrio entre trazabilidad normativa y relevancia semántica.
+
+Regla de interpretación: `unresolved_offset_count` es una métrica negativa. En SG-SST, los chunks sin offsets confiables reducen capacidad de citación y auditoría.
 
 ---
 
@@ -418,8 +423,9 @@ Hipótesis inicial:
 - [x] Implementar metadata determinística para parent chunks.
 - [x] Ajustar patrones legales mediante inspección directa del Markdown limpio.
 - [x] Implementar sliding window con LangChain.
-- [x] Implementar semantic chunking con `intfloat/multilingual-e5-base`.
-- [ ] Implementar híbrido con regex + semantic + recursive fallback.
+- [x] Implementar semantic chunking puro como baseline experimental.
+- [x] Implementar híbrido `regex_constrained_semantic` con offsets resueltos.
+- [x] Migrar conteo y offsets de tokens a `AutoTokenizer`.
 - [ ] Generar salidas por estrategia.
 - [ ] Generar reporte comparativo.
 - [ ] Revisar manualmente trazabilidad de citas normativas.
@@ -432,6 +438,7 @@ python -m unittest discover -s pipeline/tests
 python -m pipeline.chunking.main --help
 python -m pipeline.chunking.main build-sliding-window --help
 python -m pipeline.chunking.main build-semantic --help
+python -m pipeline.chunking.main build-regex-constrained-semantic --help
 python -m pipeline.chunking.main build-parents
 ```
 

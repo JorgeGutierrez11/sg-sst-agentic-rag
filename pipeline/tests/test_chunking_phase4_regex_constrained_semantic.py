@@ -107,7 +107,7 @@ def build_fixture(workspace: Path, parent: ParentChunk, min_tokens: int = 1, max
     input_path = workspace / "parents.jsonl"
     output_path = workspace / "regex_constrained_semantic" / "chunks.jsonl"
     write_parent_chunks([parent], input_path)
-    with patch_embedding_backend(), redirect_stdout(io.StringIO()):
+    with patch_embedding_backend(), patch_tokenizer(), redirect_stdout(io.StringIO()):
         exit_code = main(
             [
                 "build-regex-constrained-semantic",
@@ -137,12 +137,48 @@ def patch_embedding_backend():
     )
 
 
+def patch_tokenizer():
+    return patch(
+        "pipeline.chunking.hierarchical_splitter.tokenization.get_tokenizer",
+        return_value=FakeTokenizer(),
+    )
+
+
 class FakeEmbeddings:
     """Small embedding test double with alternating vector directions."""
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         vectors = [[1.0, 0.0], [0.0, 1.0]]
         return [vectors[index % 2] for index, _text in enumerate(texts)]
+
+
+class FakeTokenizer:
+    """Whitespace tokenizer test double with offset mapping support."""
+
+    is_fast = True
+
+    def encode(self, text: str, add_special_tokens: bool = False) -> list[str]:
+        return [text[start:end] for start, end in token_spans(text)]
+
+    def __call__(self, text: str, add_special_tokens: bool = False, return_offsets_mapping: bool = False) -> dict:
+        if not return_offsets_mapping:
+            return {}
+        return {"offset_mapping": token_spans(text)}
+
+
+def token_spans(text: str) -> list[tuple[int, int]]:
+    spans: list[tuple[int, int]] = []
+    start: int | None = None
+    for index, character in enumerate(text):
+        if character.isspace():
+            if start is not None:
+                spans.append((start, index))
+                start = None
+        elif start is None:
+            start = index
+    if start is not None:
+        spans.append((start, len(text)))
+    return spans
 
 
 def make_parent_chunk(text: str | None = None) -> ParentChunk:

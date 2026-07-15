@@ -13,7 +13,7 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     embedding_kwargs_for_model,
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
-from pipeline.chunking.hierarchical_splitter.tokenization import TOKEN_PATTERN, estimate_token_count
+from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count, token_offsets
 
 REGEX_CONSTRAINED_SEMANTIC_BACKEND = "custom_regex_constrained_semantic"
 REGEX_CONSTRAINED_SEMANTIC_SPLIT_REASON = "semantic_breakpoint_with_regex_constraints"
@@ -106,6 +106,7 @@ def build_regex_constrained_semantic_child_chunks(
         units = extract_text_units(parent.text)
         if not units:
             continue
+
         breakpoints = semantic_breakpoints(units, embeddings, breakpoint_threshold_type, breakpoint_threshold_amount)
         spans = adjust_chunk_sizes(spans_from_breakpoints(units, breakpoints), parent.text, min_tokens, max_tokens)
         for chunk_index, span in enumerate(spans):
@@ -204,22 +205,38 @@ def semantic_breakpoints(
 
     if len(units) < 2:
         return set()
+
     vectors = embeddings.embed_documents([unit.text for unit in units])
-    distances = [cosine_distance(vectors[index], vectors[index + 1]) for index in range(len(vectors) - 1)]
+    distances = [
+        cosine_distance(vectors[index], vectors[index + 1])
+        for index in range(len(vectors) - 1)
+    ]
+
     if breakpoint_threshold_type == "percentile":
         threshold = percentile(distances, breakpoint_threshold_amount)
-        return {index for index, distance in enumerate(distances) if distance >= threshold and distance > 0}
+        return {
+            index
+            for index, distance in enumerate(distances)
+            if distance >= threshold and distance > 0
+        }
+
     if breakpoint_threshold_type == "gradient":
         if len(distances) < 2:
             return set()
-        gradients = [abs(distances[index + 1] - distances[index]) for index in range(len(distances) - 1)]
+        gradients = [
+            abs(distances[index + 1] - distances[index])
+            for index in range(len(distances) - 1)
+        ]
         threshold = percentile(gradients, breakpoint_threshold_amount)
-        return {index + 1 for index, gradient in enumerate(gradients) if gradient >= threshold and gradient > 0}
+        return {
+            index + 1
+            for index, gradient in enumerate(gradients)
+            if gradient >= threshold and gradient > 0
+        }
     raise ValueError(f"Unsupported breakpoint threshold type: {breakpoint_threshold_type}")
 
 
 # Construcción de spans desde los cortes
-
 
 def spans_from_breakpoints(units: list[TextUnit], breakpoints: set[int]) -> list[ChunkSpan]:
     """Convert unit breakpoints into contiguous exact source spans."""
@@ -236,7 +253,6 @@ def spans_from_breakpoints(units: list[TextUnit], breakpoints: set[int]) -> list
 
 
 # Ajuste de tamaños mínimo y máximo
-
 
 def adjust_chunk_sizes(spans: list[ChunkSpan], parent_text: str, min_tokens: int, max_tokens: int) -> list[ChunkSpan]:
     """Merge tiny spans and split oversized spans without losing source offsets."""
@@ -301,17 +317,17 @@ def split_oversized_span(span: ChunkSpan, parent_text: str, max_tokens: int) -> 
 
 
 def split_single_unit_by_tokens(unit: TextUnit, parent_text: str, max_tokens: int) -> list[ChunkSpan]:
-    """Fallback split for one oversized regex unit using exact token span offsets."""
+    """Fallback split for one oversized regex unit using exact tokenizer offsets."""
 
-    token_matches = list(TOKEN_PATTERN.finditer(parent_text[unit.start_char:unit.end_char]))
-    if not token_matches:
+    offsets = token_offsets(parent_text[unit.start_char:unit.end_char])
+    if not offsets:
         return [ChunkSpan(unit.start_char, unit.end_char, [unit], "split_oversized_chunk")]
 
     pieces: list[ChunkSpan] = []
-    for start_index in range(0, len(token_matches), max_tokens):
-        batch = token_matches[start_index:start_index + max_tokens]
-        start = unit.start_char + batch[0].start()
-        end = unit.start_char + batch[-1].end()
+    for start_index in range(0, len(offsets), max_tokens):
+        batch = offsets[start_index:start_index + max_tokens]
+        start = unit.start_char + batch[0][0]
+        end = unit.start_char + batch[-1][1]
         text_unit = TextUnit(parent_text[start:end], start, end, "token_window")
         pieces.append(ChunkSpan(start, end, [text_unit], "split_oversized_chunk"))
     return pieces
@@ -420,6 +436,7 @@ def percentile(values: list[float], amount: float) -> float:
 
     if not values:
         return 0.0
+
     ordered = sorted(values)
     position = (len(ordered) - 1) * (amount / 100)
     lower = math.floor(position)
