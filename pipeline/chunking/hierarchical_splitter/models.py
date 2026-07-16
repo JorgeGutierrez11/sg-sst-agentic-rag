@@ -1,5 +1,6 @@
 """Typed data contracts used by the chunking pipeline."""
 
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -44,3 +45,19 @@ class ChildChunk:
     end_char: int | None        # Indice de fin
     token_count: int            # Cantidad de tokens
     metadata: JsonDict = field(default_factory=dict) # Metadatos adicionales
+
+@dataclass(frozen=True)
+class ParentBuildResult:
+    """Summary of a parent chunk build run."""
+
+    source_count: int
+    chunk_count: int
+    output_path: Path
+
+@dataclass(frozen=True)
+class ChildBuildResult:
+    """Summary of a child chunk build run."""
+
+    parent_count: int   # cantidad de parent chunks
+    chunk_count: int    # cantidad de child chunks
+    output_path: Path   # ruta donde se guardan los child chunks

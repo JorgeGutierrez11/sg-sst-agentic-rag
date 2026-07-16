@@ -6,14 +6,12 @@ from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chun
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SLIDING_WINDOW_BACKEND,
     SLIDING_WINDOW_SPLIT_REASON,
-    ChildBuildResult,
     build_child_chunk,
     next_child_start,
 )
-from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
+from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
 
 # Pipeline orchestration
-
 
 def write_sliding_window_child_output(
     input_path: Path,
@@ -75,7 +73,6 @@ def build_sliding_window_child_chunks(
 
 # Sliding-window configuration
 
-
 def validate_sliding_window_options(chunk_size: int, chunk_overlap: int) -> None:
     """Reject invalid sliding-window sizes before splitting starts."""
 
@@ -104,7 +101,6 @@ def create_sliding_window_splitter(chunk_size: int, chunk_overlap: int):
 
 
 # Sliding child construction
-
 
 def create_child_chunk(
     parent: ParentChunk,

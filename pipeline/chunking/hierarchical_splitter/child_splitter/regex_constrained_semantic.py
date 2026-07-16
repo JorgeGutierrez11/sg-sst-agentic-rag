@@ -8,20 +8,17 @@ from pathlib import Path
 from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_MIN_TOKENS
 from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
-    ChildBuildResult,
     build_child_chunk,
     embedding_kwargs_for_model,
 )
-from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
+from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count, token_offsets
 
 REGEX_CONSTRAINED_SEMANTIC_BACKEND = "custom_regex_constrained_semantic"
 REGEX_CONSTRAINED_SEMANTIC_SPLIT_REASON = "semantic_breakpoint_with_regex_constraints"
 SUPPORTED_THRESHOLD_TYPES = {"percentile", "gradient"}
 
-
 # Definición de estructuras internas
-
 
 @dataclass(frozen=True)
 class TextUnit:
@@ -44,7 +41,6 @@ class ChunkSpan:
 
 
 # Aplicación del método regex-constrained semantic
-
 
 def write_regex_constrained_semantic_child_output(
     input_path: Path,                       
@@ -125,7 +121,6 @@ def build_regex_constrained_semantic_child_chunks(
 
 # Definición de regex y unidades de texto
 
-
 def extract_text_units(parent_text: str) -> list[TextUnit]:
     """Extract ordered non-empty paragraph/sentence units with exact parent offsets."""
 
@@ -174,7 +169,6 @@ def sentence_units(text: str, offset: int) -> list[TextUnit]:
 
 
 # Configuración de embeddings
-
 
 def create_embedding_backend(embedding_model: str):
     """Create the embedding backend lazily so CLI validation stays dependency-light."""
@@ -335,7 +329,6 @@ def split_single_unit_by_tokens(unit: TextUnit, parent_text: str, max_tokens: in
 
 # Creación final de child chunks trazables
 
-
 def create_regex_constrained_semantic_child_chunk(
     parent: ParentChunk,
     span: ChunkSpan,
@@ -372,7 +365,6 @@ def create_regex_constrained_semantic_child_chunk(
 
 # Validación de opciones del método
 
-
 def validate_regex_constrained_semantic_options(
     breakpoint_threshold_type: str,
     breakpoint_threshold_amount: float,
@@ -400,7 +392,6 @@ def validate_regex_constrained_semantic_options(
 
 
 # Utilidades internas de spans, tokens y distancias
-
 
 def span_from_units(units: list[TextUnit], size_adjustment: str = "none") -> ChunkSpan:
     """Build a span covering contiguous units and their original separators."""

@@ -60,7 +60,6 @@ def parse_jsonl_line(line: str, path: Path, line_number: int) -> JsonDict:
 
 # Parent chunk helpers
 
-
 def write_parent_chunks(chunks: Iterable[ParentChunk], path: Path) -> int:
     """Write parent chunks to JSONL."""
 
@@ -83,7 +82,6 @@ def parent_chunk_from_record(record: JsonDict, path: Path, line_number: int) -> 
 
 
 # Child chunk helpers
-
 
 def write_child_chunks(chunks: Iterable[ChildChunk], path: Path) -> int:
     """Write child chunks to JSONL."""

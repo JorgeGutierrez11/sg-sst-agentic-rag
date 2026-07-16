@@ -1,8 +1,6 @@
 """Shared helpers for child chunk builders."""
 
 import hashlib
-from dataclasses import dataclass
-from pathlib import Path
 
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count
@@ -27,19 +25,6 @@ def embedding_kwargs_for_model(embedding_model: str) -> dict[str, dict[str, obje
         "encode_kwargs": {"normalize_embeddings": True},
         "query_encode_kwargs": {"normalize_embeddings": True},
     }
-
-
-# Build result model
-
-
-@dataclass(frozen=True)
-class ChildBuildResult:
-    """Summary of a child chunk build run."""
-
-    parent_count: int   # cantidad de parent chunks
-    chunk_count: int    # cantidad de child chunks
-    output_path: Path   # ruta donde se guardan los child chunks
-
 
 # Shared child helpers
 

@@ -19,12 +19,13 @@ SECTION_PATTERN = re.compile(
     LEGAL_PATTERN_FLAGS,
 )
 ARTICLE_PATTERN = re.compile(
-    r"(?:^\s{0,3}(?:#{1,6}\s*)?(?:\*\*)?|\s{2,}\*\*)Art[íi]culo\s+([\w.°º-]+)(?:\*\*)?\.?:?",
+    r"(?:^\s{0,3}(?:#{1,6}\s*)?[\"“”']?(?:\*\*)?|\s{2,}[\"“”']?\*\*)"
+    r"Art[íi]culo\s+([\w.°º-]+)(?:\*\*)?\.?:?",
     LEGAL_PATTERN_FLAGS,
 )
 PARAGRAPH_PATTERN = re.compile(r"^\s{0,3}(?:\*\*)?Par[áa]grafo\b\s*([\w°º.-]*)", LEGAL_PATTERN_FLAGS)
 NUMERAL_PATTERN = re.compile(r"^\s{0,6}(\d{1,3})[.)]\s+", re.MULTILINE)
-LITERAL_PATTERN = re.compile(r"^\s{0,6}([a-z])\)\s+", LEGAL_PATTERN_FLAGS)
+LITERAL_PATTERN = re.compile(r"^\s{0,6}(?:\*\*)?([a-z])(?:\.|\)|\.\))(?:\*\*)?\s+", LEGAL_PATTERN_FLAGS)
 
 BOUNDARY_PATTERNS: dict[str, Pattern[str]] = {
     "title": TITLE_PATTERN,

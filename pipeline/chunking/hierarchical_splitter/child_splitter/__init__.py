@@ -10,11 +10,11 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SEMANTIC_SPLIT_REASON,
     SLIDING_WINDOW_BACKEND,
     SLIDING_WINDOW_SPLIT_REASON,
-    ChildBuildResult,
     child_offsets,
     next_child_start,
     stable_child_chunk_id,
 )
+from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult
 
 
 def _semantic_export(name: str):

@@ -8,12 +8,11 @@ from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chun
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SEMANTIC_BACKEND,
     SEMANTIC_SPLIT_REASON,
-    ChildBuildResult,
-    build_child_chunk,
+    build_child_chunk   ,
     embedding_kwargs_for_model,
     next_child_start,
 )
-from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
+from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
 
 # pyrefly: ignore [missing-import]
 from langchain_experimental.text_splitter import SemanticChunker
@@ -21,7 +20,6 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
 
 # Pipeline orchestration
-
 
 def write_semantic_child_output(
     input_path: Path,                       # Ruta de los archivos de texto original
@@ -89,7 +87,6 @@ def build_semantic_child_chunks(
 
 
 # Semantic configuration
-
 
 def validate_semantic_options(
     breakpoint_threshold_type: str,

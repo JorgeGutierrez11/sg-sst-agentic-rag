@@ -1,23 +1,5 @@
 """Build legal-boundary parent chunks from cleaned Markdown sources."""
 
-'''
-discover_markdown_sources()          # encuentra *.md, excluye generados y ocultos
-    ↓
-load_source_manifest()               # carga metadata (tu corpus_manifest.csv, asumo)
-    ↓
-build_parent_chunks_from_sources()   # por cada archivo: lee texto, arma SourceDocument
-    ↓
-build_parent_chunks_for_document()   # decide los spans de un documento
-    ↓
-article_spans()                      # busca fronteras "ARTÍCULO N" y arma (start, end, boundary)
-    ↓
-create_parent_chunk()                # recorta texto, ajusta offsets tras strip(), arma ParentChunk
-    ↓
-stable_parent_chunk_id()             # SHA1(doc_id:index:start:end) → id determinista
-    ↓
-write_parent_chunks()                # serializa a JSONL
-'''
-
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,16 +14,12 @@ from pipeline.chunking.structural_analysis.metadata_infer import (
     inherited_metadata_for_parent,
     load_source_manifest,
 )
+from pipeline.chunking.hierarchical_splitter.models import ParentBuildResult
 
+SMALL_PARENT_TOKEN_THRESHOLD = 250
+MAX_GROUPED_PARENT_TOKENS = 1500
 
-@dataclass(frozen=True)
-class ParentBuildResult:
-    """Summary of a parent chunk build run."""
-
-    source_count: int
-    chunk_count: int
-    output_path: Path
-
+ParentSpan = tuple[int, int, BoundaryMatch | None]
 
 def discover_markdown_sources(input_dir: Path) -> list[Path]:
     """Discover cleaned Markdown files while excluding generated chunk outputs."""
@@ -51,7 +29,9 @@ def discover_markdown_sources(input_dir: Path) -> list[Path]:
     return sorted(
         path
         for path in input_dir.rglob("*.md")
-        if path.is_file() and not is_generated_output_path(path) and not _is_hidden_path(path)
+        if path.is_file()
+        and not is_generated_output_path(path)
+        and not _is_hidden_path(path.relative_to(input_dir))
     )
 
 
@@ -83,8 +63,13 @@ def build_parent_chunks_for_document(
 
     if not text.strip():
         return []
-    spans = article_spans(text) or [(0, len(text), None)]
-    return [create_parent_chunk(source_path, source_document, text, index, span) for index, span in enumerate(spans)]
+
+    boundaries = find_article_boundaries(text)
+    spans = group_small_article_spans(text, article_spans(text, boundaries)) or [(0, len(text), None)]
+    return [
+        create_parent_chunk(source_path, source_document, text, index, span, boundaries)
+        for index, span in enumerate(spans)
+    ]
 
 
 def write_parent_chunk_output(input_dir: Path, output_path: Path, manifest_path: Path) -> ParentBuildResult:
@@ -97,15 +82,84 @@ def write_parent_chunk_output(input_dir: Path, output_path: Path, manifest_path:
     return ParentBuildResult(source_count=len(sources), chunk_count=len(chunks), output_path=output_path)
 
 
-def article_spans(text: str) -> list[tuple[int, int, BoundaryMatch | None]]:
+def article_spans(text: str, boundaries: list[BoundaryMatch]) -> list[ParentSpan]:
     """Return start/end spans split by legal article boundaries."""
 
-    boundaries = find_article_boundaries(text)
-    spans: list[tuple[int, int, BoundaryMatch | None]] = []
+    spans: list[ParentSpan] = []
+    if boundaries and text[: boundaries[0].start_char].strip():
+        spans.append((0, boundaries[0].start_char, None))
     for index, boundary in enumerate(boundaries):
         start_char = boundary.start_char
         end_char = boundaries[index + 1].start_char if index + 1 < len(boundaries) else len(text)
+        if end_char <= start_char:
+            continue
         spans.append((start_char, end_char, boundary))
+    return spans
+
+
+def group_small_article_spans(text: str, spans: list[ParentSpan]) -> list[ParentSpan]:
+    """Group consecutive article spans when the current parent would be too small."""
+
+    grouped_spans: list[ParentSpan] = []
+    index = 0
+    while index < len(spans):
+        group_start, group_end, boundary = spans[index]
+        next_index = index + 1
+        while next_index < len(spans) and should_continue_small_group(
+            text,
+            group_start,
+            group_end,
+            spans[next_index - 1],
+            spans[next_index],
+        ):
+            group_end = spans[next_index][1]
+            next_index += 1
+        grouped_spans.append((group_start, group_end, boundary))
+        index = next_index
+    return merge_trailing_small_article_span(text, grouped_spans)
+
+
+def should_continue_small_group(
+    text: str,
+    group_start: int,
+    group_end: int,
+    current_span: ParentSpan,
+    next_span: ParentSpan,
+) -> bool:
+    """Return True when adding the next article keeps a small group within limits."""
+
+    if current_span[2] is None or next_span[2] is None:
+        return False
+
+    current_text = text[group_start:group_end].strip()
+    if estimate_token_count(current_text) >= SMALL_PARENT_TOKEN_THRESHOLD:
+        return False
+
+    candidate_text = text[group_start:next_span[1]].strip()
+    return estimate_token_count(candidate_text) <= MAX_GROUPED_PARENT_TOKENS
+
+
+def merge_trailing_small_article_span(text: str, grouped_spans: list[ParentSpan]) -> list[ParentSpan]:
+    """Merge trailing small articles backward, cascading while the tail stays small."""
+
+    spans = list(grouped_spans)
+    while len(spans) >= 2:
+        previous_span = spans[-2]
+        last_span = spans[-1]
+        if previous_span[2] is None or last_span[2] is None:
+            break
+
+        last_text = text[last_span[0] : last_span[1]].strip()
+        if estimate_token_count(last_text) >= SMALL_PARENT_TOKEN_THRESHOLD:
+            break
+
+        candidate_text = text[previous_span[0] : last_span[1]].strip()
+        if estimate_token_count(candidate_text) > MAX_GROUPED_PARENT_TOKENS:
+            break
+
+        merged_span = (previous_span[0], last_span[1], previous_span[2])
+        spans = [*spans[:-2], merged_span]
+
     return spans
 
 
@@ -114,7 +168,8 @@ def create_parent_chunk(
     source_document: SourceDocument,
     full_text: str,
     parent_index: int,
-    span: tuple[int, int, BoundaryMatch | None],
+    span: ParentSpan,
+    boundaries: list[BoundaryMatch],
 ) -> ParentChunk:
     """Create one parent chunk from a character span."""
 
@@ -124,13 +179,18 @@ def create_parent_chunk(
     adjusted_start = start_char + (len(raw_text) - len(raw_text.lstrip()))
     adjusted_end = adjusted_start + len(text)
     inherited_metadata = inherited_metadata_for_parent(source_document, text)
+    add_grouped_article_traceability(inherited_metadata, boundaries, start_char, end_char)
+    strategy = chunk_strategy(end_char, boundary, boundaries)
     chunk_metadata = {
-        "strategy": "parent_article_boundary" if boundary else "parent_whole_document",
-        "split_reason": "article_boundary" if boundary else "no_article_boundary_found",
+        "strategy": strategy,
+        "split_reason": chunk_split_reason(end_char, boundary, boundaries),
         "parent_index": parent_index,
     }
+    if strategy == "parent_document_preamble":
+        chunk_metadata["section_type"] = "preamble"
+        chunk_metadata["indexable"] = False
     return ParentChunk(
-        chunk_id=stable_parent_chunk_id(source_document.document_id, parent_index, adjusted_start, adjusted_end),
+        chunk_id=stable_parent_chunk_id(source_document.document_id, parent_index, text),
         source_document_id=source_document.document_id,
         source_path=str(source_path),
         parent_index=parent_index,
@@ -142,10 +202,55 @@ def create_parent_chunk(
     )
 
 
-def stable_parent_chunk_id(source_document_id: str, parent_index: int, start_char: int, end_char: int) -> str:
-    """Return a stable parent chunk id based on source and offsets."""
+def add_grouped_article_traceability(
+    metadata: JsonDict,
+    boundaries: list[BoundaryMatch],
+    start_char: int,
+    end_char: int,
+) -> None:
+    """Add article-list traceability only when one parent contains multiple articles.
 
-    payload = f"{source_document_id}:{parent_index}:{start_char}:{end_char}"
+    Filtra los boundaries ya calculados por rango de caracteres en vez de volver a
+    correr la regex de detección de artículos sobre el texto del chunk.
+    """
+
+    article_values = [b.value for b in boundaries if start_char <= b.start_char < end_char]
+    if len(article_values) <= 1:
+        return
+    hierarchy = metadata.setdefault("hierarchy", {})
+    hierarchy["articles"] = article_values
+
+
+def chunk_strategy(end_char: int, boundary: BoundaryMatch | None, boundaries: list[BoundaryMatch]) -> str:
+    """Return the parent chunking strategy label for a span."""
+
+    if boundary:
+        return "parent_article_boundary"
+    if is_document_preamble(end_char, boundaries):
+        return "parent_document_preamble"
+    return "parent_whole_document"
+
+
+def chunk_split_reason(end_char: int, boundary: BoundaryMatch | None, boundaries: list[BoundaryMatch]) -> str:
+    """Return the parent chunk split reason for a span."""
+
+    if boundary:
+        return "article_boundary"
+    if is_document_preamble(end_char, boundaries):
+        return "document_preamble_before_first_article"
+    return "no_article_boundary_found"
+
+
+def is_document_preamble(end_char: int, boundaries: list[BoundaryMatch]) -> bool:
+    """Return True when a span ends before a later article boundary."""
+
+    return any(boundary.start_char >= end_char for boundary in boundaries)
+
+
+def stable_parent_chunk_id(source_document_id: str, parent_index: int, text: str) -> str:
+    """Return a stable parent chunk id based on source and chunk content."""
+
+    payload = f"{source_document_id}:{text}"
     digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:10]
     return f"parent-{source_document_id}-{parent_index:04d}-{digest}"
 

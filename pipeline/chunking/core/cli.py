@@ -7,11 +7,11 @@ from pipeline.chunking.core.config import (
     DEFAULT_CLEANED_MARKDOWN_DIR,
     DEFAULT_MAX_TOKENS,
     DEFAULT_MIN_TOKENS,
+    DEFAULT_PARENT_CHUNKS_PATH,
     DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
     DEFAULT_SEMANTIC_CHUNKS_PATH,
-    DEFAULT_PARENT_CHUNKS_PATH,
     DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP,
     DEFAULT_SLIDING_WINDOW_CHUNK_SIZE,
     DEFAULT_SLIDING_WINDOW_CHUNKS_PATH,
@@ -28,7 +28,6 @@ from pipeline.chunking.hierarchical_splitter.parent_builder import write_parent_
 
 # Entrypoint and parser
 
-
 def main(argv: list[str] | None = None) -> int:
     """Run the chunking CLI."""
 
@@ -43,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
             return run_build_semantic(args)
         if args.command == "build-regex-constrained-semantic":
             return run_build_regex_constrained_semantic(args)
-    except (FileNotFoundError, RuntimeError, ValueError) as error:
+    except (FileNotFoundError, ImportError, RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     raise ValueError(f"Unsupported command: {args.command}")
@@ -54,15 +53,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(description="SG-SST chunking utilities.")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
     add_build_parents_parser(subparsers)
     add_build_sliding_window_parser(subparsers)
     add_build_semantic_parser(subparsers)
     add_build_regex_constrained_semantic_parser(subparsers)
+
     return parser
 
 
 # Parent chunk command
-
 
 def add_build_parents_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Register the build-parents subcommand."""
@@ -87,29 +87,14 @@ def run_build_parents(args: argparse.Namespace) -> int:
 
 # Sliding-window command
 
-
 def add_build_sliding_window_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Register the build-sliding-window subcommand."""
 
     parser = subparsers.add_parser("build-sliding-window", help="Build sliding-window child chunks from parents.")
     parser.add_argument("--input-path", default=str(DEFAULT_PARENT_CHUNKS_PATH), help="Parent JSONL input path.")
-    parser.add_argument(
-        "--output-path",
-        default=str(DEFAULT_SLIDING_WINDOW_CHUNKS_PATH),
-        help="Sliding-window child JSONL output path.",
-    )
-    parser.add_argument(
-        "--chunk-size",
-        type=int,
-        default=DEFAULT_SLIDING_WINDOW_CHUNK_SIZE,
-        help="Maximum token window size for child chunks.",
-    )
-    parser.add_argument(
-        "--chunk-overlap",
-        type=int,
-        default=DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP,
-        help="Token overlap between adjacent child chunks.",
-    )
+    parser.add_argument("--output-path", default=str(DEFAULT_SLIDING_WINDOW_CHUNKS_PATH), help="Child JSONL output path.")
+    parser.add_argument("--chunk-size", type=int, default=DEFAULT_SLIDING_WINDOW_CHUNK_SIZE, help="Target chunk size.")
+    parser.add_argument("--chunk-overlap", type=int, default=DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP, help="Chunk overlap.")
 
 
 def run_build_sliding_window(args: argparse.Namespace) -> int:
@@ -127,27 +112,22 @@ def run_build_sliding_window(args: argparse.Namespace) -> int:
 
 # Semantic chunking command
 
-
 def add_build_semantic_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Register the build-semantic subcommand."""
 
     parser = subparsers.add_parser("build-semantic", help="Build semantic child chunks from parents.")
     parser.add_argument("--input-path", default=str(DEFAULT_PARENT_CHUNKS_PATH), help="Parent JSONL input path.")
-    parser.add_argument(
-        "--output-path",
-        default=str(DEFAULT_SEMANTIC_CHUNKS_PATH),
-        help="Semantic child JSONL output path.",
-    )
+    parser.add_argument("--output-path", default=str(DEFAULT_SEMANTIC_CHUNKS_PATH), help="Child JSONL output path.")
     parser.add_argument(
         "--breakpoint-threshold-type",
         default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
-        help="SemanticChunker breakpoint threshold type.",
+        help="Semantic breakpoint threshold type.",
     )
     parser.add_argument(
         "--breakpoint-threshold-amount",
         type=float,
         default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
-        help="SemanticChunker breakpoint threshold amount.",
+        help="Semantic breakpoint threshold amount.",
     )
 
 
@@ -166,7 +146,6 @@ def run_build_semantic(args: argparse.Namespace) -> int:
 
 # Regex-constrained semantic command
 
-
 def add_build_regex_constrained_semantic_parser(
     subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
 ) -> None:
@@ -180,7 +159,7 @@ def add_build_regex_constrained_semantic_parser(
     parser.add_argument(
         "--output-path",
         default=str(DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH),
-        help="Regex-constrained semantic child JSONL output path.",
+        help="Child JSONL output path.",
     )
     parser.add_argument(
         "--breakpoint-threshold-type",
@@ -193,18 +172,8 @@ def add_build_regex_constrained_semantic_parser(
         default=DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
         help="Semantic breakpoint threshold amount.",
     )
-    parser.add_argument(
-        "--min-tokens",
-        type=int,
-        default=DEFAULT_MIN_TOKENS,
-        help="Minimum target token size after semantic splitting.",
-    )
-    parser.add_argument(
-        "--max-tokens",
-        type=int,
-        default=DEFAULT_MAX_TOKENS,
-        help="Maximum target token size after semantic splitting.",
-    )
+    parser.add_argument("--min-tokens", type=int, default=DEFAULT_MIN_TOKENS, help="Minimum child chunk tokens.")
+    parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS, help="Maximum child chunk tokens.")
 
 
 def run_build_regex_constrained_semantic(args: argparse.Namespace) -> int:
