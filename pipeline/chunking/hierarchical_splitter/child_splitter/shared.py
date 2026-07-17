@@ -1,9 +1,11 @@
 """Shared helpers for child chunk builders."""
 
 import hashlib
+from pathlib import Path
 
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count
+from pipeline.tables.table_references import table_references_for_text
 
 SLIDING_WINDOW_BACKEND = "langchain_recursive_character_text_splitter"
 SLIDING_WINDOW_SPLIT_REASON = "recursive_token_window"
@@ -67,6 +69,13 @@ def build_child_chunk(
             "cannot assign reliable offsets."
         )
 
+    inherited_metadata = dict(parent.metadata.get("inherited", {}))
+    child_chunk_metadata = dict(chunk_metadata)
+    source_stem = inherited_metadata.get("source_stem") or Path(parent.source_path).stem
+    table_refs = table_references_for_text(text, str(source_stem))
+    if table_refs:
+        child_chunk_metadata["tables"] = table_refs
+
     return ChildChunk(
         chunk_id=stable_child_chunk_id(parent.chunk_id, chunk_index, start_char, end_char),
         parent_id=parent.chunk_id,
@@ -76,8 +85,8 @@ def build_child_chunk(
         end_char=end_char,
         token_count=estimate_token_count(text),
         metadata={
-            "inherited": dict(parent.metadata.get("inherited", {})),
-            "chunk": chunk_metadata,
+            "inherited": inherited_metadata,
+            "chunk": child_chunk_metadata,
         },
     )
 

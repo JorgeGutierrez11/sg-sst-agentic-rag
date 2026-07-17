@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from pipeline.chunking.core.config import DEFAULT_TABLES_ROOT
 from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SLIDING_WINDOW_BACKEND,
@@ -10,6 +11,7 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     next_child_start,
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
+from pipeline.tables.table_references import validate_table_html_references
 
 # Pipeline orchestration
 
@@ -18,6 +20,7 @@ def write_sliding_window_child_output(
     output_path: Path,
     chunk_size: int,
     chunk_overlap: int,
+    tables_root: Path = DEFAULT_TABLES_ROOT,
 ) -> ChildBuildResult:
     """Read parent chunks, write sliding-window child chunks, and return a summary."""
 
@@ -27,6 +30,7 @@ def write_sliding_window_child_output(
 
     parents = read_parent_chunks(input_path)
     children = build_sliding_window_child_chunks(parents, chunk_size, chunk_overlap)
+    validate_table_html_references(children, tables_root)
     write_child_chunks(children, output_path)
     return ChildBuildResult(
         parent_count=len(parents),

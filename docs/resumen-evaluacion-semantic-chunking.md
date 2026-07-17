@@ -1,322 +1,379 @@
-# Evaluación comparativa de child chunks para vector store legal SG-SST
+# Evaluación comparativa de chunks para vector store legal SG-SST
 
-Este documento evalúa los métodos de generación de `child_chunks` regenerados para el corpus normativo SG-SST. La evaluación se enfoca en su aptitud para alimentar un vector store de alto rendimiento orientado a normatividad legal colombiana.
+Este documento resume la evaluación actual de `parent_chunks` y `child_chunks` regenerados para el corpus normativo SG-SST. El análisis se enfoca en calidad de datos para alimentar un vector store de alto rendimiento sobre normatividad legal colombiana.
 
 ## Decisión actual
 
-El mejor candidato para indexación es:
+La estrategia recomendada para indexación principal es:
 
 ```text
 regex_constrained_semantic
 ```
 
-Razón: combina el control estructural de reglas legales con cortes semánticos, conserva `100%` de offsets resueltos, elimina outliers mayores a `350` tokens y casi elimina microchunks. `sliding_window` queda como baseline técnico fuerte. `semantic_chunking` puro no se recomienda para indexación final por su alta tasa de offsets no resueltos, chunks huérfanos y outliers de tamaño.
+Razón: es la única estrategia de child chunks que combina offsets exactos, máximo controlado de `350` tokens, referencias de tablas correctas, buena cohesión legal y preservación estructural. `sliding_window` queda como baseline técnico fuerte. `semantic_chunking` puro no se recomienda como salida final.
 
-## Marco de evaluación cualitativa
+## Dimensiones de evaluación
 
 Cada método se califica de `1.0` a `5.0` en cuatro dimensiones:
 
-| Dimensión | Qué mide | Fallo crítico |
+| Dimensión | Qué mide | Riesgo crítico |
 |---|---|---|
-| Cohesión semántica | Que el chunk contenga una idea jurídica o técnica completa. | Frases truncadas, numerales huérfanos o notas de procedencia aisladas. |
-| Densidad informativa | Proporción de contenido útil frente a ruido o fragmentación. | Chunks demasiado cortos sin sustancia o demasiado largos con múltiples temas. |
-| Anclaje estructural | Capacidad de conservar referencia legal y contexto jerárquico. | Obligaciones/listas sin artículo, parágrafo, sujeto obligado o contexto normativo. |
+| Cohesión semántica | Que el chunk contenga una idea jurídica o técnica comprensible. | Frases truncadas, numerales huérfanos, notas aisladas. |
+| Densidad informativa | Proporción de contenido útil frente a ruido o dispersión. | Chunks muy cortos sin sustancia o muy largos con múltiples temas. |
+| Anclaje estructural/legal | Capacidad de conservar contexto normativo y trazabilidad. | Obligaciones/listas sin artículo, parágrafo, sujeto obligado o fuente. |
 | Integridad de formato | Markdown limpio y sintaxis legible. | Palabras pegadas, saltos rotos, pérdida de títulos o caracteres corruptos. |
 
-Los puntajes son una lectura analítica basada en métricas cuantitativas, revisión de extremos y muestras representativas. No sustituyen una evaluación de retrieval con consultas reales.
+Los puntajes combinan métricas cuantitativas, validación de offsets, revisión de extremos y cumplimiento del plan de referencias de tablas.
 
-## Contexto: parent chunks regenerados
+---
 
-Los `parent_chunks` actuales son estructuralmente válidos, pero grandes e irregulares como unidad directa de recuperación.
+## Evaluación de parent chunks
+
+Archivo evaluado:
 
 ```text
-parents: 201
-avg tokens: 375.23
-min tokens: 33
+data/processed/chunks/parents.jsonl
+```
+
+### Métricas de tamaño
+
+```text
+parents: 138
+avg tokens: 546.64
+min tokens: 69
 max tokens: 2376
-p50: 258
-p75: 474
-p90: 771
-p95: 981
+p50: 426
+p75: 654.25
+p90: 897.6
+p95: 1071.7
 ```
 
-Validación estructural:
+### Buckets de tamaño
+
+| Bucket | Parents |
+|---|---:|
+| `<50` | 0 |
+| `<80` | 1 |
+| `<150` | 3 |
+| `<250` | 3 |
+| `250-350` | 36 |
+| `351-500` | 39 |
+| `501-650` | 21 |
+| `651-1000` | 24 |
+| `>1000` | 11 |
+
+### Integridad estructural
+
+| Validación | Resultado |
+|---|---:|
+| JSON inválidos | 0 |
+| IDs duplicados | 0 |
+| Referencias a fuente faltantes | 0 |
+| Offsets inválidos | 0 |
+| Mismatch texto/offset contra Markdown fuente | 0 |
+| Overlaps | 0 |
+| Gaps entre parents | 130 |
+| Caracteres totales en gaps | 260 |
+| Parents con jerarquía vacía | 4 |
+
+Los gaps observados son de `2` caracteres, compatibles con separadores como `\n\n`. No parecen pérdida sustantiva de contenido.
+
+### Estrategias detectadas
+
+| Strategy | Count |
+|---|---:|
+| `parent_article_boundary` | 130 |
+| `parent_document_preamble` | 8 |
+
+| Split reason | Count |
+|---|---:|
+| `article_boundary` | 130 |
+| `document_preamble_before_first_article` | 8 |
+
+### Referencias de tablas en parents
+
+| Validación | Resultado |
+|---|---:|
+| Parents con placeholder de tabla | 9 |
+| Parents con `metadata.chunk.tables` | 9 |
+| Referencias totales de tablas | 10 |
+| Referencias a HTML faltantes | 0 |
+| HTML huérfanos | 0 |
+| Metadata con shape incorrecto | 0 |
+| Campos de ruta persistidos | 0 |
+| Refs de tabla sin placeholder propio | 0 |
+| Placeholders sin refs | 0 |
+
+La metadata cumple el plan: solo persiste `placeholder`, `table_index` y `source_stem`. No persiste rutas derivables como `html_path`, `text_path` o `markdown_path`.
+
+### Evaluación cualitativa de parents
+
+| Dimensión | Score | Análisis |
+|---|---:|---|
+| Cohesión semántica | 4.1 | Conservan unidades legales completas o grupos de artículos. Buenos como fuente, no siempre como unidad fina de retrieval. |
+| Densidad informativa | 3.4 | Ya casi no hay parents pequeños, pero ahora hay muchos parents grandes: p75 `654.25`, p95 `1071.7`. |
+| Anclaje estructural/legal | 4.6 | Offsets exactos, IDs únicos y buen vínculo a fuente. Quedan `4` preámbulos con `hierarchy = {}`. |
+| Integridad de formato | 4.5 | Markdown generalmente limpio; conserva artículos, numerales, parágrafos y placeholders de tabla. |
+
+### Veredicto de parents
+
+Los parents están **aprobados como contenedores legales fuente**, pero **no deben usarse como unidad principal de retrieval**. Su tamaño actual confirma la arquitectura correcta:
 
 ```text
-JSONL válido: sí
-IDs duplicados: 0
-fuentes faltantes: 0
+parent = contenedor legal trazable
+child = unidad optimizada para vector store
 ```
-
-Advertencia: hay `4` parents con `hierarchy = {}`. Corresponden a bloques de preámbulo/document header y deberían marcarse explícitamente como `section_type: "preamble"` o equivalente.
-
-Conclusión: los parents funcionan bien como unidades fuente trazables, pero no como unidad principal de retrieval. Los child chunks deben resolver tamaño, densidad y anclaje.
 
 ---
 
-## Método 1: `sliding_window`
+## Child method 1: `sliding_window`
 
-### Configuración detectada
+Archivo evaluado:
 
 ```text
-path: data/processed/chunks/sliding_window/chunks.jsonl
-strategy: sliding_window
-backend: langchain_recursive_character_text_splitter
-split_reason: recursive_token_window
-chunk_size: 350
-chunk_overlap: 70
+data/processed/chunks/sliding_window/chunks.jsonl
 ```
 
-### Métricas
+### Métricas de integridad
+
+| Validación | Resultado |
+|---|---:|
+| Chunks | 417 |
+| Parents cubiertos | 138 / 138 |
+| Parent refs faltantes | 0 |
+| IDs duplicados | 0 |
+| Offsets inválidos | 0 |
+| Mismatches texto/offset contra parent | 0 |
+| Offsets resueltos exactos | 417 / 417 |
+| Offsets unresolved | 0 |
+
+### Métricas de tamaño
 
 ```text
-chunks: 432
-parents cubiertos: 201 / 201
-IDs duplicados: 0
-parent refs faltantes: 0
-mismatches texto/offset contra parent: 0
-
-avg tokens: 181.73
-min tokens: 21
+avg tokens: 190.2
+min tokens: 14
 max tokens: 323
-p50: 194.5
-p75: 231.25
-p90: 252.0
-p95: 261.45
-
-<30 tokens: 1 / 432 = 0.23%
-<40 tokens: 4 / 432 = 0.93%
-<50 tokens: 9 / 432 = 2.08%
->350 tokens: 0
->500 tokens: 0
->650 tokens: 0
-unresolved offsets: 0
-resolved offsets: 432 / 432 = 100%
+p50: 205
+p75: 236
+p90: 256
+p95: 263
 ```
 
-### Evaluación por dimensión
+| Bucket crítico | Count |
+|---|---:|
+| `<30` | 2 |
+| `<40` | 3 |
+| `<50` | 9 |
+| `>350` | 0 |
+| `>500` | 0 |
+| `>650` | 0 |
 
-| Dimensión | Puntaje | Análisis |
+### Referencias de tablas
+
+| Validación | Resultado |
+|---|---:|
+| Chunks con placeholder | 12 |
+| Chunks con `metadata.chunk.tables` | 12 |
+| Referencias totales | 13 |
+| Referencias HTML faltantes | 0 |
+| Refs sin placeholder propio | 0 |
+| Campos de ruta persistidos | 0 |
+| Metadata con shape incorrecto | 0 |
+
+Nota: hay más referencias que en parents porque el overlap de sliding windows puede duplicar placeholders en más de una ventana. Esto es esperable.
+
+### Evaluación cualitativa
+
+| Dimensión | Score | Análisis |
 |---|---:|---|
-| Cohesión semántica | 4.2 | Buena en general, pero los cortes son mecánicos. Puede separar o unir numerales legales sin respetar completamente la unidad normativa. |
-| Densidad informativa | 4.8 | Muy buena distribución: casi no hay microchunks y no hay outliers grandes. |
-| Anclaje estructural | 4.2 | Los offsets son perfectos y hereda metadata, pero algunos chunks inician en numerales/listas sin repetir encabezado legal explícito dentro del texto. |
-| Integridad de formato | 4.9 | Markdown limpio y offsets exactos. Los gaps pequeños observados parecen separadores (`\n\n` o espacios), no corrupción. |
-
-### Hallazgos
-
-- Es el método más estable en tamaño.
-- Es excelente como baseline técnico.
-- Su principal debilidad no es la integridad, sino la falta de criterio jurídico en el punto exacto de corte.
-- Para preguntas legales específicas puede recuperar fragmentos adecuados, pero en listas de obligaciones puede cortar por ventana y no por unidad legal.
+| Cohesión semántica | 3.4 | Corta por ventana, no por unidad jurídica. Puede fragmentar obligaciones o agrupar partes de listas. |
+| Densidad informativa | 3.8 | Tamaños muy controlados y casi sin microchunks, aunque el overlap puede duplicar contenido. |
+| Anclaje estructural/legal | 4.2 | Offsets perfectos y metadata consistente; el texto no siempre conserva encabezado legal cercano. |
+| Integridad de formato | 4.5 | Muy buena integridad técnica. Los cortes son mecánicos, no corruptos. |
 
 ### Veredicto
 
-`sliding_window` es apto como baseline fuerte y alternativa segura. No es el candidato principal si el objetivo es maximizar unidad normativa y semántica.
+`sliding_window` es **técnicamente sólido** y debe conservarse como baseline. No es el mejor candidato semántico/legal porque prioriza estabilidad de tamaño sobre unidad normativa.
 
 ---
 
-## Método 2: `semantic_chunking`
+## Child method 2: `semantic_chunking`
+
+Archivo evaluado:
+
+```text
+data/processed/chunks/semantic_chunking/chunks.jsonl
+```
 
 ### Configuración detectada
 
 ```text
-path: data/processed/chunks/semantic_chunking/chunks.jsonl
-strategy: semantic_chunking
-backend: langchain_semantic_chunker
 embedding_model: Qwen/Qwen3-Embedding-0.6B
 threshold_type: gradient
-threshold_amount: 95
-split_reason: semantic_breakpoint
 ```
 
-### Métricas
+### Métricas de integridad
+
+| Validación | Resultado |
+|---|---:|
+| Chunks | 282 |
+| Parents cubiertos | 138 / 138 |
+| Parent refs faltantes | 0 |
+| IDs duplicados | 0 |
+| Offsets inválidos | 0 |
+| Mismatches texto/offset resuelto | 0 |
+| Offsets resueltos exactos | 117 / 282 |
+| Offsets unresolved | 165 / 282 |
+
+### Métricas de tamaño
 
 ```text
-chunks: 376
-parents cubiertos: 201 / 201
-IDs duplicados: 0
-parent refs faltantes: 0
-mismatches texto/offset contra parent en offsets resueltos: 0
-
-avg tokens: 200.95
-min tokens: 6
+avg tokens: 267.96
+min tokens: 2
 max tokens: 1581
-p50: 135.0
-p75: 257.0
-p90: 458.0
-p95: 617.75
-
-<30 tokens: 43 / 376 = 11.44%
-<40 tokens: 60 / 376 = 15.96%
-<50 tokens: 76 / 376 = 20.21%
->350 tokens: 56 / 376 = 14.89%
->500 tokens: 33 / 376 = 8.78%
->650 tokens: 17 / 376 = 4.52%
-unresolved offsets: 175 / 376 = 46.54%
-resolved offsets: 201 / 376 = 53.46%
+p50: 191.5
+p75: 349.25
+p90: 588
+p95: 786.7
 ```
 
-### Evaluación por dimensión
+| Bucket crítico | Count |
+|---|---:|
+| `<30` | 20 |
+| `<40` | 27 |
+| `<50` | 39 |
+| `>350` | 70 |
+| `>500` | 41 |
+| `>650` | 22 |
 
-| Dimensión | Puntaje | Análisis |
+### Referencias de tablas
+
+| Validación | Resultado |
+|---|---:|
+| Chunks con placeholder | 9 |
+| Chunks con `metadata.chunk.tables` | 9 |
+| Referencias totales | 10 |
+| Referencias HTML faltantes | 0 |
+| Refs sin placeholder propio | 0 |
+| Campos de ruta persistidos | 0 |
+| Metadata con shape incorrecto | 0 |
+
+### Evaluación cualitativa
+
+| Dimensión | Score | Análisis |
 |---|---:|---|
-| Cohesión semántica | 2.4 | Produce varios cortes semánticamente pobres: títulos aislados, fragmentos muy cortos y chunks enormes que mezclan varios asuntos. |
-| Densidad informativa | 2.2 | Tiene demasiados chunks menores a 50 tokens y demasiados chunks mayores a 500 tokens. La densidad es inestable. |
-| Anclaje estructural | 2.5 | Casi la mitad de los offsets quedan unresolved. Además, algunos chunks empiezan lejos del encabezado legal o en medio de listas. |
-| Integridad de formato | 4.7 | El texto no muestra corrupción masiva, pero el problema está en el corte, no tanto en el Markdown. |
-
-### Hallazgos
-
-- El método semántico puro no controla bien los extremos.
-- Genera ejemplos críticos como encabezados aislados (`**Artículo 1.`) y chunks de más de `1000` tokens.
-- Los offsets no resueltos reducen trazabilidad legal, lo cual es especialmente grave para un sistema normativo.
-- Aunque Qwen3 puede capturar relaciones semánticas, el chunker puro no respeta suficiente la estructura documental legal.
+| Cohesión semántica | 3.0 | Algunos cortes son semánticamente útiles, pero hay microchunks y chunks enormes que mezclan varios asuntos. |
+| Densidad informativa | 2.8 | Alta variabilidad: chunks de `2` tokens y outliers de `1581` tokens. |
+| Anclaje estructural/legal | 3.4 | Las tablas están bien referenciadas, pero `165` offsets unresolved debilitan trazabilidad. |
+| Integridad de formato | 2.5 | Hay normalización/compactación que impide resolver offsets en muchos casos. |
 
 ### Veredicto
 
-`semantic_chunking` puro no debe usarse como salida final para vector store. Puede servir como componente interno o experimento, pero necesita restricciones estructurales.
+`semantic_chunking` puro **no se recomienda** como estrategia final. Aunque las tablas ya están correctamente asignadas, falla en control de tamaño y trazabilidad exacta.
 
 ---
 
-## Método 3: `regex_constrained_semantic`
+## Child method 3: `regex_constrained_semantic`
+Archivo evaluado:
+
+```text
+data/processed/chunks/regex_constrained_semantic/chunks.jsonl
+```
 
 ### Configuración detectada
 
 ```text
-path: data/processed/chunks/regex_constrained_semantic/chunks.jsonl
-strategy: regex_constrained_semantic
-backend: custom_regex_constrained_semantic
 embedding_model: Qwen/Qwen3-Embedding-0.6B
 threshold_type: gradient
-threshold_amount: 95
-split_reason: semantic_breakpoint_with_regex_constraints
 ```
 
-### Métricas
+### Métricas de integridad
+
+| Validación | Resultado |
+|---|---:|
+| Chunks | 330 |
+| Parents cubiertos | 138 / 138 |
+| Parent refs faltantes | 0 |
+| IDs duplicados | 0 |
+| Offsets inválidos | 0 |
+| Mismatches texto/offset contra parent | 0 |
+| Offsets resueltos exactos | 330 / 330 |
+| Offsets unresolved | 0 |
+
+### Métricas de tamaño
 
 ```text
-chunks: 361
-parents cubiertos: 201 / 201
-IDs duplicados: 0
-parent refs faltantes: 0
-mismatches texto/offset contra parent: 0
-
-avg tokens: 208.91
+avg tokens: 228.57
 min tokens: 9
 max tokens: 350
-p50: 210.0
-p75: 291.0
-p90: 328.0
-p95: 337.0
-
-<30 tokens: 1 / 361 = 0.28%
-<40 tokens: 6 / 361 = 1.66%
-<50 tokens: 8 / 361 = 2.22%
->350 tokens: 0
->500 tokens: 0
->650 tokens: 0
-unresolved offsets: 0
-resolved offsets: 361 / 361 = 100%
+p50: 249.5
+p75: 305
+p90: 331
+p95: 338
 ```
 
-### Evaluación por dimensión
+| Bucket crítico | Count |
+|---|---:|
+| `<30` | 3 |
+| `<40` | 7 |
+| `<50` | 10 |
+| `>350` | 0 |
+| `>500` | 0 |
+| `>650` | 0 |
 
-| Dimensión | Puntaje | Análisis |
+### Referencias de tablas
+
+| Validación | Resultado |
+|---|---:|
+| Chunks con placeholder | 9 |
+| Chunks con `metadata.chunk.tables` | 9 |
+| Referencias totales | 10 |
+| Referencias HTML faltantes | 0 |
+| Refs sin placeholder propio | 0 |
+| Campos de ruta persistidos | 0 |
+| Metadata con shape incorrecto | 0 |
+
+### Evaluación cualitativa
+
+| Dimensión | Score | Análisis |
 |---|---:|---|
-| Cohesión semántica | 4.7 | Los chunks tienden a preservar unidades legales completas o subunidades razonables. Corrige la mayoría de numerales huérfanos y outliers. |
-| Densidad informativa | 4.6 | Casi no hay microchunks y no hay chunks excesivamente largos. El promedio es alto, pero aceptable para normatividad legal porque preserva contexto. |
-| Anclaje estructural | 5.0 | Todos los offsets están resueltos y los cortes respetan mejor estructura legal. Es el método más trazable. |
-| Integridad de formato | 4.9 | Conserva Markdown limpio, títulos y separación lógica. No se observaron fallos de formato relevantes. |
-
-### Hallazgos
-
-- Elimina completamente los outliers mayores a `350` tokens.
-- Elimina offsets unresolved.
-- Reduce casi a cero los microchunks.
-- Es más grande en promedio que `sliding_window`, pero ese aumento compra más contexto legal y mejor unidad normativa.
-- El único caso muy pequeño observado (`**RAFAEL PARDO RUEDA**`, 9 tokens) corresponde a firma o cierre documental; debería filtrarse o marcarse como contenido no indexable.
+| Cohesión semántica | 4.4 | Preserva mejor unidades legales y evita gran parte de la fragmentación mecánica. |
+| Densidad informativa | 4.3 | Controla máximos y minimiza microchunks. Promedio alto, pero adecuado para contexto legal. |
+| Anclaje estructural/legal | 4.6 | Offsets perfectos, tablas correctas y buena relación con parent legal. |
+| Integridad de formato | 4.8 | Markdown consistente, placeholders preservados y sin corrupción relevante. |
 
 ### Veredicto
 
-`regex_constrained_semantic` es el mejor candidato actual para indexación del corpus normativo SG-SST. Es el único método que equilibra trazabilidad, tamaño máximo controlado, densidad útil y respeto por estructura legal.
+`regex_constrained_semantic` es la **mejor estrategia actual** para vector store. Mantiene trazabilidad exacta, controla tamaño máximo y respeta mejor la estructura legal.
 
 ---
 
-## Recomendaciones de mejora
+## Cumplimiento del plan de referencias de tablas
 
-### 1. Usar `regex_constrained_semantic` como salida principal
-
-Debe ser la estrategia preferida para construir el vector store.
-
-### 2. Mantener `sliding_window` como baseline de evaluación
-
-Es útil para comparar recall/faithfulness porque tiene excelente estabilidad técnica.
-
-### 3. No indexar `semantic_chunking` puro como corpus final
-
-Debe descartarse como salida final mientras mantenga:
+Plan evaluado:
 
 ```text
-unresolved offsets: 46.54%
->500 tokens: 8.78%
-<50 tokens: 20.21%
+docs/decisiones/plan-referencias-tablas-en-chunks.md
 ```
 
-### 4. Filtrar o etiquetar chunks no sustantivos
+| Regla | Estado |
+|---|---|
+| Metadata mínima: `placeholder`, `table_index`, `source_stem` | Cumple |
+| No persistir `html_path`, `text_path`, `markdown_path` | Cumple |
+| Parents con tablas solo si contienen placeholder | Cumple |
+| Child chunks con tablas solo si su propio texto contiene placeholder | Cumple |
+| Referencias a HTML existentes | Cumple |
+| HTML huérfanos | 0 |
 
-Aplicar regla para firmas, nombres de ministros, notas de cierre o fragmentos sin valor normativo:
-
-```text
-indexable: false
-content_type: signature | provenance_note | preamble | normative_text
-```
-
-Ejemplo detectado:
-
-```text
-**RAFAEL PARDO RUEDA**
-```
-
-### 5. Enriquecer anclaje textual opcional
-
-Para chunks que empiezan en numeral o literal, considerar prefijar metadata contextual fuera del texto indexado o en campos separados:
-
-```text
-source_name
-article
-paragraph
-numeral
-parent_id
-```
-
-No conviene duplicar encabezados dentro del texto si eso infla embeddings; mejor conservarlo como metadata filtrable y como contexto de respuesta.
-
-### 6. Evaluar con consultas reales
-
-La decisión final debe validarse con preguntas SG-SST y métricas RAG:
-
-- context relevance
-- answer faithfulness
-- answer relevance
-- capacidad de citar fuente legal exacta
+La asignación de tablas queda correcta tanto en parents como en child chunks.
 
 ---
 
 ## Tabla comparativa final
 
-| Método | Chunks | Avg tokens | Max | <30 | <50 | >350 | >500 | Unresolved | Cohesión | Densidad | Anclaje | Formato | Puntaje global | Veredicto |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| `regex_constrained_semantic` | 361 | 208.91 | 350 | 0.28% | 2.22% | 0% | 0% | 0% | 4.7 | 4.6 | 5.0 | 4.9 | 4.8 | Mejor candidato para vector store. |
-| `sliding_window` | 432 | 181.73 | 323 | 0.23% | 2.08% | 0% | 0% | 0% | 4.2 | 4.8 | 4.2 | 4.9 | 4.5 | Baseline técnico fuerte. |
-| `semantic_chunking` | 376 | 200.95 | 1581 | 11.44% | 20.21% | 14.89% | 8.78% | 46.54% | 2.4 | 2.2 | 2.5 | 4.7 | 3.0 | No recomendado como salida final. |
-
-## Ranking actual
-
-1. `regex_constrained_semantic`
-2. `sliding_window`
-3. `semantic_chunking`
-
-## Conclusión
-
-Para un vector store legal de SG-SST, la prioridad no es solo reducir tokens. La prioridad es recuperar unidades normativas completas, trazables y sin ruido. Bajo ese criterio, `regex_constrained_semantic` es la mejor salida actual: mantiene offsets perfectos, evita outliers, reduce microchunks y preserva mejor la estructura legal colombiana.
+| Método | Chunks | Avg | Max | `<30` | `<50` | `>350` | `>500` | Unresolved | Tablas OK | Cohesión | Densidad | Anclaje | Formato | Veredicto |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|
+| `parents` | 138 | 546.64 | 2376 | n/a | 0 | 95 | 56 | 0 | Sí | 4.1 | 3.4 | 4.6 | 4.5 | Contenedor fuente, no retrieval directo. |
+| `regex_constrained_semantic` | 330 | 228.57 | 350 | 3 | 10 | 0 | 0 | 0 | Sí | 4.4 | 4.3 | 4.6 | 4.8 | Mejor candidato para vector store. |
+| `sliding_window` | 417 | 190.2 | 323 | 2 | 9 | 0 | 0 | 0 | Sí | 3.4 | 3.8 | 4.2 | 4.5 | Baseline técnico fuerte. |
+| `semantic_chunking` | 282 | 267.96 | 1581 | 20 | 39 | 70 | 41 | 165 | Sí | 3.0 | 2.8 | 3.4 | 2.5 | No recomendado como salida final. |

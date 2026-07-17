@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_MIN_TOKENS
+from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_MIN_TOKENS, DEFAULT_TABLES_ROOT
 from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     build_child_chunk,
@@ -13,6 +13,7 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count, token_offsets
+from pipeline.tables.table_references import validate_table_html_references
 
 REGEX_CONSTRAINED_SEMANTIC_BACKEND = "custom_regex_constrained_semantic"
 REGEX_CONSTRAINED_SEMANTIC_SPLIT_REASON = "semantic_breakpoint_with_regex_constraints"
@@ -50,6 +51,7 @@ def write_regex_constrained_semantic_child_output(
     embedding_model: str = DEFAULT_EMBEDDING_MODEL, 
     min_tokens: int = DEFAULT_MIN_TOKENS,   
     max_tokens: int = DEFAULT_MAX_TOKENS,
+    tables_root: Path = DEFAULT_TABLES_ROOT,
 ) -> ChildBuildResult:
     """Read parent chunks, write regex-constrained semantic children, and return a summary."""
 
@@ -72,6 +74,7 @@ def write_regex_constrained_semantic_child_output(
         min_tokens,
         max_tokens,
     )
+    validate_table_html_references(children, tables_root)
     write_child_chunks(children, output_path)
     return ChildBuildResult(parent_count=len(parents), chunk_count=len(children), output_path=output_path)
 

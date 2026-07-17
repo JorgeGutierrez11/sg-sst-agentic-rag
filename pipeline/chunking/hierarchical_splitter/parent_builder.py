@@ -4,9 +4,9 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from pipeline.chunking.core.config import is_generated_output_path
+from pipeline.chunking.core.config import DEFAULT_TABLES_ROOT, is_generated_output_path
 from pipeline.chunking.core.io_jsonl import write_parent_chunks
-from pipeline.chunking.hierarchical_splitter.models import JsonDict, ParentChunk, SourceDocument
+from pipeline.chunking.hierarchical_splitter.models import JsonDict, ParentBuildResult, ParentChunk, SourceDocument
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count
 from pipeline.chunking.structural_analysis.boundaries import BoundaryMatch, find_article_boundaries
 from pipeline.chunking.structural_analysis.metadata_infer import (
@@ -14,12 +14,17 @@ from pipeline.chunking.structural_analysis.metadata_infer import (
     inherited_metadata_for_parent,
     load_source_manifest,
 )
-from pipeline.chunking.hierarchical_splitter.models import ParentBuildResult
+from pipeline.tables.table_references import table_references_for_text, validate_table_html_references
+
+# Configuración local
 
 SMALL_PARENT_TOKEN_THRESHOLD = 250
 MAX_GROUPED_PARENT_TOKENS = 1500
 
 ParentSpan = tuple[int, int, BoundaryMatch | None]
+
+
+# Descubrimiento de fuentes
 
 def discover_markdown_sources(input_dir: Path) -> list[Path]:
     """Discover cleaned Markdown files while excluding generated chunk outputs."""
@@ -34,6 +39,8 @@ def discover_markdown_sources(input_dir: Path) -> list[Path]:
         and not _is_hidden_path(path.relative_to(input_dir))
     )
 
+
+# Orquestación de construcción
 
 def build_parent_chunks(input_dir: Path, manifest_path: Path) -> list[ParentChunk]:
     """Build parent chunks for every discovered Markdown source."""
@@ -72,15 +79,23 @@ def build_parent_chunks_for_document(
     ]
 
 
-def write_parent_chunk_output(input_dir: Path, output_path: Path, manifest_path: Path) -> ParentBuildResult:
+def write_parent_chunk_output(
+    input_dir: Path,
+    output_path: Path,
+    manifest_path: Path,
+    tables_root: Path = DEFAULT_TABLES_ROOT,
+) -> ParentBuildResult:
     """Build and write parent chunks to JSONL."""
 
     sources = discover_markdown_sources(input_dir)
     manifest = load_source_manifest(manifest_path)
     chunks = build_parent_chunks_from_sources(sources, manifest)
+    validate_table_html_references(chunks, tables_root)
     write_parent_chunks(chunks, output_path)
     return ParentBuildResult(source_count=len(sources), chunk_count=len(chunks), output_path=output_path)
 
+
+# Cálculo de spans por artículo
 
 def article_spans(text: str, boundaries: list[BoundaryMatch]) -> list[ParentSpan]:
     """Return start/end spans split by legal article boundaries."""
@@ -96,6 +111,8 @@ def article_spans(text: str, boundaries: list[BoundaryMatch]) -> list[ParentSpan
         spans.append((start_char, end_char, boundary))
     return spans
 
+
+# Agrupación de artículos pequeños
 
 def group_small_article_spans(text: str, spans: list[ParentSpan]) -> list[ParentSpan]:
     """Group consecutive article spans when the current parent would be too small."""
@@ -163,6 +180,8 @@ def merge_trailing_small_article_span(text: str, grouped_spans: list[ParentSpan]
     return spans
 
 
+# Creación de parent chunks
+
 def create_parent_chunk(
     source_path: Path,
     source_document: SourceDocument,
@@ -186,6 +205,9 @@ def create_parent_chunk(
         "split_reason": chunk_split_reason(end_char, boundary, boundaries),
         "parent_index": parent_index,
     }
+    table_refs = table_references_for_text(text, source_document.source_stem)
+    if table_refs:
+        chunk_metadata["tables"] = table_refs
     if strategy == "parent_document_preamble":
         chunk_metadata["section_type"] = "preamble"
         chunk_metadata["indexable"] = False
@@ -201,6 +223,8 @@ def create_parent_chunk(
         metadata={"inherited": inherited_metadata, "chunk": chunk_metadata},
     )
 
+
+# Metadata y trazabilidad
 
 def add_grouped_article_traceability(
     metadata: JsonDict,
@@ -220,6 +244,8 @@ def add_grouped_article_traceability(
     hierarchy = metadata.setdefault("hierarchy", {})
     hierarchy["articles"] = article_values
 
+
+# Estrategias e identificadores
 
 def chunk_strategy(end_char: int, boundary: BoundaryMatch | None, boundaries: list[BoundaryMatch]) -> str:
     """Return the parent chunking strategy label for a span."""
@@ -254,6 +280,8 @@ def stable_parent_chunk_id(source_document_id: str, parent_index: int, text: str
     digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:10]
     return f"parent-{source_document_id}-{parent_index:04d}-{digest}"
 
+
+# Helpers internos
 
 def _is_hidden_path(path: Path) -> bool:
     return any(part.startswith(".") for part in path.parts)

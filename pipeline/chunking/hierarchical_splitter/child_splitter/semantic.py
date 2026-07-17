@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_TABLES_ROOT
 from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SEMANTIC_BACKEND,
@@ -13,6 +13,7 @@ from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     next_child_start,
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
+from pipeline.tables.table_references import validate_table_html_references
 
 # pyrefly: ignore [missing-import]
 from langchain_experimental.text_splitter import SemanticChunker
@@ -27,6 +28,7 @@ def write_semantic_child_output(
     breakpoint_threshold_type: str,         # Tipo de umbral de breakpoint
     breakpoint_threshold_amount: float,     # Cantidad de umbral de breakpoint
     embedding_model: str = DEFAULT_EMBEDDING_MODEL,
+    tables_root: Path = DEFAULT_TABLES_ROOT,
 ) -> ChildBuildResult:
     """Read parent chunks, write semantic child chunks, and return a summary."""
 
@@ -41,6 +43,7 @@ def write_semantic_child_output(
         breakpoint_threshold_amount,
         embedding_model,
     )
+    validate_table_html_references(children, tables_root)
     write_child_chunks(children, output_path)
     return ChildBuildResult(
         parent_count=len(parents),

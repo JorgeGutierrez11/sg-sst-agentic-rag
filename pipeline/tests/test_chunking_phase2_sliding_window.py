@@ -6,10 +6,12 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from pipeline.chunking.core.cli import build_parser, main
 from pipeline.chunking.core.io_jsonl import write_parent_chunks
-from pipeline.chunking.hierarchical_splitter.child_splitter.shared import child_offsets
+from pipeline.chunking.hierarchical_splitter.child_splitter.shared import build_child_chunk, child_offsets
+from pipeline.chunking.hierarchical_splitter.child_splitter.sliding_window import write_sliding_window_child_output
 from pipeline.chunking.hierarchical_splitter.models import ParentChunk
 
 
@@ -74,6 +76,63 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
 
         self.assertEqual(inherited["source_name"], "Decreto 1072 de 2015")
         self.assertEqual(inherited["hierarchy"]["article"], "2.2.4.6.8")
+
+    def test_child_with_table_placeholder_gets_minimal_table_metadata(self) -> None:
+        with patch_child_token_count():
+            child = build_child_chunk(
+                parent=make_parent_chunk(text="Texto previo. <!-- TABLE_0 --> Texto posterior."),
+                text="<!-- TABLE_0 -->",
+                chunk_index=0,
+                relative_start=14,
+                chunk_metadata={"strategy": "test_child"},
+            )
+
+        self.assertEqual(
+            child.metadata["chunk"]["tables"],
+            [
+                {
+                    "placeholder": "<!-- TABLE_0 -->",
+                    "table_index": 0,
+                    "source_stem": "decreto_1072",
+                }
+            ],
+        )
+
+    def test_child_without_placeholder_does_not_inherit_parent_table_metadata(self) -> None:
+        parent = make_parent_chunk(text="Texto con <!-- TABLE_0 --> y otro child sin tabla.")
+        parent.metadata["chunk"]["tables"] = [
+            {
+                "placeholder": "<!-- TABLE_0 -->",
+                "table_index": 0,
+                "source_stem": "decreto_1072",
+            }
+        ]
+
+        with patch_child_token_count():
+            child = build_child_chunk(
+                parent=parent,
+                text="otro child sin tabla.",
+                chunk_index=1,
+                relative_start=29,
+                chunk_metadata={"strategy": "test_child"},
+            )
+
+        self.assertNotIn("tables", child.metadata["chunk"])
+
+    def test_child_table_metadata_uses_parent_inherited_source_stem(self) -> None:
+        parent = make_parent_chunk(text="Texto <!-- TABLE_3 -->.")
+        parent.metadata["inherited"]["source_stem"] = "Resolución 0312 de 2019"
+
+        with patch_child_token_count():
+            child = build_child_chunk(
+                parent=parent,
+                text="<!-- TABLE_3 -->",
+                chunk_index=0,
+                relative_start=6,
+                chunk_metadata={"strategy": "test_child"},
+            )
+
+        self.assertEqual(child.metadata["chunk"]["tables"][0]["source_stem"], "Resolución 0312 de 2019")
 
     def test_children_offsets_stay_within_parent_and_match_exact_substrings(self) -> None:
         parent = make_parent_chunk(
@@ -150,9 +209,39 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             self.assertIn("error: Invalid parent chunk record", stderr.getvalue())
             self.assertNotIn("Traceback", stderr.getvalue())
 
+    def test_sliding_window_output_validates_child_table_references_before_write(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            input_path = workspace / "parents.jsonl"
+            output_path = workspace / "chunks.jsonl"
+            parent = make_parent_chunk(text="Texto previo. <!-- TABLE_0 --> Texto posterior.")
+            write_parent_chunks([parent], input_path)
+
+            with patch_child_token_count():
+                child = build_child_chunk(
+                    parent=parent,
+                    text="<!-- TABLE_0 -->",
+                    chunk_index=0,
+                    relative_start=14,
+                    chunk_metadata={"strategy": "sliding_window"},
+                )
+
+            with patch(
+                "pipeline.chunking.hierarchical_splitter.child_splitter.sliding_window.build_sliding_window_child_chunks",
+                return_value=[child],
+            ):
+                with self.assertRaisesRegex(ValueError, "Chunk references missing table file: .*table_0.html"):
+                    write_sliding_window_child_output(input_path, output_path, 32, 8, tables_root=workspace / "tables")
+
+            self.assertFalse(output_path.exists())
+
 
 def build_one_parent_fixture(workspace: Path) -> Path:
     return build_parent_fixture(workspace, make_parent_chunk())
+
+
+def patch_child_token_count():
+    return patch("pipeline.chunking.hierarchical_splitter.child_splitter.shared.estimate_token_count", return_value=3)
 
 
 def build_parent_fixture(workspace: Path, parent: ParentChunk) -> Path:

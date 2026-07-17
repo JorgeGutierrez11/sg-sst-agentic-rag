@@ -8,12 +8,14 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
+from pipeline.chunking.core import config
 from pipeline.chunking.core.cli import build_parser, main
 from pipeline.chunking.hierarchical_splitter.parent_builder import (
     build_parent_chunks_for_document,
     discover_markdown_sources,
     stable_parent_chunk_id,
 )
+from pipeline.chunking.hierarchical_splitter.models import SourceDocument
 from pipeline.chunking.structural_analysis.boundaries import extract_first_boundary_value, iter_boundary_matches
 from pipeline.chunking.structural_analysis.metadata_infer import build_source_document
 
@@ -218,6 +220,22 @@ class ChunkingPhase1CLITest(unittest.TestCase):
 
         self.assertEqual(sources, [visible_source])
 
+    def test_generated_table_markdown_is_not_discovered_as_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_dir = Path(temp_dir) / "processed"
+            table_markdown_dir = input_dir / "tables_markdown" / "norma"
+            input_dir.mkdir()
+            table_markdown_dir.mkdir(parents=True)
+            visible_source = input_dir / "norma.md"
+            generated_table = table_markdown_dir / "table_0.md"
+            visible_source.write_text("Artículo 1. Texto.\n", encoding="utf-8")
+            generated_table.write_text("| A |\n|---|\n", encoding="utf-8")
+
+            with patch.object(config, "GENERATED_OUTPUT_DIRS", (input_dir / "tables_markdown",)):
+                sources = discover_markdown_sources(input_dir)
+
+        self.assertEqual(sources, [visible_source])
+
     def test_parent_id_digest_is_stable_when_same_text_moves_offsets(self) -> None:
         first_id = stable_parent_chunk_id("doc-1", 0, "Artículo 1. Texto estable.")
         moved_id = stable_parent_chunk_id("doc-1", 0, "Artículo 1. Texto estable.")
@@ -383,6 +401,59 @@ class ChunkingPhase1CLITest(unittest.TestCase):
         self.assertTrue(forbidden_keys.isdisjoint(chunks[0].metadata["chunk"]))
         self.assertTrue(forbidden_keys.isdisjoint(chunks[0].metadata["inherited"]))
         self.assertTrue(forbidden_keys.isdisjoint(chunks[0].metadata["inherited"]["hierarchy"]))
+
+    def test_parent_with_table_placeholder_adds_minimal_table_metadata(self) -> None:
+        text = "Artículo 1. Tabla de estándares.\nTexto previo.\n<!-- TABLE_0 -->\nTexto posterior.\n"
+        source_path = Path("resolucion_0312.md")
+        source_document = build_source_document(source_path, text, {})
+
+        with patch(
+            "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
+            side_effect=count_words,
+        ):
+            chunks = build_parent_chunks_for_document(source_path, text, source_document)
+
+        self.assertEqual(
+            chunks[0].metadata["chunk"]["tables"],
+            [
+                {
+                    "placeholder": "<!-- TABLE_0 -->",
+                    "table_index": 0,
+                    "source_stem": "resolucion_0312",
+                }
+            ],
+        )
+
+    def test_parent_without_table_placeholder_does_not_add_tables_metadata(self) -> None:
+        text = "Artículo 1. Texto sin tablas.\nContenido completo.\n"
+        source_path = Path("decreto_1072.md")
+        source_document = build_source_document(source_path, text, {})
+
+        with patch(
+            "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
+            side_effect=count_words,
+        ):
+            chunks = build_parent_chunks_for_document(source_path, text, source_document)
+
+        self.assertNotIn("tables", chunks[0].metadata["chunk"])
+
+    def test_parent_table_metadata_uses_source_document_stem(self) -> None:
+        text = "Artículo 1. Tabla.\n<!-- TABLE_0 -->\n"
+        source_path = Path("fallback_name.md")
+        source_document = SourceDocument(
+            document_id="doc-1",
+            source_stem="Resolución 0312 de 2019",
+            source_path=str(source_path),
+            source_name="fallback_name",
+        )
+
+        with patch(
+            "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
+            side_effect=count_words,
+        ):
+            chunks = build_parent_chunks_for_document(source_path, text, source_document)
+
+        self.assertEqual(chunks[0].metadata["chunk"]["tables"][0]["source_stem"], "Resolución 0312 de 2019")
 
 
 if __name__ == "__main__":
