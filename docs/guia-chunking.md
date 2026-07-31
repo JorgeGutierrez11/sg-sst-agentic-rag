@@ -1,6 +1,6 @@
 # Guía de uso del pipeline de chunking
 
-Esta guía explica cómo ejecutar el pipeline de chunking del corpus normativo SG-SST. El objetivo es convertir Markdown limpio en parent chunks, child chunks y documentos de tablas listos para evaluación o recuperación RAG.
+El objetivo es convertir Markdown limpio en parent chunks, child chunks y documentos de tablas listos para evaluación o recuperación RAG.
 
 ## Ruta rápida recomendada
 

@@ -104,25 +104,16 @@ Los gaps observados son de `2` caracteres, compatibles con separadores como `\n\
 | Refs de tabla sin placeholder propio | 0 |
 | Placeholders sin refs | 0 |
 
-La metadata cumple el plan: solo persiste `placeholder`, `table_index` y `source_stem`. No persiste rutas derivables como `html_path`, `text_path` o `markdown_path`.
-
 ### Evaluación cualitativa de parents
 
 | Dimensión | Score | Análisis |
 |---|---:|---|
-| Cohesión semántica | 4.1 | Conservan unidades legales completas o grupos de artículos. Buenos como fuente, no siempre como unidad fina de retrieval. |
-| Densidad informativa | 3.4 | Ya casi no hay parents pequeños, pero ahora hay muchos parents grandes: p75 `654.25`, p95 `1071.7`. |
-| Anclaje estructural/legal | 4.6 | Offsets exactos, IDs únicos y buen vínculo a fuente. Quedan `4` preámbulos con `hierarchy = {}`. |
-| Integridad de formato | 4.5 | Markdown generalmente limpio; conserva artículos, numerales, parágrafos y placeholders de tabla. |
+| **Cohesión semántica** | 4.1 | Conservan unidades legales completas o grupos de artículos. Buenos como fuente, no siempre como unidad fina de retrieval. |
+| **Densidad informativa** | 3.4 | Ya casi no hay parents pequeños, pero ahora hay muchos parents grandes: p75 `654.25`, p95 `1071.7`. |
+| **Anclaje estructural/legal** | 4.6 | Offsets exactos, IDs únicos y buen vínculo a fuente. Quedan `4` preámbulos con `hierarchy = {}`. |
+| **Integridad de formato** | 4.5 | Markdown generalmente limpio; conserva artículos, numerales, parágrafos y placeholders de tabla. |
 
-### Veredicto de parents
-
-Los parents están **aprobados como contenedores legales fuente**, pero **no deben usarse como unidad principal de retrieval**. Su tamaño actual confirma la arquitectura correcta:
-
-```text
-parent = contenedor legal trazable
-child = unidad optimizada para vector store
-```
+**Densidad Informativa | 3.4** : Aunque es un puntaje bajo, es adecuado para la capa Parent Chunk. La dimensión excede el óptimo para un retrieval directo, pero resulta ideal para retener contexto suficiente. 
 
 ---
 
@@ -186,7 +177,7 @@ Nota: hay más referencias que en parents porque el overlap de sliding windows p
 
 | Dimensión | Score | Análisis |
 |---|---:|---|
-| Cohesión semántica | 3.4 | Corta por ventana, no por unidad jurídica. Puede fragmentar obligaciones o agrupar partes de listas. |
+| Cohesión semántica | 3.4 | Corta por ventana. Puede fragmentar obligaciones o agrupar partes de listas. |
 | Densidad informativa | 3.8 | Tamaños muy controlados y casi sin microchunks, aunque el overlap puede duplicar contenido. |
 | Anclaje estructural/legal | 4.2 | Offsets perfectos y metadata consistente; el texto no siempre conserva encabezado legal cercano. |
 | Integridad de formato | 4.5 | Muy buena integridad técnica. Los cortes son mecánicos, no corruptos. |
