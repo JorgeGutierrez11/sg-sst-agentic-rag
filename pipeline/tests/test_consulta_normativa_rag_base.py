@@ -38,7 +38,7 @@ class ConsultaNormativaRagBaseTest(unittest.TestCase):
         self.assertEqual(result.answer, "Respuesta generada desde contexto recuperado.")
         self.assertIn("El SG-SST debe implementarse", result.context)
         self.assertIn("Answer only with the recovered context", captured_prompt)
-        self.assertEqual(result.references, ["Decreto 1072 de 2015, article 2.2.4.6.1 (child_chunk)"])
+        self.assertEqual(result.references, ["Decreto 1072 de 2015, artículo 2.2.4.6.1 (child_chunk)"])
 
     def test_fallback_is_deterministic_without_generator(self) -> None:
         def fake_retriever(question: str, top_k: int) -> dict[str, object]:
@@ -50,7 +50,7 @@ class ConsultaNormativaRagBaseTest(unittest.TestCase):
 
         result = answer_question("Pregunta", fake_retriever)
 
-        self.assertIn("Grounded draft based only on recovered context", result.answer)
+        self.assertIn("Borrador fundamentado solo en el contexto recuperado", result.answer)
         self.assertIn("Resolución 0312 de 2019 (table)", result.answer)
 
     def test_empty_retrieval_reports_insufficient_evidence(self) -> None:
@@ -63,7 +63,7 @@ class ConsultaNormativaRagBaseTest(unittest.TestCase):
             unexpected_generator,
         )
 
-        self.assertEqual(result.answer, "Recovered evidence is insufficient to answer the question.")
+        self.assertEqual(result.answer, "La evidencia recuperada es insuficiente para responder la pregunta.")
         self.assertEqual(result.references, [])
 
     def test_chroma_retriever_uses_expected_query_shape(self) -> None:

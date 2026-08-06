@@ -50,8 +50,8 @@ class ConsultaNormativaCliTest(unittest.TestCase):
     def test_ask_opens_collection_uses_retriever_answer_flow_and_prints_sections(self) -> None:
         calls: dict[str, object] = {}
 
-        def fake_open_collection(chroma_path: object, collection_name: str) -> object:
-            calls["open_collection"] = (chroma_path, collection_name)
+        def fake_open_existing_collection(chroma_path: object, collection_name: str) -> object:
+            calls["open_existing_collection"] = (chroma_path, collection_name)
             return "collection"
 
         def fake_chroma_retriever(collection: object) -> object:
@@ -65,7 +65,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
         dependencies = cli.RagDependencies(
             answer_question=fake_answer_question,
             chroma_retriever=fake_chroma_retriever,
-            open_collection=fake_open_collection,
+            open_existing_collection=fake_open_existing_collection,
             chroma_path="data/processed/chroma",
             collection_name="sg_sst_base_rag",
         )
@@ -80,19 +80,19 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             exit_code = cli.main(["ask", "¿Qué debe incluir el plan anual?"])
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(calls["open_collection"], ("data/processed/chroma", "sg_sst_base_rag"))
+        self.assertEqual(calls["open_existing_collection"], ("data/processed/chroma", "sg_sst_base_rag"))
         self.assertEqual(calls["chroma_retriever"], "collection")
         self.assertEqual(
             calls["answer_question"],
             ("¿Qué debe incluir el plan anual?", "retriever", {"generator": fake_generator, "top_k": 5}),
         )
-        self.assertEqual(stdout.getvalue(), "Answer:\nGenerated answer.\n\nReferences:\n- Decreto 1072 (child_chunk)\n")
+        self.assertEqual(stdout.getvalue(), "Respuesta:\nGenerated answer.\n\nReferencias:\n- Decreto 1072 (child_chunk)\n")
 
     def test_ask_empty_retrieval_returns_insufficient_evidence_without_building_groq(self) -> None:
         dependencies = cli.RagDependencies(
             answer_question=answer_question,
             chroma_retriever=lambda collection: lambda question, top_k: {"documents": [[]], "metadatas": [[]]},
-            open_collection=lambda chroma_path, collection_name: object(),
+            open_existing_collection=lambda chroma_path, collection_name: object(),
             chroma_path="data/processed/chroma",
             collection_name="sg_sst_base_rag",
         )
@@ -106,7 +106,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(
             stdout.getvalue(),
-            "Answer:\nRecovered evidence is insufficient to answer the question.\n\nReferences:\n",
+            "Respuesta:\nLa evidencia recuperada es insuficiente para responder la pregunta.\n\nReferencias:\n",
         )
 
     def test_missing_groq_api_key_returns_controlled_error_without_traceback(self) -> None:
@@ -117,7 +117,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
                 "documents": [["Recovered context."]],
                 "metadatas": [[{"source_stem": "Decreto 1072", "document_type": "child_chunk"}]],
             },
-            open_collection=lambda chroma_path, collection_name: object(),
+            open_existing_collection=lambda chroma_path, collection_name: object(),
             chroma_path="data/processed/chroma",
             collection_name="sg_sst_base_rag",
         )
@@ -139,7 +139,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
                 "documents": [["Recovered context."]],
                 "metadatas": [[{"source_stem": "Decreto 1072", "document_type": "child_chunk"}]],
             },
-            open_collection=lambda chroma_path, collection_name: object(),
+            open_existing_collection=lambda chroma_path, collection_name: object(),
             chroma_path="data/processed/chroma",
             collection_name="sg_sst_base_rag",
         )
@@ -177,7 +177,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
                 "documents": [["Recovered context."]],
                 "metadatas": [[{"source_stem": "Decreto 1072", "document_type": "child_chunk"}]],
             },
-            open_collection=lambda chroma_path, collection_name: object(),
+            open_existing_collection=lambda chroma_path, collection_name: object(),
             chroma_path="data/processed/chroma",
             collection_name="sg_sst_base_rag",
         )

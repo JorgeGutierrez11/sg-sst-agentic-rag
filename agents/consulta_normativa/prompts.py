@@ -2,6 +2,7 @@
 
 
 BASE_SYSTEM_INSTRUCTIONS = """You are an SG-SST normative consultation assistant.
+Write the final answer in Spanish.
 Answer only with the recovered context provided below.
 If the context is insufficient, say that the recovered evidence is insufficient.
 Do not add legal sources, obligations, or recommendations that are not supported by the context.
@@ -13,10 +14,10 @@ def build_base_prompt(question: str, context: str) -> str:
 
     return f"""{BASE_SYSTEM_INSTRUCTIONS}
 
-    Recovered context:
-    {context}
+Recovered context:
+{context}
 
-    Question:
-    {question}
+Question:
+{question}
 
-    Grounded answer:"""
+Grounded answer:"""
