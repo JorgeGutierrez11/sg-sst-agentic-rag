@@ -7,21 +7,35 @@ Esta guía explica cómo convertir los artefactos del chunking en una colección
 Desde la raíz del proyecto:
 
 ```bash
-python -m pipeline.vectorization.main
+# Si cambió data/processed/table_documents.jsonl, regenéralo antes de vectorizar.
+python -m pipeline.chunking.main build-table-documents
+
+python -m pipeline.vectorization.main --batch-size 8
 export GROQ_API_KEY="tu_api_key"
 python -m agents.consulta_normativa.main ask "¿Qué debe incluir el plan anual de trabajo del SG-SST?"
 ```
 
-El primer comando indexa child chunks y documentos de tablas en ChromaDB. El segundo consulta la colección ya indexada usando el agente RAG base.
+El primer comando reconstruye los documentos vectorizables de tablas. El segundo indexa child chunks y documentos de tablas en ChromaDB. El tercero consulta la colección ya indexada usando el agente RAG base.
+
+Vista previa opcional de tablas, útil para inspección manual antes de vectorizar:
+
+```bash
+python -m pipeline.tables.table_jsonl_to_html
+```
 
 ## Entradas y salidas
 
 | Elemento | Ruta por defecto | Uso |
 |---|---|---|
 | Child chunks recomendados | `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` | Corpus normativo principal. |
-| Documentos vector-ready de tablas | `data/processed/table_documents.jsonl` | Tablas convertidas a documentos indexables. |
+| Markdown derivado de tablas | `data/processed/tables_markdown` | Lista de tablas disponibles y ruta lógica por documento. |
+| HTML estructural de tablas | `data/interim/tables` | Fuente preferida para reconstruir filas y celdas cuando existe. |
+| Documentos vector-ready de tablas | `data/processed/table_documents.jsonl` | Tablas convertidas a documentos indexables desde HTML o fallback Markdown. |
+| Vista previa HTML de tablas | `data/processed/tables_htlm` | Archivos de inspección generados desde `table_documents.jsonl`. |
 | Base ChromaDB persistente | `data/processed/chroma` | Almacén vectorial local. |
 | Colección ChromaDB | `sg_sst_base_rag` | Colección usada por ingesta y consulta. |
+
+> Nota: `tables_htlm` conserva el nombre real del directorio implementado actualmente.
 
 ## Modelo de embeddings
 
@@ -47,10 +61,32 @@ mediante `SentenceTransformerEmbeddingFunction` de Chroma.
 
 ## Ingesta vectorial
 
+### 1. Regenerar documentos de tablas cuando cambie el JSONL
+
+```bash
+python -m pipeline.chunking.main build-table-documents \
+  --markdown-root data/processed/tables_markdown \
+  --output-path data/processed/table_documents.jsonl
+```
+
+Este comando descubre `table_*.md` bajo `data/processed/tables_markdown`, pero la fuente estructural preferida es el HTML correspondiente bajo `data/interim/tables`. Si no hay HTML disponible, usa el Markdown como fallback.
+
+### 2. Vista previa opcional
+
+```bash
+python -m pipeline.tables.table_jsonl_to_html \
+  --input-path data/processed/table_documents.jsonl \
+  --output-dir data/processed/tables_htlm
+```
+
+Genera un `index.html` y un HTML por registro de tabla para revisar contenido, partes y metadata antes de indexar.
+
+### 3. Vectorizar en ChromaDB
+
 Comando base:
 
 ```bash
-python -m pipeline.vectorization.main
+python -m pipeline.vectorization.main --batch-size 8
 ```
 
 Parámetros opcionales:
@@ -60,8 +96,11 @@ python -m pipeline.vectorization.main \
   --chunks-path data/processed/chunks/regex_constrained_semantic/chunks.jsonl \
   --tables-path data/processed/table_documents.jsonl \
   --persist-path data/processed/chroma \
-  --collection sg_sst_base_rag
+  --collection sg_sst_base_rag \
+  --batch-size 8
 ```
+
+`--batch-size` controla cuántos documentos se envían por lote a Chroma. Un valor mayor puede acelerar la ingesta, pero consume más RAM porque agrupa más textos y embeddings en cada operación. Si el equipo se queda sin memoria, baja el valor; el valor por defecto actual es `8`.
 
 La ingesta realiza este flujo:
 
@@ -76,6 +115,10 @@ table documents JSONL
 ```
 
 La ingesta falla de forma controlada si faltan los JSONL de entrada. Esto evita crear una colección vacía por accidente.
+
+### Reset/rebuild de Chroma
+
+La ingesta usa `upsert`: actualiza o inserta registros con el mismo `id`, pero no elimina de Chroma documentos que ya no existan en los JSONL fuente. Si cambiaste `chunks.jsonl` o `table_documents.jsonl` y quieres una reconstrucción limpia, elimina o mueve `data/processed/chroma` antes de volver a ejecutar la vectorización.
 
 ## Metadata indexada
 
@@ -122,12 +165,37 @@ Metadata principal:
   "document_type": "table",
   "source_stem": "Resolución 0312 de 2019",
   "table_index": 0,
+  "table_part_index": 0,
+  "table_part_count": 1,
   "table_key": "Resolución 0312 de 2019:0",
-  "linked_placeholder": "<!-- TABLE_0 -->"
+  "linked_placeholder": "<!-- TABLE_0 -->",
+  "oversized_row": false
 }
 ```
 
-No se guardan rutas físicas dentro de ChromaDB. La relación tabla-chunk se conserva mediante claves lógicas como `source_stem:table_index`.
+No se guardan rutas físicas dentro de ChromaDB. La relación tabla-chunk se conserva mediante claves lógicas como `source_stem:table_index`. Cuando una tabla grande se divide, todos los registros comparten `table_key` y se diferencian por `table_part_index`.
+
+## Generación de `table_documents.jsonl`
+
+El JSONL de tablas no es una copia directa de `data/processed/tables_markdown/*.md`.
+
+Flujo actual:
+
+```txt
+data/processed/tables_markdown/*/table_*.md
+  → descubre documentos y table_index
+  → busca HTML equivalente en data/interim/tables
+  → parsea filas/celdas desde HTML cuando existe
+  → genera texto tipo Markdown en table_documents.jsonl
+```
+
+Reglas importantes:
+
+- `colspan` se expande horizontalmente repitiendo el texto de la celda, para conservar encabezados semánticos.
+- Las tablas grandes sin `rowspan` se dividen en varios registros: `part-0000`, `part-0001`, etc.
+- Las tablas con `rowspan` se mantienen en un solo registro para no perder contexto vertical heredado.
+- El campo JSONL `text` es texto tipo Markdown generado desde HTML; no es HTML crudo y no necesariamente coincide con el `.md` en `tables_markdown`.
+- Las estructuras complejas con `rowspan` quedan simplificadas: se evita partirlas, pero no se reconstruye plenamente la herencia vertical de celdas.
 
 ## Consulta del RAG base
 
@@ -204,6 +272,10 @@ Referencias:
 | `pipeline/vectorization/chroma_store.py` | Abre colecciones ChromaDB, configura embeddings Qwen y ejecuta upsert/query. |
 | `pipeline/vectorization/ingest.py` | Orquesta la ingesta vectorial y reporta conteos. |
 | `pipeline/vectorization/main.py` | CLI central de ingesta vectorial. |
+| `pipeline/tables/table_documents.py` | Construye `table_documents.jsonl` desde tablas Markdown/HTML y metadata de partes. |
+| `pipeline/tables/table_jsonl_to_html.py` | Genera HTML de vista previa para inspeccionar registros de tablas. |
+| `pipeline/chunking/main.py` | Entrypoint recomendado para comandos de chunking, incluido `build-table-documents`. |
+| `pipeline/chunking/core/cli.py` | Define la CLI interna usada por `pipeline.chunking.main`. |
 | `agents/consulta_normativa/main.py` | CLI `ask` para consultar el RAG base. |
 | `agents/consulta_normativa/rag_base.py` | Flujo base: recuperar, construir contexto, generar respuesta y referencias. |
 | `agents/consulta_normativa/prompts.py` | Prompt base del RAG. |
@@ -214,6 +286,7 @@ Ejecuta pruebas enfocadas:
 
 ```bash
 python -m unittest \
+  pipeline.tests.test_table_documents \
   pipeline.tests.test_vectorization_documents \
   pipeline.tests.test_vectorization_chroma_store \
   pipeline.tests.test_consulta_normativa_cli \
@@ -223,7 +296,7 @@ python -m unittest \
 Compila los módulos principales:
 
 ```bash
-python -m compileall pipeline/vectorization agents/consulta_normativa
+python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa
 ```
 
 ## Errores comunes

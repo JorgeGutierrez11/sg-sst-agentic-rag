@@ -59,23 +59,48 @@ class VectorizationDocumentsTest(unittest.TestCase):
 
     def test_table_document_metadata_uses_logical_table_key(self) -> None:
         record = {
+            "id": "table-resolucion-0312-de-2019-0-part-0001",
+            "text": "| Ítem | Criterio |\n|---|---|",
+            "metadata": {
+                "type": "table",
+                "source_stem": "Resolución 0312 de 2019",
+                "table_index": 0,
+                "table_part_index": 1,
+                "table_part_count": 3,
+                "table_key": "Resolución 0312 de 2019:0",
+                "linked_placeholder": "<!-- TABLE_0 -->",
+                "oversized_row": False,
+            },
+        }
+
+        chroma_record = table_document_to_chroma(record)
+
+        self.assertEqual(chroma_record.id, "table-resolucion-0312-de-2019-0-part-0001")
+        self.assertEqual(chroma_record.metadata["document_type"], "table")
+        self.assertEqual(chroma_record.metadata["table_key"], "Resolución 0312 de 2019:0")
+        self.assertEqual(chroma_record.metadata["table_part_index"], 1)
+        self.assertEqual(chroma_record.metadata["table_part_count"], 3)
+        self.assertEqual(chroma_record.metadata["linked_placeholder"], "<!-- TABLE_0 -->")
+        self.assertEqual(chroma_record.metadata["oversized_row"], False)
+        self.assert_metadata_is_flat(chroma_record.metadata)
+
+    def test_table_document_metadata_defaults_part_fields_for_legacy_records(self) -> None:
+        record = {
             "id": "table-resolucion-0312-de-2019-0",
             "text": "| Ítem | Criterio |\n|---|---|",
             "metadata": {
                 "type": "table",
                 "source_stem": "Resolución 0312 de 2019",
                 "table_index": 0,
-                "linked_placeholder": "<!-- TABLE_0 -->",
             },
         }
 
         chroma_record = table_document_to_chroma(record)
 
-        self.assertEqual(chroma_record.id, "table-resolucion-0312-de-2019-0")
-        self.assertEqual(chroma_record.metadata["document_type"], "table")
         self.assertEqual(chroma_record.metadata["table_key"], "Resolución 0312 de 2019:0")
-        self.assertEqual(chroma_record.metadata["linked_placeholder"], "<!-- TABLE_0 -->")
-        self.assert_metadata_is_flat(chroma_record.metadata)
+        self.assertEqual(chroma_record.metadata["table_part_index"], 0)
+        self.assertEqual(chroma_record.metadata["table_part_count"], 1)
+        self.assertEqual(chroma_record.metadata["oversized_row"], False)
 
     def test_blank_text_with_id_raises_controlled_error(self) -> None:
         with self.assertRaisesRegex(ValueError, "empty text"):

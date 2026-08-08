@@ -21,6 +21,22 @@ class OperationalError(Exception):
     """Controlled error for missing runtime dependencies or configuration."""
 
 
+class DependencyLoadError(OperationalError):
+    """Controlled error raised when CLI runtime dependencies cannot be loaded."""
+
+
+class GeneratorBuildError(OperationalError):
+    """Controlled error raised when the default LLM generator cannot be built."""
+
+
+class CollectionOpenError(OperationalError):
+    """Controlled error raised when the Chroma collection cannot be opened."""
+
+
+class RagExecutionError(OperationalError):
+    """Controlled error raised when retrieval or generation fails."""
+
+
 @dataclass(frozen=True)
 class RagDependencies:
     """Runtime dependencies for the CLI ask flow."""
@@ -36,7 +52,7 @@ def build_default_generator() -> Generator:
     """Return the default Groq-backed generator for the base RAG."""
 
     if not os.environ.get("GROQ_API_KEY"):
-        raise OperationalError("GROQ_API_KEY is not configured in the environment.")
+        raise GeneratorBuildError("GROQ_API_KEY is not configured in the environment.")
 
     try:
         # pyrefly: ignore [missing-import]
@@ -47,9 +63,9 @@ def build_default_generator() -> Generator:
             temperature=DEFAULT_TEMPERATURE
         )
     except ModuleNotFoundError as error:
-        raise OperationalError("langchain_groq is not installed.") from error
+        raise GeneratorBuildError(f"langchain_groq is not installed: {error}") from error
     except Exception as error:  # noqa: BLE001 - CLI must convert provider setup failures to controlled errors.
-        raise OperationalError("Could not build the Groq generator.") from error
+        raise GeneratorBuildError(f"Could not build the Groq generator: {error}") from error
 
     def generate(prompt: str) -> str:
         response = llm.invoke(prompt)
@@ -102,19 +118,42 @@ def ask(question: str) -> int:
 
     try:
         dependencies = load_rag_dependencies()
+    except OperationalError as error:
+        return fail("dependency loading", error)
+    except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
+        return fail("dependency loading", DependencyLoadError(str(error)))
+
+    try:
         generator = build_lazy_default_generator()
+    except OperationalError as error:
+        return fail("generator setup", error)
+    except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
+        return fail("generator setup", GeneratorBuildError(str(error)))
+
+    try:
         collection = dependencies.open_existing_collection(dependencies.chroma_path, dependencies.collection_name)
+    except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
+        return fail("Chroma collection opening", CollectionOpenError(str(error)))
+
+    try:
         retriever = dependencies.chroma_retriever(collection)
         result = dependencies.answer_question(question, retriever, generator=generator, top_k=DEFAULT_TOP_K)
     except OperationalError as error:
-        print(f"Error: {error}", file=sys.stderr)
-        return OPERATIONAL_ERROR_CODE
+        stage = "generator setup" if isinstance(error, GeneratorBuildError) else "RAG execution"
+        return fail(stage, error)
     except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
-        print("Error: Could not run the normative consultation CLI.", file=sys.stderr)
-        return OPERATIONAL_ERROR_CODE
+        return fail("RAG execution", RagExecutionError(str(error)))
 
     print_answer(result.answer, result.references)
     return 0
+
+
+def fail(stage: str, error: Exception) -> int:
+    """Print a controlled full error message for one CLI pipeline stage."""
+
+    print(f"Error during {stage}:", file=sys.stderr)
+    print(str(error), file=sys.stderr)
+    return OPERATIONAL_ERROR_CODE
 
 
 def load_rag_dependencies() -> RagDependencies:
@@ -125,7 +164,7 @@ def load_rag_dependencies() -> RagDependencies:
         from pipeline.vectorization.chroma_store import DEFAULT_COLLECTION_NAME, open_existing_collection
         from pipeline.vectorization.ingest import DEFAULT_CHROMA_PATH
     except ModuleNotFoundError as error:
-        raise OperationalError("Required runtime dependency is not installed.") from error
+        raise DependencyLoadError(f"Required runtime dependency is not installed: {error}") from error
 
     return RagDependencies(
         answer_question=answer_question,

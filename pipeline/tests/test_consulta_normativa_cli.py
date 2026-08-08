@@ -128,6 +128,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             exit_code = cli.main(["ask", "Pregunta"])
 
         self.assertEqual(exit_code, 2)
+        self.assertIn("Error during generator setup", stderr.getvalue())
         self.assertIn("GROQ_API_KEY", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
@@ -150,10 +151,11 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             exit_code = cli.main(["ask", "Pregunta"])
 
         self.assertEqual(exit_code, 2)
+        self.assertIn("Error during generator setup", stderr.getvalue())
         self.assertIn("langchain_groq is not installed", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
-    def test_provider_setup_failure_does_not_print_raw_exception_details(self) -> None:
+    def test_provider_setup_failure_preserves_raw_exception_message(self) -> None:
         class FakeChatGroq:
             def __init__(self, **kwargs: object) -> None:
                 raise RuntimeError("secret provider detail")
@@ -166,8 +168,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             with self.assertRaises(cli.OperationalError) as context:
                 cli.build_default_generator()
 
-        self.assertEqual(str(context.exception), "Could not build the Groq generator.")
-        self.assertNotIn("secret provider detail", str(context.exception))
+        self.assertEqual(str(context.exception), "Could not build the Groq generator: secret provider detail")
 
     def test_missing_langchain_groq_returns_controlled_error_without_traceback(self) -> None:
         stderr = io.StringIO()
@@ -188,7 +189,63 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             exit_code = cli.main(["ask", "Pregunta"])
 
         self.assertEqual(exit_code, 2)
+        self.assertIn("Error during generator setup", stderr.getvalue())
         self.assertIn("langchain_groq is not installed", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_collection_open_failure_prints_stage_and_original_error(self) -> None:
+        stderr = io.StringIO()
+        dependencies = cli.RagDependencies(
+            answer_question=answer_question,
+            chroma_retriever=lambda collection: lambda question, top_k: {},
+            open_existing_collection=lambda chroma_path, collection_name: (_ for _ in ()).throw(
+                RuntimeError("collection does not exist")
+            ),
+            chroma_path="data/processed/chroma",
+            collection_name="sg_sst_base_rag",
+        )
+
+        with patch.object(cli, "load_rag_dependencies", return_value=dependencies), redirect_stderr(stderr):
+            exit_code = cli.main(["ask", "Pregunta"])
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("Error during Chroma collection opening", stderr.getvalue())
+        self.assertIn("collection does not exist", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_dependency_loading_failure_prints_stage_and_original_error(self) -> None:
+        stderr = io.StringIO()
+
+        with patch.object(
+            cli,
+            "load_rag_dependencies",
+            side_effect=cli.DependencyLoadError("missing dependency detail"),
+        ), redirect_stderr(stderr):
+            exit_code = cli.main(["ask", "Pregunta"])
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("Error during dependency loading", stderr.getvalue())
+        self.assertIn("missing dependency detail", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
+
+    def test_rag_execution_failure_prints_stage_and_original_error(self) -> None:
+        stderr = io.StringIO()
+        dependencies = cli.RagDependencies(
+            answer_question=lambda question, retriever, **kwargs: (_ for _ in ()).throw(
+                RuntimeError("provider rejected request")
+            ),
+            chroma_retriever=lambda collection: lambda question, top_k: {},
+            open_existing_collection=lambda chroma_path, collection_name: object(),
+            chroma_path="data/processed/chroma",
+            collection_name="sg_sst_base_rag",
+        )
+
+        with patch.object(cli, "load_rag_dependencies", return_value=dependencies), redirect_stderr(stderr):
+            exit_code = cli.main(["ask", "Pregunta"])
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("Error during RAG execution", stderr.getvalue())
+        self.assertIn("provider rejected request", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
 if __name__ == "__main__":

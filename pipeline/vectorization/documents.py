@@ -127,6 +127,7 @@ def table_document_to_chroma(record: JsonDict) -> ChromaRecord:
     metadata = required_mapping(record.get("metadata"), "metadata")
     source_stem = required_metadata_text(metadata, "source_stem", record_id)
     table_index = required_metadata_int(metadata, "table_index", record_id)
+    logical_table_key = str(metadata.get("table_key") or table_key(source_stem, table_index))
 
     return ChromaRecord(
         id=record_id,
@@ -136,8 +137,11 @@ def table_document_to_chroma(record: JsonDict) -> ChromaRecord:
                 "document_type": "table",
                 "source_stem": source_stem,
                 "table_index": table_index,
-                "table_key": table_key(source_stem, table_index),
+                "table_part_index": optional_metadata_int(metadata, "table_part_index", 0),
+                "table_part_count": optional_metadata_int(metadata, "table_part_count", 1),
+                "table_key": logical_table_key,
                 "linked_placeholder": metadata.get("linked_placeholder", ""),
+                "oversized_row": bool(metadata.get("oversized_row", False)),
             }
         ),
     )
@@ -218,6 +222,15 @@ def required_metadata_int(metadata: JsonDict, key: str, record_id: str) -> int:
         raise ValueError(f"Vector document {record_id!r} is missing metadata field {key!r}") from error
     except (TypeError, ValueError) as error:
         raise ValueError(f"Vector document {record_id!r} has invalid integer metadata field {key!r}") from error
+
+
+def optional_metadata_int(metadata: JsonDict, key: str, default: int) -> int:
+    """Return an optional integer metadata value with backward-compatible defaults."""
+
+    try:
+        return int(metadata.get(key, default))
+    except (TypeError, ValueError):
+        return default
 
 
 def mapping(value: Any) -> JsonDict:
