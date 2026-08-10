@@ -32,9 +32,10 @@ data/processed/table_documents.jsonl
 ### Consulta CLI
 
 ```txt
-python -m agents.consulta_normativa.main ask "<pregunta>"
+python -m agents.consulta_normativa.main
   → open_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
   → chroma_retriever(collection)
+  → prompt interactivo
   → answer_question(question, retriever, generator, top_k=5)
   → query_top_k(...)
   → recovered_documents(...)
@@ -131,7 +132,7 @@ Conclusión: tu sospecha es correcta. Los wrappers que terminan en `_records` y 
 
 ### Media prioridad
 
-- [ ] Separar apertura Chroma para ingesta y consulta, o validar explícitamente colección vacía en el CLI `ask`.
+- [ ] Separar apertura Chroma para ingesta y consulta, o validar explícitamente colección vacía en el CLI interactivo.
 - [ ] Agregar tests de `ingest_base_rag_documents(...)` con colección fake.
 - [ ] Agregar tests de `upsert_records(...)`.
 - [ ] Agregar tests del CLI `pipeline.vectorization.main ingest`.

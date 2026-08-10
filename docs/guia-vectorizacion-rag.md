@@ -12,10 +12,10 @@ python -m pipeline.chunking.main build-table-documents
 
 python -m pipeline.vectorization.main --batch-size 8
 export GROQ_API_KEY="tu_api_key"
-python -m agents.consulta_normativa.main ask "¿Qué debe incluir el plan anual de trabajo del SG-SST?"
+python -m agents.consulta_normativa.main
 ```
 
-El primer comando reconstruye los documentos vectorizables de tablas. El segundo indexa child chunks y documentos de tablas en ChromaDB. El tercero consulta la colección ya indexada usando el agente RAG base.
+El primer comando reconstruye los documentos vectorizables de tablas. El segundo indexa child chunks y documentos de tablas en ChromaDB. El tercero abre una sesión interactiva del agente RAG base para consultar la colección ya indexada.
 
 Vista previa opcional de tablas, útil para inspección manual antes de vectorizar:
 
@@ -208,23 +208,37 @@ export GROQ_API_KEY="tu_api_key"
 Luego ejecuta:
 
 ```bash
-python -m agents.consulta_normativa.main ask "¿Qué debe incluir el plan anual de trabajo del SG-SST?"
+python -m agents.consulta_normativa.main
 ```
+
+El comando abre un prompt interactivo:
+
+```txt
+RAG normativo listo. Escribe 'exit' o 'quit' para salir.
+Pregunta> ¿Qué debe incluir el plan anual de trabajo del SG-SST?
+```
+
+Escribe una pregunta por turno. Para cerrar la sesión, usa `exit` o `quit`. Las preguntas en blanco se ignoran.
 
 El flujo interno es:
 
 ```txt
-pregunta
+inicio de sesión CLI
+  → carga de dependencias RAG
   → open_existing_collection(...)
   → chroma_retriever(collection)
-  → answer_question(..., top_k=5)
-  → contexto recuperado
-  → prompt base
   → ChatGroq
-  → respuesta + referencias
+  → prompt interactivo
+  → por cada pregunta:
+      → answer_question(..., top_k=5)
+      → contexto recuperado
+      → prompt base
+      → respuesta + referencias
 ```
 
 La consulta usa `open_existing_collection(...)`, no `get_or_create_collection(...)`. Esto es intencional: consultar no debe crear una colección vacía si la ingesta no se ha ejecutado.
+
+La sesión carga Chroma, el modelo de embeddings Qwen y el generador Groq una sola vez por ejecución del CLI. Esto mejora la latencia cuando haces varias preguntas seguidas, porque cada turno reutiliza el mismo runtime.
 
 ## LLM por defecto
 
@@ -276,7 +290,7 @@ Referencias:
 | `pipeline/tables/table_jsonl_to_html.py` | Genera HTML de vista previa para inspeccionar registros de tablas. |
 | `pipeline/chunking/main.py` | Entrypoint recomendado para comandos de chunking, incluido `build-table-documents`. |
 | `pipeline/chunking/core/cli.py` | Define la CLI interna usada por `pipeline.chunking.main`. |
-| `agents/consulta_normativa/main.py` | CLI `ask` para consultar el RAG base. |
+| `agents/consulta_normativa/main.py` | CLI interactivo para consultar el RAG base. |
 | `agents/consulta_normativa/rag_base.py` | Flujo base: recuperar, construir contexto, generar respuesta y referencias. |
 | `agents/consulta_normativa/prompts.py` | Prompt base del RAG. |
 

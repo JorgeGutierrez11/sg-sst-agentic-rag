@@ -50,8 +50,7 @@ agents/consulta_normativa/main.py
 ## Comando esperado
 
 ```bash
-python -m agents.consulta_normativa.main ask \
-  "¿Qué debe incluir el plan anual de trabajo del SG-SST?"
+python -m agents.consulta_normativa.main
 ```
 
 ## Argumentos CLI

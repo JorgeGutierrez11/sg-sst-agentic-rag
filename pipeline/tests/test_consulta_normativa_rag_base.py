@@ -37,7 +37,7 @@ class ConsultaNormativaRagBaseTest(unittest.TestCase):
 
         self.assertEqual(result.answer, "Respuesta generada desde contexto recuperado.")
         self.assertIn("El SG-SST debe implementarse", result.context)
-        self.assertIn("Answer only with the recovered context", captured_prompt)
+        self.assertIn("Responde ÚNICAMENTE con información que aparezca literalmente", captured_prompt)
         self.assertEqual(result.references, ["Decreto 1072 de 2015, artículo 2.2.4.6.1 (child_chunk)"])
 
     def test_fallback_is_deterministic_without_generator(self) -> None:
