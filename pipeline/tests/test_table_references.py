@@ -160,20 +160,12 @@ class TableReferencesTest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 return_value=10,
-            ), redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "build-parents",
-                        "--input-dir",
-                        str(input_dir),
-                        "--output-path",
-                        str(output_path),
-                        "--manifest-path",
-                        str(workspace / "missing_manifest.json"),
-                        "--tables-root",
-                        str(workspace / "tables"),
-                    ]
-                )
+            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch(
+                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
+            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stderr(stderr):
+                exit_code = main(["build-parents"])
 
             self.assertEqual(exit_code, 2)
             self.assertFalse(output_path.exists())
@@ -186,22 +178,34 @@ class TableReferencesTest(unittest.TestCase):
             workspace = Path(temp_dir)
             chunks_path = workspace / "chunks.jsonl"
             write_jsonl_records(chunks_path, [chunk_record_with_tables("norma", 2)])
+            stdout = io.StringIO()
             stderr = io.StringIO()
 
-            with redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "audit-table-references",
-                        "--chunks-path",
-                        str(chunks_path),
-                        "--tables-root",
-                        str(workspace / "tables"),
-                    ]
-                )
+            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
+                "pipeline.chunking.core.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
+            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stdout(
+                stdout
+            ), redirect_stderr(stderr):
+                exit_code = main(["audit-table-references"])
 
             self.assertEqual(exit_code, 2)
             self.assertIn("Missing referenced table files:", stderr.getvalue())
             self.assertIn("norma/table_2.html", stderr.getvalue())
+
+    def test_removed_audit_cli_flags_are_rejected_by_argparse(self) -> None:
+        removed_flags = [
+            ["--chunks-path", "chunks.jsonl"],
+            ["--tables-root", "tables"],
+        ]
+
+        for flag_args in removed_flags:
+            with self.subTest(flag_args=flag_args):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+                    main(["audit-table-references", *flag_args])
+
+                self.assertEqual(context.exception.code, 2)
+                self.assertIn("unrecognized arguments", stderr.getvalue())
 
     def test_audit_cli_exits_zero_and_warns_on_orphaned_tables(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -217,16 +221,12 @@ class TableReferencesTest(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
 
-            with redirect_stdout(stdout), redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "audit-table-references",
-                        "--chunks-path",
-                        str(chunks_path),
-                        "--tables-root",
-                        str(tables_root),
-                    ]
-                )
+            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
+                "pipeline.chunking.core.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
+            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), redirect_stdout(stdout), redirect_stderr(
+                stderr
+            ):
+                exit_code = main(["audit-table-references"])
 
             self.assertEqual(exit_code, 0)
             self.assertIn("Audited 1 chunks", stdout.getvalue())

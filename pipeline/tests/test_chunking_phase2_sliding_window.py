@@ -32,20 +32,10 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             )
             write_parent_chunks([parent], input_path)
 
-            with redirect_stdout(io.StringIO()):
-                exit_code = main(
-                    [
-                        "build-sliding-window",
-                        "--input-path",
-                        str(input_path),
-                        "--output-path",
-                        str(output_path),
-                        "--chunk-size",
-                        "24",
-                        "--chunk-overlap",
-                        "6",
-                    ]
-                )
+            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+                "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+            ), redirect_stdout(io.StringIO()):
+                exit_code = main(["build-sliding-window"])
 
             records = read_records(output_path)
             self.assertEqual(exit_code, 0)
@@ -162,23 +152,14 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
 
         self.assertEqual(child_offsets(parent, "texto ausente", 0), (None, None))
 
-    def test_invalid_overlap_rejected_without_traceback(self) -> None:
+    def test_removed_chunk_size_flag_is_rejected_by_argparse(self) -> None:
         stderr = io.StringIO()
-        with redirect_stderr(stderr):
-            exit_code = main(["build-sliding-window", "--chunk-size", "10", "--chunk-overlap", "10"])
 
-        self.assertEqual(exit_code, 2)
-        self.assertIn("error: --chunk-overlap must be lower than --chunk-size", stderr.getvalue())
-        self.assertNotIn("Traceback", stderr.getvalue())
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+            main(["build-sliding-window", "--chunk-size", "10"])
 
-    def test_invalid_chunk_size_rejected_without_traceback(self) -> None:
-        stderr = io.StringIO()
-        with redirect_stderr(stderr):
-            exit_code = main(["build-sliding-window", "--chunk-size", "0"])
-
-        self.assertEqual(exit_code, 2)
-        self.assertIn("error: --chunk-size must be greater than 0", stderr.getvalue())
-        self.assertNotIn("Traceback", stderr.getvalue())
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn("unrecognized arguments: --chunk-size 10", stderr.getvalue())
 
     def test_parser_exposes_build_sliding_window_help(self) -> None:
         parser = build_parser()
@@ -194,16 +175,10 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             input_path.write_text('{"chunk_id": "missing-required-fields"}\n', encoding="utf-8")
             stderr = io.StringIO()
 
-            with redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "build-sliding-window",
-                        "--input-path",
-                        str(input_path),
-                        "--output-path",
-                        str(output_path),
-                    ]
-                )
+            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+                "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+            ), redirect_stderr(stderr):
+                exit_code = main(["build-sliding-window"])
 
             self.assertEqual(exit_code, 2)
             self.assertIn("error: Invalid parent chunk record", stderr.getvalue())
@@ -248,20 +223,10 @@ def build_parent_fixture(workspace: Path, parent: ParentChunk) -> Path:
     input_path = workspace / "parents.jsonl"
     output_path = workspace / "chunks.jsonl"
     write_parent_chunks([parent], input_path)
-    with redirect_stdout(io.StringIO()):
-        exit_code = main(
-            [
-                "build-sliding-window",
-                "--input-path",
-                str(input_path),
-                "--output-path",
-                str(output_path),
-                "--chunk-size",
-                "32",
-                "--chunk-overlap",
-                "8",
-            ]
-        )
+    with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+        "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+    ), redirect_stdout(io.StringIO()):
+        exit_code = main(["build-sliding-window"])
     if exit_code != 0:
         raise AssertionError(f"Fixture build failed with exit code {exit_code}")
     return output_path

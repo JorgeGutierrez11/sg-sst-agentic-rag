@@ -1,65 +1,60 @@
 # OpenCode Instructions
 
-This is not a git repo and no project-level dependency, test, lint, or typecheck manifest is currently present; do not invent commands.
+This repo is a thesis RAG system for SG-SST normative assistance and compliance diagnosis for Colombian risk-I MiPymes.
 
-## Project boundary
+## Source of truth
 
-- The project is a thesis RAG system for SG-SST assistance and compliance diagnosis for Colombian MiPymes classified as risk level I.
-- The plan of record is `docs/EISI_2026-04-09_14-25-36_pg1409.pdf`; use its methodology over stale prose when phases conflict.
-- `README.md` references `docs/arquitectura.md`, but that file is currently missing.
+- When methodology conflicts, trust `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` over stale prose.
+- Keep scope anchored to the official SG-SST sources named in the plan: Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
+- `docs/arquitectura.md` is referenced by docs but is currently absent; do not assume it exists.
 
-## Methodology constraints
+## Tooling and verification
 
-- Keep the scope anchored to official SG-SST sources listed in the plan: Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
-- Phase 2 builds the normative corpus: structured segmentation by article/section, text cleaning/normalization, metadata enrichment, then vector-ready artifacts.
-- Phase 3 evaluation comes before agent development: create expert-supported datasets, with Conjunto A as gold standard for ARES calibration and Conjunto B for optimization during development.
-- The consultation agent is developed iteratively in five stages: base RAG, query understanding, retrieval improvement, business context, then response validation/control.
-- Each consultation-agent stage should compare three candidate techniques and choose by ARES metrics on Conjunto B.
-- Evaluate RAG on context relevance, answer faithfulness, and answer relevance; include confidence intervals when using ARES.
-- Final system evaluation combines user sessions from at least five risk-I companies, expert SST validation, and calibrated ARES evaluation.
+- Root dependency manifest is only `requirements.txt`; there is no pyproject, lockfile, Makefile/task runner, CI workflow, formatter, lint, typecheck, pre-commit, or repo-local OpenCode config discovered.
+- Use `python -m unittest discover -s pipeline/tests` for the current Python test suite when dependencies are installed.
+- Focused table pipeline tests: `python -m unittest pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents`.
+- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_table_documents pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store pipeline.tests.test_consulta_normativa_cli pipeline.tests.test_consulta_normativa_rag_base`.
+- Compile check for vector/RAG work: `python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa`.
+- If `.codegraph/` exists locally, use CodeGraph first for structural/codebase questions, then fall back to direct file reads only when needed.
 
 ## Directory boundaries
 
-- Put offline corpus transformation code in `pipeline/`; put runtime LLM agent logic in `agents/`; put user-facing API/UI code in `app/`; put evaluation definitions/results in `evaluation/`; put thesis docs and decisions in `docs/`.
-- `data/raw/` holds original DOCX normative sources; `data/interim/` and `data/processed/` are derived pipeline artifacts.
-- `.gitignore` ignores all `data/raw/`, `data/interim/`, and `data/processed/` except `.gitkeep`, so do not assume local DOCX or generated corpus files are versioned.
-- `scripts/` is for one-off operational utilities or migrations; the two current processing scripts live under `pipeline/`, not `scripts/`.
+- `pipeline/`: offline corpus transformation only; keep runtime agent logic out of it.
+- `agents/`: online LLM agent logic. `agents/consulta_normativa/` is Phase 4 Block A; represent the five consultation-agent stages with git tags, not duplicated `etapa_*` folders.
+- `agents/shared/`: shared LLM clients, retrievers, prompts, adapters, and utilities reused by both agents.
+- `agents/diagnostico_cumplimiento/`: Phase 4 Block B diagnostic agent; output requirement-by-requirement compliance plus executive summary of critical gaps and priority actions.
+- `app/backend/` and `app/frontend/`: user-facing API/UI; currently only placeholder `.gitkeep` files exist.
+- `evaluation/instruments/`: rubrics, surveys, protocols, consent, and sampling definitions; results do not belong here.
+- `evaluation/results/`: processed/anonymized evaluation outputs, including ARES runs, expert validation, user-study summaries, and integrated reports.
+- `evaluation/resultados_usuarios/`: confidential raw company interactions; anonymize identifiers and confirm consent before storing anything. Its contents are ignored except README.
+- `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable data areas; do not assume source DOCX or generated corpus files are versioned.
 
-## Design principles for this project
+## Methodology constraints
 
-- Apply YAGNI: do not create abstractions, wrappers, interfaces, DTOs, or helper layers for hypothetical future needs. Build only what the current phase requires.
-- Apply KISS: prefer the clearest linear implementation over academically elegant but fragmented code. If cohesive logic is readable in one module, do not split it across multiple files.
-- Prefer local cohesion over absolute modular separation: keep tightly related functions together when splitting them would make debugging or traceability harder.
-- Balance coupling and readability: do not apply Clean Code dogmatically. If decoupling requires redundant mappers, DTOs, or indirection that hides the flow, choose a compact locally coupled design.
-- Prefer feature-driven structure over technical micro-packages. Group code by the workflow/domain relationship first, then by technical concern only when it clearly improves readability.
+- Phase 2 builds the normative corpus: structured article/section segmentation, cleaning/normalization, metadata enrichment, then vector-ready artifacts.
+- Phase 3 evaluation comes before agent development: Conjunto A is the expert gold standard for ARES calibration; Conjunto B is for development optimization.
+- Consultation-agent stages are: base RAG, query understanding, retrieval improvement, business context, response validation/control.
+- Each consultation-agent stage should compare three candidate techniques and choose using ARES metrics on Conjunto B.
+- Evaluate RAG on context relevance, answer faithfulness, and answer relevance; include confidence intervals with ARES.
+- Final system evaluation combines sessions from at least five risk-I companies, expert SST validation, and calibrated ARES evaluation.
 
-## Pipeline architecture decisions
+## Design rules to preserve
 
-- `pipeline/chunking/` uses a compact feature-driven layout:
-  - `core/` for local infrastructure such as CLI, config, and JSONL persistence.
-  - `structural_analysis/` for normative structure detection, legal regex patterns, boundaries, and metadata inference.
-  - `hierarchical_splitter/` for parent/child chunk domain models, parent building, token counting, and future child splitting.
-- Keep `pipeline/chunking/main.py` as the chunking entrypoint and orchestrator. Current Phase 1 behavior exposes `build-parents` only.
-- Do not reintroduce a dedicated Markdown/legal pattern analysis module unless repeated automated analysis becomes necessary; inspect cleaned Markdown directly and keep regex simple and evidence-based.
-- Metadata extraction is deterministic: optional source manifest for controlled document metadata, regex over cleaned Markdown for structural metadata, and pipeline-calculated offsets/token counts. Do not use an LLM as the primary metadata extractor.
-- Child chunking strategies are future phases. Do not add strategy abstractions or placeholders until there is real behavior to implement.
+- Apply YAGNI and KISS: do not add abstractions, wrappers, DTOs, helpers, interfaces, or placeholders for hypothetical future phases.
+- Prefer local cohesion and readable pragmatic coupling over dogmatic layering.
+- Group by workflow/domain first; split by technical concern only when it clearly improves traceability.
+- Metadata extraction is deterministic: optional manifest + regex over cleaned Markdown + pipeline-calculated offsets/token counts. Do not use an LLM as the primary metadata extractor.
 
-## Current executable entrypoints
+## Real entrypoints and gotchas
 
-- `pipeline/ingestion/docx_to_markdown.py` reads DOCX files from `data/raw` and writes markdown plus extracted HTML tables to `data/interim`.
-- `pipeline/cleaning/markdown_cleaner.py` has an outdated `__main__` input path (`../fase1_parsing/data/processed`); update or pass paths through code before using it in the new structure.
-- `python -m pipeline.chunking.main build-parents` builds parent chunks from cleaned Markdown for the chunking Phase 1 pipeline.
-- `pipeline/ingestion/docx_to_markdown.py` imports `pypandoc` and depends on Pandoc availability, but no dependency manifest is present.
-
-## Agent implementation conventions
-
-- `agents/shared/` is for common LLM clients, retrievers, prompts, adapters, and utilities reused by both agents.
-- `agents/consulta_normativa/` is the Phase 4 Block A consultation agent; existing guidance says represent the five stages with git tags, not duplicated `etapa_*` folders.
-- `agents/diagnostico_cumplimiento/` is the Phase 4 Block B diagnostic agent; it must produce a requirement-by-requirement compliance report and an executive summary of critical gaps and priority actions.
-- `app/backend/` should expose both agents through a Python REST API; `app/frontend/` should provide the React prototype UI.
-
-## Evaluation and privacy
-
-- `evaluation/instruments/` stores expert rubrics, user surveys, protocols, consent, and sampling criteria; results do not belong there.
-- `evaluation/results/` stores processed or anonymized evaluation outputs, including ARES runs, expert validation, user-study summaries, and integrated reports.
-- `evaluation/resultados_usuarios/` is confidential raw user-interaction data; anonymize company-identifying data and confirm consent before storing anything there.
+- DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes Markdown and extracted HTML tables under `data/interim/`, and requires Pandoc plus `pypandoc`.
+- Markdown cleaning: `python pipeline/cleaning/markdown_cleaner.py` reads `data/interim/*.md` and writes `data/processed/*.md`.
+- Chunking CLI: `python -m pipeline.chunking.main --help`.
+- Recommended chunking path: `build-parents`, `build-sliding-window`, `build-regex-constrained-semantic`, `audit-table-references`, `build-table-markdown`, `build-table-documents`.
+- `build-regex-constrained-semantic` is the current recommended child-chunk strategy for SG-SST because it preserves exact offsets and legal traceability; keep `build-sliding-window` as a baseline and avoid pure `semantic_chunking` as final output.
+- Table references use logical metadata such as `source_stem` + `table_index`; do not persist physical HTML paths in chunks or Chroma metadata.
+- Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` and `data/processed/table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
+- Vector ingestion uses upsert and does not delete stale Chroma records; remove/move `data/processed/chroma` for a clean rebuild.
+- Base consultation CLI: set `GROQ_API_KEY` in the environment, then run `python -m agents.consulta_normativa.main`; it opens an existing Chroma collection and must not create an empty one during consultation.
+- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default Groq generation model is `openai/gpt-oss-120b` at temperature `0`.
+- Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the current output directory name is intentionally misspelled as `data/processed/tables_htlm`.

@@ -10,6 +10,9 @@ from unittest.mock import patch
 
 from pipeline.chunking.core.cli import build_parser, main
 from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.hierarchical_splitter.child_splitter.regex_constrained_semantic import (
+    write_regex_constrained_semantic_child_output,
+)
 from pipeline.chunking.hierarchical_splitter.models import ParentChunk
 
 
@@ -87,20 +90,14 @@ class ChunkingPhase4RegexConstrainedSemanticTest(unittest.TestCase):
             self.assertLessEqual(record["token_count"], 5)
             self.assertEqual(record["metadata"]["chunk"]["size_adjustment"], "split_oversized_chunk")
 
-    def test_invalid_options_produce_controlled_cli_error_without_traceback(self) -> None:
+    def test_removed_breakpoint_flag_is_rejected_by_argparse(self) -> None:
         stderr = io.StringIO()
-        with redirect_stderr(stderr):
-            exit_code = main(
-                [
-                    "build-regex-constrained-semantic",
-                    "--breakpoint-threshold-type",
-                    "unknown",
-                ]
-            )
 
-        self.assertEqual(exit_code, 2)
-        self.assertIn("error: --breakpoint-threshold-type must be one of", stderr.getvalue())
-        self.assertNotIn("Traceback", stderr.getvalue())
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+            main(["build-regex-constrained-semantic", "--breakpoint-threshold-type", "unknown"])
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn("unrecognized arguments: --breakpoint-threshold-type unknown", stderr.getvalue())
 
 
 def build_fixture(workspace: Path, parent: ParentChunk, min_tokens: int = 1, max_tokens: int = 80) -> Path:
@@ -108,25 +105,14 @@ def build_fixture(workspace: Path, parent: ParentChunk, min_tokens: int = 1, max
     output_path = workspace / "regex_constrained_semantic" / "chunks.jsonl"
     write_parent_chunks([parent], input_path)
     with patch_embedding_backend(), patch_tokenizer(), redirect_stdout(io.StringIO()):
-        exit_code = main(
-            [
-                "build-regex-constrained-semantic",
-                "--input-path",
-                str(input_path),
-                "--output-path",
-                str(output_path),
-                "--breakpoint-threshold-type",
-                "percentile",
-                "--breakpoint-threshold-amount",
-                "0",
-                "--min-tokens",
-                str(min_tokens),
-                "--max-tokens",
-                str(max_tokens),
-            ]
+        write_regex_constrained_semantic_child_output(
+            input_path=input_path,
+            output_path=output_path,
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=0,
+            min_tokens=min_tokens,
+            max_tokens=max_tokens,
         )
-    if exit_code != 0:
-        raise AssertionError(f"Fixture build failed with exit code {exit_code}")
     return output_path
 
 

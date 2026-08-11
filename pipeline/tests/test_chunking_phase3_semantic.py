@@ -27,6 +27,16 @@ class ChunkingPhase3SemanticTest(unittest.TestCase):
         help_text = parser.format_help()
 
         self.assertIn("build-semantic", help_text)
+        self.assertNotIn("--breakpoint-threshold-type", help_text)
+
+    def test_removed_semantic_input_flag_is_rejected_by_argparse(self) -> None:
+        stderr = io.StringIO()
+
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+            main(["build-semantic", "--input-path", "parents.jsonl"])
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn("unrecognized arguments: --input-path parents.jsonl", stderr.getvalue())
 
     def test_build_semantic_reads_parent_and_writes_children(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -76,8 +86,8 @@ class ChunkingPhase3SemanticTest(unittest.TestCase):
             output_path = workspace / "semantic" / "chunks.jsonl"
             write_parent_chunks([], input_path)
 
-            with patch_semantic_splitter(), redirect_stdout(io.StringIO()):
-                exit_code = main(["build-semantic", "--input-path", str(input_path), "--output-path", str(output_path)])
+            with semantic_cli_defaults(input_path, output_path), patch_semantic_splitter(), redirect_stdout(io.StringIO()):
+                exit_code = main(["build-semantic"])
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(output_path.read_text(encoding="utf-8"), "")
@@ -89,8 +99,8 @@ class ChunkingPhase3SemanticTest(unittest.TestCase):
             output_path = workspace / "semantic" / "chunks.jsonl"
             write_parent_chunks([make_parent_chunk(text="")], input_path)
 
-            with patch_semantic_splitter(), redirect_stdout(io.StringIO()):
-                exit_code = main(["build-semantic", "--input-path", str(input_path), "--output-path", str(output_path)])
+            with semantic_cli_defaults(input_path, output_path), patch_semantic_splitter(), redirect_stdout(io.StringIO()):
+                exit_code = main(["build-semantic"])
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(output_path.read_text(encoding="utf-8"), "")
@@ -103,8 +113,8 @@ class ChunkingPhase3SemanticTest(unittest.TestCase):
             input_path.write_text('{"chunk_id": "missing-required-fields"}\n', encoding="utf-8")
             stderr = io.StringIO()
 
-            with patch_semantic_splitter(), redirect_stderr(stderr):
-                exit_code = main(["build-semantic", "--input-path", str(input_path), "--output-path", str(output_path)])
+            with semantic_cli_defaults(input_path, output_path), patch_semantic_splitter(), redirect_stderr(stderr):
+                exit_code = main(["build-semantic"])
 
             self.assertEqual(exit_code, 2)
             self.assertIn("error: Invalid parent chunk record", stderr.getvalue())
@@ -117,8 +127,10 @@ class ChunkingPhase3SemanticTest(unittest.TestCase):
             output_path = workspace / "chunks.jsonl"
             write_parent_chunks([make_parent_chunk()], input_path)
 
-            with patch_normalized_semantic_splitter(), redirect_stdout(io.StringIO()):
-                exit_code = main(["build-semantic", "--input-path", str(input_path), "--output-path", str(output_path)])
+            with semantic_cli_defaults(input_path, output_path), patch_normalized_semantic_splitter(), redirect_stdout(
+                io.StringIO()
+            ):
+                exit_code = main(["build-semantic"])
 
             self.assertEqual(exit_code, 0)
             records = read_records(output_path)
@@ -136,8 +148,8 @@ def build_one_semantic_fixture(workspace: Path) -> Path:
     input_path = workspace / "parents.jsonl"
     output_path = workspace / "semantic" / "chunks.jsonl"
     write_parent_chunks([make_parent_chunk()], input_path)
-    with patch_semantic_splitter(), redirect_stdout(io.StringIO()):
-        exit_code = main(["build-semantic", "--input-path", str(input_path), "--output-path", str(output_path)])
+    with semantic_cli_defaults(input_path, output_path), patch_semantic_splitter(), redirect_stdout(io.StringIO()):
+        exit_code = main(["build-semantic"])
     if exit_code != 0:
         raise AssertionError(f"Fixture build failed with exit code {exit_code}")
     return output_path
@@ -154,6 +166,14 @@ def patch_normalized_semantic_splitter():
     return patch(
         "pipeline.chunking.hierarchical_splitter.child_splitter.semantic.create_semantic_splitter",
         return_value=NormalizedSemanticSplitter(),
+    )
+
+
+def semantic_cli_defaults(input_path: Path, output_path: Path):
+    return patch.multiple(
+        "pipeline.chunking.core.cli",
+        DEFAULT_PARENT_CHUNKS_PATH=input_path,
+        DEFAULT_SEMANTIC_CHUNKS_PATH=output_path,
     )
 
 

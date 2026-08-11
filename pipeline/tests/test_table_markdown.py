@@ -75,20 +75,29 @@ class TableMarkdownTest(unittest.TestCase):
             with patch.dict(
                 "sys.modules",
                 {"pypandoc": SimpleNamespace(convert_file=Mock(return_value="| value |\n|---|\n"))},
+            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
+                "pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
             ), redirect_stdout(stdout):
-                exit_code = main(
-                    [
-                        "build-table-markdown",
-                        "--tables-root",
-                        str(tables_root),
-                        "--output-root",
-                        str(output_root),
-                    ]
-                )
+                exit_code = main(["build-table-markdown"])
 
             self.assertEqual(exit_code, 0)
             self.assertIn("Converted 1 table HTML file(s) to Markdown:", stdout.getvalue())
             self.assertTrue((output_root / "norma" / "table_0.md").exists())
+
+    def test_removed_table_markdown_cli_flags_are_rejected_by_argparse(self) -> None:
+        removed_flags = [
+            ["--tables-root", "tables"],
+            ["--output-root", "tables_markdown"],
+        ]
+
+        for flag_args in removed_flags:
+            with self.subTest(flag_args=flag_args):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+                    main(["build-table-markdown", *flag_args])
+
+                self.assertEqual(context.exception.code, 2)
+                self.assertIn("unrecognized arguments", stderr.getvalue())
 
     def test_cli_catches_conversion_failure_without_traceback(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -103,16 +112,10 @@ class TableMarkdownTest(unittest.TestCase):
             with patch.dict(
                 "sys.modules",
                 {"pypandoc": SimpleNamespace(convert_file=Mock(side_effect=OSError("pandoc failed")))},
+            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
+                "pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
             ), redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "build-table-markdown",
-                        "--tables-root",
-                        str(tables_root),
-                        "--output-root",
-                        str(output_root),
-                    ]
-                )
+                exit_code = main(["build-table-markdown"])
 
             self.assertEqual(exit_code, 2)
             self.assertIn("error: Failed to convert table HTML to Markdown:", stderr.getvalue())

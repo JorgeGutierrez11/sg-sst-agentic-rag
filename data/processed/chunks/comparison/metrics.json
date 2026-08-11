@@ -1,0 +1,56 @@
+{
+  "strategies": {
+    "regex_constrained_semantic": {
+      "avg_token_count": 228.57,
+      "chunks_too_large": 0,
+      "chunks_too_small": 18,
+      "max_token_count": 350,
+      "min_token_count": 9,
+      "orphan_child_chunks": 0,
+      "overlap_count": 0,
+      "path": "/home/leo/Documents/Proyecto de grado/proyecto_rag/data/processed/chunks/regex_constrained_semantic/chunks.jsonl",
+      "percentage_with_article_metadata": 93.33,
+      "percentage_with_source_metadata": 100.0,
+      "total_chunks": 330,
+      "unique_parent_count": 138,
+      "unresolved_offset_count": 0
+    },
+    "semantic_chunking": {
+      "avg_token_count": 267.96,
+      "chunks_too_large": 70,
+      "chunks_too_small": 56,
+      "max_token_count": 1581,
+      "min_token_count": 2,
+      "orphan_child_chunks": 0,
+      "overlap_count": 0,
+      "path": "/home/leo/Documents/Proyecto de grado/proyecto_rag/data/processed/chunks/semantic_chunking/chunks.jsonl",
+      "percentage_with_article_metadata": 95.74,
+      "percentage_with_source_metadata": 100.0,
+      "total_chunks": 282,
+      "unique_parent_count": 138,
+      "unresolved_offset_count": 165
+    },
+    "sliding_window": {
+      "avg_token_count": 190.2,
+      "chunks_too_large": 0,
+      "chunks_too_small": 28,
+      "max_token_count": 323,
+      "min_token_count": 14,
+      "orphan_child_chunks": 0,
+      "overlap_count": 0,
+      "path": "/home/leo/Documents/Proyecto de grado/proyecto_rag/data/processed/chunks/sliding_window/chunks.jsonl",
+      "percentage_with_article_metadata": 93.05,
+      "percentage_with_source_metadata": 100.0,
+      "total_chunks": 417,
+      "unique_parent_count": 138,
+      "unresolved_offset_count": 0
+    }
+  },
+  "summary": {
+    "available_strategies": 3,
+    "best_article_metadata_coverage": "semantic_chunking",
+    "fewest_oversized_chunks": "sliding_window",
+    "fewest_unresolved_offsets": "sliding_window",
+    "most_chunks": "sliding_window"
+  }
+}

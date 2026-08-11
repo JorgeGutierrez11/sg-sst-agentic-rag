@@ -4,8 +4,9 @@ import io
 import json
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from pipeline.chunking.core.cli import main
 from pipeline.tables.table_documents import (
@@ -236,22 +237,31 @@ class TableDocumentsTest(unittest.TestCase):
             output_path = workspace / "processed" / "table_documents.jsonl"
             stdout = io.StringIO()
 
-            with redirect_stdout(stdout):
-                exit_code = main(
-                    [
-                        "build-table-documents",
-                        "--markdown-root",
-                        str(markdown_root),
-                        "--output-path",
-                        str(output_path),
-                    ]
-                )
+            with patch("pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", markdown_root), patch(
+                "pipeline.chunking.core.cli.DEFAULT_TABLE_DOCUMENTS_PATH", output_path
+            ), redirect_stdout(stdout):
+                exit_code = main(["build-table-documents"])
 
             records = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(exit_code, 0)
             self.assertIn("Built 1 table document(s):", stdout.getvalue())
             self.assertEqual(records[0]["id"], "table-resolucion-0312-de-2019-1-part-0000")
             self.assertEqual(records[0]["metadata"]["linked_placeholder"], "<!-- TABLE_1 -->")
+
+    def test_removed_table_documents_cli_flags_are_rejected_by_argparse(self) -> None:
+        removed_flags = [
+            ["--markdown-root", "tables_markdown"],
+            ["--output-path", "table_documents.jsonl"],
+        ]
+
+        for flag_args in removed_flags:
+            with self.subTest(flag_args=flag_args):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+                    main(["build-table-documents", *flag_args])
+
+                self.assertEqual(context.exception.code, 2)
+                self.assertIn("unrecognized arguments", stderr.getvalue())
 
     def test_write_table_documents_returns_flattened_count(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

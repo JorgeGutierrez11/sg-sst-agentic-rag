@@ -36,7 +36,17 @@ class ChunkingPhase1CLITest(unittest.TestCase):
         help_text = parser.format_help()
 
         self.assertIn("build-parents", help_text)
+        self.assertNotIn("--input-dir", help_text)
         self.assertNotIn("--strategy", help_text)
+
+    def test_build_parents_rejects_removed_input_dir_flag(self) -> None:
+        stderr = io.StringIO()
+
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
+            main(["build-parents", "--input-dir", "custom"])
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn("unrecognized arguments: --input-dir custom", stderr.getvalue())
 
     def test_build_parents_writes_jsonl_and_skips_empty_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -64,18 +74,12 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
+            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch(
+                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
             ), redirect_stdout(stdout):
-                exit_code = main(
-                    [
-                        "build-parents",
-                        "--input-dir",
-                        str(input_dir),
-                        "--output-path",
-                        str(output_path),
-                        "--manifest-path",
-                        str(workspace / "missing_manifest.json"),
-                    ]
-                )
+                exit_code = main(["build-parents"])
 
             records = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(exit_code, 0)
@@ -100,18 +104,10 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
-            ), redirect_stderr(stderr):
-                exit_code = main(
-                    [
-                        "build-parents",
-                        "--input-dir",
-                        str(input_dir),
-                        "--output-path",
-                        str(workspace / "parents.jsonl"),
-                        "--manifest-path",
-                        str(manifest_path),
-                    ]
-                )
+            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", workspace / "parents.jsonl"
+            ), patch("pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", manifest_path), redirect_stderr(stderr):
+                exit_code = main(["build-parents"])
 
             self.assertEqual(exit_code, 2)
             self.assertIn("error: Source manifest is not valid JSON", stderr.getvalue())
@@ -132,18 +128,12 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
+            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch(
+                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
             ), redirect_stdout(io.StringIO()):
-                exit_code = main(
-                    [
-                        "build-parents",
-                        "--input-dir",
-                        str(input_dir),
-                        "--output-path",
-                        str(output_path),
-                        "--manifest-path",
-                        str(workspace / "missing_manifest.json"),
-                    ]
-                )
+                exit_code = main(["build-parents"])
 
             self.assertEqual(exit_code, 0)
             records = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines()]
