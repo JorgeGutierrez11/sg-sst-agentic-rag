@@ -11,9 +11,9 @@ python pipeline/cleaning/markdown_cleaner.py
 python -m pipeline.chunking.main build-parents
 python -m pipeline.chunking.main build-sliding-window
 python -m pipeline.chunking.main build-regex-constrained-semantic
-python -m pipeline.chunking.main audit-table-references
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main audit-table-references
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 ```
 
 
@@ -90,7 +90,7 @@ Esta es la estrategia recomendada para SG-SST porque conserva spans exactos y tr
 ### 6. Auditar referencias de tablas
 
 ```bash
-python -m pipeline.chunking.main audit-table-references
+python -m pipeline.tables.main audit-table-references
 ```
 
 La auditoría compara `parents.jsonl` y `regex_constrained_semantic/chunks.jsonl` contra `data/interim/tables/`.
@@ -103,7 +103,7 @@ La auditoría compara `parents.jsonl` y `regex_constrained_semantic/chunks.jsonl
 ### 7. Convertir tablas HTML a Markdown derivado
 
 ```bash
-python -m pipeline.chunking.main build-table-markdown
+python -m pipeline.tables.main build-table-markdown
 ```
 
 Salida principal: `data/processed/tables_markdown/<source_stem>/table_<n>.md`.
@@ -113,7 +113,7 @@ Este paso también depende de Pandoc/pypandoc y debe ejecutarse antes de `build-
 ### 8. Crear documentos vector-ready de tablas
 
 ```bash
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main build-table-documents
 ```
 
 Salida principal: `data/processed/table_documents.jsonl`.
@@ -151,7 +151,7 @@ Los documentos de tabla conservan metadata lógica (`source_stem`, `table_index`
 python -m pipeline.chunking.main --help
 python -m pipeline.chunking.main build-parents --help
 python -m pipeline.chunking.main build-regex-constrained-semantic --help
-python -m pipeline.chunking.main audit-table-references --help
-python -m pipeline.chunking.main build-table-markdown --help
-python -m pipeline.chunking.main build-table-documents --help
+python -m pipeline.tables.main audit-table-references --help
+python -m pipeline.tables.main build-table-markdown --help
+python -m pipeline.tables.main build-table-documents --help
 ```

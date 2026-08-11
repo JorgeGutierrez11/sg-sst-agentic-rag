@@ -5,11 +5,13 @@ Esta guía sirve para regenerar, auditar y previsualizar los artefactos de tabla
 ## Ruta rápida
 
 ```bash
-python -m pipeline.chunking.main audit-table-references
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main audit-table-references
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 python -m pipeline.tables.table_jsonl_to_html
 ```
+
+`python -m pipeline.chunking.main ...` conserva los mismos comandos por compatibilidad, pero el punto de entrada propio del dominio de tablas es `python -m pipeline.tables.main ...`.
 
 La vista previa HTML es opcional. En reconstrucciones desde cero, o después de cambios en la extracción de tablas, ejecuta siempre `build-table-markdown` antes de `build-table-documents`.
 
@@ -27,7 +29,7 @@ La vista previa HTML es opcional. En reconstrucciones desde cero, o después de 
 ### 1. Auditar referencias de tablas
 
 ```bash
-python -m pipeline.chunking.main audit-table-references
+python -m pipeline.tables.main audit-table-references
 ```
 
 | Entrada | Salida |
@@ -41,7 +43,7 @@ Ejecuta este paso después de reconstruir chunks o cambiar la extracción DOCX. 
 ### 2. Regenerar Markdown derivado de tablas
 
 ```bash
-python -m pipeline.chunking.main build-table-markdown
+python -m pipeline.tables.main build-table-markdown
 ```
 
 | Entrada | Salida |
@@ -53,7 +55,7 @@ Este paso convierte las tablas HTML extraídas a Markdown derivado. Es obligator
 ### 3. Crear documentos vectorizables de tablas
 
 ```bash
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main build-table-documents
 ```
 
 | Entrada | Salida |
@@ -85,4 +87,3 @@ Usa esta salida para revisión humana rápida. No es necesaria para indexar en C
 | Cambió la extracción de tablas HTML | `audit-table-references` → `build-table-markdown` → `build-table-documents` |
 | Solo quieres revisar visualmente documentos ya generados | `python -m pipeline.tables.table_jsonl_to_html` |
 | Vas a vectorizar | Confirma que existe `data/processed/table_documents.jsonl`; si no existe, ejecuta `build-table-markdown` y luego `build-table-documents`. |
-

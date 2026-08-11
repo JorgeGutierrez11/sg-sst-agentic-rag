@@ -6,14 +6,14 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 
 - When methodology conflicts, trust `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` over stale prose.
 - Keep scope anchored to the official SG-SST sources named in the plan: Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
-- `docs/arquitectura.md` is referenced by docs but is currently absent; do not assume it exists.
+- Current technical docs live under `docs/architecture/`, operational runbooks under `docs/operations/`, and experiment notes under `docs/experiments/`; prefer those over deleted legacy guides.
 
 ## Tooling and verification
 
 - Root dependency manifest is only `requirements.txt`; there is no pyproject, lockfile, Makefile/task runner, CI workflow, formatter, lint, typecheck, pre-commit, or repo-local OpenCode config discovered.
 - Use `python -m unittest discover -s pipeline/tests` for the current Python test suite when dependencies are installed.
 - Focused table pipeline tests: `python -m unittest pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents`.
-- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_table_documents pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store pipeline.tests.test_consulta_normativa_cli pipeline.tests.test_consulta_normativa_rag_base`.
+- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_table_documents pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store agents.consulta_normativa.tests.test_cli agents.consulta_normativa.tests.test_rag_base`.
 - Compile check for vector/RAG work: `python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa`.
 - If `.codegraph/` exists locally, use CodeGraph first for structural/codebase questions, then fall back to direct file reads only when needed.
 
@@ -28,6 +28,7 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 - `evaluation/results/`: processed/anonymized evaluation outputs, including ARES runs, expert validation, user-study summaries, and integrated reports.
 - `evaluation/resultados_usuarios/`: confidential raw company interactions; anonymize identifiers and confirm consent before storing anything. Its contents are ignored except README.
 - `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable data areas; do not assume source DOCX or generated corpus files are versioned.
+- `docs/decisiones/` legacy planning docs were removed; do not recreate ADR/decision files unless explicitly requested.
 
 ## Methodology constraints
 
@@ -50,7 +51,8 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 - DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes Markdown and extracted HTML tables under `data/interim/`, and requires Pandoc plus `pypandoc`.
 - Markdown cleaning: `python pipeline/cleaning/markdown_cleaner.py` reads `data/interim/*.md` and writes `data/processed/*.md`.
 - Chunking CLI: `python -m pipeline.chunking.main --help`.
-- Recommended chunking path: `build-parents`, `build-sliding-window`, `build-regex-constrained-semantic`, `audit-table-references`, `build-table-markdown`, `build-table-documents`.
+- Corpus rebuild runbook: `docs/operations/corpus-build.md`; table processing runbook: `docs/operations/table-processing.md`; vectorization/RAG runbook: `docs/operations/vectorization-and-rag.md`.
+- Recommended chunking path: `build-parents`, `build-sliding-window`, `build-regex-constrained-semantic`; use `python -m pipeline.tables.main ...` for table auditing and table document generation.
 - `build-regex-constrained-semantic` is the current recommended child-chunk strategy for SG-SST because it preserves exact offsets and legal traceability; keep `build-sliding-window` as a baseline and avoid pure `semantic_chunking` as final output.
 - Table references use logical metadata such as `source_stem` + `table_index`; do not persist physical HTML paths in chunks or Chroma metadata.
 - Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` and `data/processed/table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.

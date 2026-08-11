@@ -7,6 +7,9 @@ from pipeline.chunking.hierarchical_splitter import tokenization
 
 
 class ChunkingTokenizationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        tokenization.get_tokenizer.cache_clear()
+
     def tearDown(self) -> None:
         tokenization.get_tokenizer.cache_clear()
 

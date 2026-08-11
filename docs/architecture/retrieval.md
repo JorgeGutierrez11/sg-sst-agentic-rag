@@ -45,7 +45,7 @@ Si `data/processed/chroma` no existe o la colección `sg_sst_base_rag` no está 
 
 ## Recuperación top-k y contexto
 
-`agents/consulta_normativa/rag_base.py` encapsula la recuperación con `chroma_retriever(collection)`. Internamente llama a `query_top_k(...)` en `pipeline/vectorization/chroma_store.py` con esta forma:
+`agents/consulta_normativa/rag_base.py` encapsula la recuperación con `chroma_retriever(collection)`. Internamente llama a `query_top_k(...)` en `agents/shared/chroma_retrieval.py` con esta forma:
 
 ```python
 collection.query(

@@ -4,8 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from agents.consulta_normativa.config import DEFAULT_TOP_K
 from agents.consulta_normativa.prompts import build_base_prompt
-from pipeline.vectorization.chroma_store import query_top_k
+from agents.shared.chroma_retrieval import query_top_k
 
 
 Retriever = Callable[[str, int], dict[str, Any]]
@@ -60,7 +61,12 @@ class SourceReference:
 
 # RAG orchestration
 
-def answer_question(question: str, retriever: Retriever, generator: Generator | None = None, top_k: int = 5) -> RagAnswer:
+def answer_question(
+    question: str,
+    retriever: Retriever,
+    generator: Generator | None = None,
+    top_k: int = DEFAULT_TOP_K,
+) -> RagAnswer:
     """Retrieve context and answer a normative question with optional generation."""
 
     results = retriever(question, top_k)

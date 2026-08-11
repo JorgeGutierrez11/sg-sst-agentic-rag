@@ -61,4 +61,4 @@ También acepta `--output-dir`, `--min-tokens`, `--max-tokens` y múltiples pare
 | `regex_constrained_semantic` | 330 | 350 | 0 | Mejor candidato para vector store. |
 
 
-Para contrastar la implementación actual con esa evidencia, revisar también `evaluation/experiments/chunking_comparison.py`, la salida regenerable `data/processed/chunks/comparison/metrics.json` y el reporte regenerable `data/processed/chunks/comparison/comparison_report.md`.
+Para contrastar la implementación actual con esa evidencia, revisar también el resultado obtenido de la evaluacion [`metrics.json`](../../data/processed/chunks/comparison/metrics.json) y el reporte regenerado [`comparison_report.md`](../../data/processed/chunks/comparison/comparison_report.md).

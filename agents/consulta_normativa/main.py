@@ -9,9 +9,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-DEFAULT_TOP_K = 5
-DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
-DEFAULT_TEMPERATURE = 0
+from agents.consulta_normativa.config import (
+    DEFAULT_CHROMA_PATH,
+    DEFAULT_COLLECTION_NAME,
+    DEFAULT_GROQ_MODEL,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TOP_K,
+)
+
 OPERATIONAL_ERROR_CODE = 2
 
 Generator = Callable[[str], str]
@@ -127,8 +132,8 @@ def build_rag_runtime() -> RagRuntime:
 
     try:
         collection = dependencies.open_existing_collection(
-            dependencies.chroma_path, 
-            dependencies.collection_name
+            dependencies.chroma_path,
+            dependencies.collection_name,
         )
         retriever = dependencies.chroma_retriever(collection)
     except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
@@ -145,10 +150,10 @@ def answer_once(runtime: RagRuntime, question: str) -> None:
     """Answer one question with the already initialized RAG runtime."""
 
     result = runtime.answer_question(
-        question, 
-        runtime.retriever, 
-        generator=runtime.generator, 
-        top_k=DEFAULT_TOP_K
+        question,
+        runtime.retriever,
+        generator=runtime.generator,
+        top_k=DEFAULT_TOP_K,
     )
     print_answer(result.answer, result.references)
 
@@ -209,8 +214,7 @@ def load_rag_dependencies() -> RagDependencies:
 
     try:
         from agents.consulta_normativa.rag_base import answer_question, chroma_retriever
-        from pipeline.vectorization.chroma_store import DEFAULT_COLLECTION_NAME, open_existing_collection
-        from pipeline.vectorization.ingest import DEFAULT_CHROMA_PATH
+        from agents.shared.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise DependencyLoadError(f"Required runtime dependency is not installed: {error}") from error
 

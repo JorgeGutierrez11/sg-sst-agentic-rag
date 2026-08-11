@@ -1,6 +1,6 @@
 # Arquitectura del pipeline de chunking
 
-El pipeline de chunking convierte normas SG-SST en unidades recuperables para RAG sin romper la trazabilidad jurídica. Su salida principal recomendada es `data/processed/chunks/regex_constrained_semantic/chunks.jsonl`, complementada por `parents.jsonl` y baselines de comparación. El flujo completo de tablas vive en [`tables.md`](tables.md).
+El pipeline de chunking convierte normas SG-SST en unidades recuperables para RAG sin romper la trazabilidad jurídica. Su salida principal recomendada es `data/processed/chunks/regex_constrained_semantic/chunks.jsonl`, complementada por `parents.jsonl` y baselines de comparación.
 
 ## Ruta operativa actual
 
@@ -11,9 +11,6 @@ python -m pipeline.chunking.main build-parents
 python -m pipeline.chunking.main build-sliding-window
 python -m pipeline.chunking.main build-semantic
 python -m pipeline.chunking.main build-regex-constrained-semantic
-python -m pipeline.chunking.main audit-table-references
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
 ```
 
 ## Por qué existe este pipeline

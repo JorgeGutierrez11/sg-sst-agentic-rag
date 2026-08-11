@@ -7,9 +7,9 @@ Las tablas son contenido normativo de primera clase en el RAG SG-SST. En normas 
 Ejecuta estos comandos desde la raíz del repositorio cuando ya existen Markdown limpio y chunks:
 
 ```bash
-python -m pipeline.chunking.main audit-table-references
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main audit-table-references
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 python -m pipeline.tables.table_jsonl_to_html
 ```
 

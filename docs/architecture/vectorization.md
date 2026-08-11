@@ -8,8 +8,8 @@ Desde la raíz del repositorio:
 
 ```bash
 python -m pipeline.chunking.main build-regex-constrained-semantic
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 python -m pipeline.vectorization.main --batch-size 8
 ```
 
@@ -34,7 +34,7 @@ La colección se abre con `SentenceTransformerEmbeddingFunction` y el modelo:
 Qwen/Qwen3-Embedding-0.6B
 ```
 
-El modelo está centralizado como `DEFAULT_EMBEDDING_MODEL` en `pipeline/chunking/core/config.py`. La estrategia `regex_constrained_semantic` lo usa para calcular señales semánticas durante el chunking, y `pipeline/vectorization/chroma_store.py` lo usa como función de embeddings para ingesta y consulta en Chroma.
+El modelo está centralizado como `DEFAULT_EMBEDDING_MODEL` en `pipeline/chunking/core/config.py`. La estrategia `regex_constrained_semantic` lo usa para calcular señales semánticas durante el chunking; la ingesta y la consulta lo usan como función de embeddings para Chroma.
 
 La consistencia importa por tres razones:
 
@@ -96,8 +96,8 @@ Procedimiento recomendado para rebuild limpio:
 
 ```bash
 rm -rf data/processed/chroma
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 python -m pipeline.vectorization.main --batch-size 8
 ```
 
@@ -105,7 +105,7 @@ Si quieres conservar el índice anterior para comparación, muévelo en vez de b
 
 ```bash
 mv data/processed/chroma data/processed/chroma.backup
-python -m pipeline.chunking.main build-table-markdown
-python -m pipeline.chunking.main build-table-documents
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
 python -m pipeline.vectorization.main --batch-size 8
 ```
