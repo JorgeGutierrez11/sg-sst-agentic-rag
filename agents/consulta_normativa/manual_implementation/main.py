@@ -21,7 +21,7 @@ OPERATIONAL_ERROR_CODE = 2
 
 Generator = Callable[[str], str]
 
-
+# Custom Application Exceptions 
 class OperationalError(Exception):
     """Controlled error for missing runtime dependencies or configuration."""
 
@@ -41,7 +41,7 @@ class CollectionOpenError(OperationalError):
 class RagExecutionError(OperationalError):
     """Controlled error raised when retrieval or generation fails."""
 
-
+# Data structures 
 @dataclass(frozen=True)
 class RagDependencies:
     """Import-time dependencies for the interactive CLI flow."""
@@ -61,7 +61,7 @@ class RagRuntime:
     retriever: Callable[[str, int], dict[str, Any]]
     generator: Generator
 
-
+# Core build functions
 def build_default_generator() -> Generator:
     """Return the default Groq-backed generator for the base RAG."""
 
@@ -87,18 +87,11 @@ def build_default_generator() -> Generator:
 
     return generate
 
-
-def build_parser() -> argparse.ArgumentParser:
-    """Build the CLI parser for the interactive normative consultation RAG."""
-
-    parser = argparse.ArgumentParser(prog="python -m agents.consulta_normativa.main")
-    return parser
-
-
+# Main flow
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI and return a process exit code."""
 
-    parser = build_parser()
+    parser = argparse.ArgumentParser(prog="python -m agents.consulta_normativa.main")
     parser.parse_args(argv)
 
     try:
@@ -112,11 +105,12 @@ def main(argv: list[str] | None = None) -> int:
 
     return run_interactive_loop(runtime)
 
-
+# RAG builder
 def build_rag_runtime() -> RagRuntime:
     """Build the reusable RAG runtime once for the interactive session."""
 
     try:
+        # answer_question, chroma_retriever, open_existing_collection, chroma_path, collection_name 
         dependencies = load_rag_dependencies()
     except OperationalError as error:
         raise StagedOperationalError("dependency loading", str(error)) from error
@@ -124,7 +118,8 @@ def build_rag_runtime() -> RagRuntime:
         raise StagedOperationalError("dependency loading", str(error)) from error
 
     try:
-        generator = build_default_generator()
+        # Carga el modelo LLM (Groq)
+        generator = build_default_generator() 
     except OperationalError as error:
         raise StagedOperationalError("generator setup", str(error)) from error
     except Exception as error:  # noqa: BLE001 - CLI must report operational failures without traceback.
@@ -144,18 +139,6 @@ def build_rag_runtime() -> RagRuntime:
         retriever=retriever,
         generator=generator,
     )
-
-
-def answer_once(runtime: RagRuntime, question: str) -> None:
-    """Answer one question with the already initialized RAG runtime."""
-
-    result = runtime.answer_question(
-        question,
-        runtime.retriever,
-        generator=runtime.generator,
-        top_k=DEFAULT_TOP_K,
-    )
-    print_answer(result.answer, result.references)
 
 
 def run_interactive_loop(runtime: RagRuntime) -> int:
@@ -184,6 +167,18 @@ def run_interactive_loop(runtime: RagRuntime) -> int:
             print_controlled_error("RAG execution", RagExecutionError(str(error)))
 
 
+def answer_once(runtime: RagRuntime, question: str) -> None:
+    """Answer one question with the already initialized RAG runtime."""
+
+    result = runtime.answer_question(
+        question,
+        runtime.retriever,
+        generator=runtime.generator,
+        top_k=DEFAULT_TOP_K,
+    )
+    print_answer(result.answer, result.references, result.context)
+
+# Error Handling
 @dataclass(frozen=True)
 class StagedOperationalError(OperationalError):
     """Controlled operational error that already knows its failing stage."""
@@ -209,6 +204,7 @@ def print_controlled_error(stage: str, error: Exception) -> None:
     print(str(error), file=sys.stderr)
 
 
+# Auxiliar Functions 
 def load_rag_dependencies() -> RagDependencies:
     """Load RAG dependencies lazily so missing optional packages fail cleanly."""
 
@@ -227,12 +223,16 @@ def load_rag_dependencies() -> RagDependencies:
     )
 
 
-def print_answer(answer: str, references: list[str]) -> None:
+def print_answer(answer: str, references: list[str], context: str) -> None:
     """Print the base readable answer and references sections."""
-
+    print("Contexto recuperado:")
+    print(context)
+    print()
+    print("-----------------------------------------------------")
     print("Respuesta:")
     print(answer)
     print()
+    print("-----------------------------------------------------")
     print("Referencias:")
     for reference in references:
         print(f"- {reference}")

@@ -16,18 +16,20 @@ class ConsultaNormativaCliTest(unittest.TestCase):
     """Verify interactive orchestration, generation, and controlled errors."""
 
     def test_parser_accepts_base_command_without_subcommands(self) -> None:
-        parser = cli.build_parser()
+        with patch.object(cli, "build_rag_runtime", return_value=self.build_runtime()), patch.object(
+            cli,
+            "run_interactive_loop",
+            return_value=0,
+        ):
+            exit_code = cli.main([])
 
-        args = parser.parse_args([])
-
-        self.assertEqual(vars(args), {})
+        self.assertEqual(exit_code, 0)
 
     def test_parser_rejects_removed_ask_subcommand(self) -> None:
-        parser = cli.build_parser()
         stderr = io.StringIO()
 
         with redirect_stderr(stderr), self.assertRaises(SystemExit) as context:
-            parser.parse_args(["ask", "¿Qué debe incluir el plan anual?"])
+            cli.main(["ask", "¿Qué debe incluir el plan anual?"])
 
         self.assertEqual(context.exception.code, 2)
         self.assertIn("unrecognized arguments", stderr.getvalue())
@@ -72,7 +74,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
 
         def fake_answer_question(question: str, retriever: object, **kwargs: object) -> object:
             calls.append(f"answer:{question}:{retriever}:{kwargs['generator']('prompt')}")
-            return types.SimpleNamespace(answer=f"answer for {question}", references=[])
+            return types.SimpleNamespace(answer=f"answer for {question}", references=[], context="context")
 
         def fake_chroma_retriever(collection: object) -> object:
             calls.append(f"retriever:{collection}")
@@ -117,7 +119,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
 
         def fake_answer_question(question: str, retriever: object, **kwargs: object) -> object:
             calls.append((question, retriever, kwargs))
-            return types.SimpleNamespace(answer="Generated answer.", references=["Decreto 1072 (child_chunk)"])
+            return types.SimpleNamespace(answer="Generated answer.", references=["Decreto 1072 (decreto)"], context="context")
 
         runtime = self.build_runtime(answer_question=fake_answer_question)
         stdout = io.StringIO()
@@ -131,7 +133,8 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             [("¿Qué debe incluir el plan anual?", "retriever", {"generator": runtime.generator, "top_k": 5})],
         )
         self.assertIn("RAG normativo listo", stdout.getvalue())
-        self.assertIn("Respuesta:\nGenerated answer.\n\nReferencias:\n- Decreto 1072 (child_chunk)\n", stdout.getvalue())
+        self.assertIn("Respuesta:\nGenerated answer.\n", stdout.getvalue())
+        self.assertNotIn("Referencias:", stdout.getvalue())
 
     def test_blank_input_is_ignored(self) -> None:
         runtime = self.build_runtime(answer_question=lambda question, retriever, **kwargs: self.fail("Blank input ran RAG"))
@@ -148,7 +151,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
             calls.append(question)
             if question == "falla":
                 raise RuntimeError("provider rejected request")
-            return types.SimpleNamespace(answer="Recovered answer.", references=[])
+            return types.SimpleNamespace(answer="Recovered answer.", references=[], context="context")
 
         runtime = self.build_runtime(answer_question=fake_answer_question)
         stdout = io.StringIO()
@@ -287,7 +290,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
 
     def build_runtime(self, answer_question: object | None = None) -> cli.RagRuntime:
         def default_answer_question(question: str, retriever: object, **kwargs: object) -> object:
-            return types.SimpleNamespace(answer="Generated answer.", references=[])
+            return types.SimpleNamespace(answer="Generated answer.", references=[], context="context")
 
         return cli.RagRuntime(
             answer_question=answer_question or default_answer_question,

@@ -27,10 +27,10 @@ def build_base_prompt(question: str, context: str) -> str:
     """Build the base grounded-answer prompt."""
     return f"""{BASE_SYSTEM_INSTRUCTIONS}
 
-Contexto recuperado:
-{context}
+    Contexto recuperado:
+    {context}
 
-Pregunta:
-{question}
+    Pregunta:
+    {question}
 
-Respuesta fundamentada (cita cada afirmación con [n]):"""
+    Respuesta fundamentada (cita cada afirmación con [n]):"""
