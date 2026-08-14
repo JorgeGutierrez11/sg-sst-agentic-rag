@@ -8,8 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-# pyrefly: ignore [missing-import]
-from agents.consulta_normativa.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, DEFAULT_TOP_K
+from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, DEFAULT_TOP_K
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -24,8 +23,9 @@ class OperationalError(Exception):
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
-    answer_with_langchain: Callable[[str, Retriever, Any, int], Any]
     build_groq_llm: Callable[[], Any]
+    build_langgraph_rag: Callable[[Any, Retriever, int], Any]
+    answer_with_langgraph: Callable[[str, Any], Any]
     chroma_retriever: Callable[[Any], Retriever]
     open_existing_collection: Callable[[Any, str], Any]
 
@@ -34,9 +34,8 @@ class RuntimeDependencies:
 class RagRuntime:
     """Reusable runtime built once for direct or interactive execution."""
 
-    answer_with_langchain: Callable[[str, Retriever, Any, int], Any]
-    retriever: Retriever
-    llm: Any
+    answer_with_langgraph: Callable[[str, Any], Any]
+    graph: Any
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -71,13 +70,20 @@ def build_runtime() -> RagRuntime:
     try:
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         retriever = dependencies.chroma_retriever(collection)
+        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K)
+
+        # Guardar diagrama en disco
+        png_bytes = graph.get_graph().draw_mermaid_png()
+        with open("data/images/base_rag_graph.png", "wb") as f:
+            f.write(png_bytes)
+
+        print("Grafo guardado exitosamente como 'base_rag_graph.png'")
     except Exception as error:  # noqa: BLE001 - Chroma path, package, and collection failures are operational.
         raise OperationalError(str(error)) from error
 
     return RagRuntime(
-        answer_with_langchain=dependencies.answer_with_langchain,
-        retriever=retriever,
-        llm=llm,
+        answer_with_langgraph=dependencies.answer_with_langgraph,
+        graph=graph,
     )
 
 
@@ -85,16 +91,16 @@ def load_dependencies() -> RuntimeDependencies:
     """Load optional runtime dependencies lazily so failures stay controlled."""
 
     try:
-        # pyrefly: ignore [missing-import]
-        from agents.consulta_normativa.rag_base import chroma_retriever
-        from agents.consulta_normativa.langchain_rag.chain import answer_with_langchain, build_groq_llm
+        from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_groq_llm, build_langgraph_rag
+        from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
         from agents.shared.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
     return RuntimeDependencies(
-        answer_with_langchain=answer_with_langchain,
         build_groq_llm=build_groq_llm,
+        build_langgraph_rag=build_langgraph_rag,
+        answer_with_langgraph=answer_with_langgraph,
         chroma_retriever=chroma_retriever,
         open_existing_collection=open_existing_collection,
     )
@@ -123,7 +129,7 @@ def run_once(runtime: RagRuntime, question: str) -> int:
     """Answer one question and keep expected failures controlled."""
 
     try:
-        result = runtime.answer_with_langchain(question, runtime.retriever, runtime.llm, DEFAULT_TOP_K)
+        result = runtime.answer_with_langgraph(question, runtime.graph)
     except Exception as error:  # noqa: BLE001 - direct CLI should report RAG failures without traceback.
         return fail("RAG execution", OperationalError(str(error)))
 

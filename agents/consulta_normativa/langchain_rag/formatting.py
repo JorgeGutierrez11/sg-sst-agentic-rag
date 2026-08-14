@@ -4,7 +4,6 @@ from typing import Any
 
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 
-
 def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
     """Normalize ChromaDB query output into one list of retrieved documents."""
 
@@ -25,8 +24,8 @@ def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
 def build_context(documents: list[RetrievedDocument]) -> str:
     """Build compact textual context from retrieved documents."""
 
-    if not documents:
-        return "No se recuperó contexto."
+    # if not documents:
+    #     return "No se recuperó contexto."
 
     context_blocks: list[str] = []
     for index, item in enumerate(documents, start=1):
@@ -118,7 +117,6 @@ def metadata_context(metadata: dict[str, Any]) -> str:
         if lines:
             rendered_sections.append("\n".join([f"{title}:", *lines]))
     return "\n".join(rendered_sections)
-
 
 def metadata_at(metadatas: list[Any], index: int) -> dict[str, Any]:
     """Return metadata at a result index when it is a dictionary."""

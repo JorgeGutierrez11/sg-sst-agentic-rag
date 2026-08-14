@@ -34,7 +34,7 @@ class LangChainRagMainTest(unittest.TestCase):
             exit_code = cli.main(["What does the employer need?"])
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(runtime.calls, ["What does the employer need?:5"])
+        self.assertEqual(runtime.calls, ["What does the employer need?:graph"])
         self.assertIn("Answer:\nGenerated answer.", stdout.getvalue())
         self.assertIn("References:\n- Decreto 1072", stdout.getvalue())
 
@@ -67,7 +67,7 @@ class LangChainRagMainTest(unittest.TestCase):
             exit_code = cli.run_interactive_loop(runtime)
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(runtime.calls, ["fail:5", "recover:5"])
+        self.assertEqual(runtime.calls, ["fail:graph", "recover:graph"])
         self.assertIn("Error during RAG execution", stderr.getvalue())
         self.assertIn("fake RAG failure", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
@@ -129,6 +129,7 @@ class LangChainRagMainTest(unittest.TestCase):
 
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
+            build_langgraph_rag=lambda llm, retriever, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or "graph",
             open_existing_collection=fake_open_existing_collection,
             chroma_retriever=fake_chroma_retriever,
         )
@@ -136,36 +137,39 @@ class LangChainRagMainTest(unittest.TestCase):
         with patch.object(cli, "load_dependencies", return_value=dependencies):
             runtime = cli.build_runtime()
 
-        self.assertEqual(calls, [f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag", "retriever:collection"])
-        self.assertEqual(runtime.llm, "llm")
-        self.assertEqual(runtime.retriever, "retriever")
+        self.assertEqual(
+            calls,
+            [f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag", "retriever:collection", "graph:llm:retriever:5"],
+        )
+        self.assertEqual(runtime.graph, "graph")
 
     def build_runtime(self, fail_first: bool = False) -> object:
         calls: list[str] = []
 
-        def fake_answer_with_langchain(question: str, retriever: object, llm: object, top_k: int) -> object:
-            calls.append(f"{question}:{top_k}")
+        def fake_answer_with_langgraph(question: str, graph: object) -> object:
+            calls.append(f"{question}:{graph}")
             if fail_first and question == "fail":
                 raise RuntimeError("fake RAG failure")
             return types.SimpleNamespace(answer="Generated answer.", references=["Decreto 1072"])
 
         runtime = cli.RagRuntime(
-            answer_with_langchain=fake_answer_with_langchain,  # type: ignore[arg-type]
-            retriever=lambda question, top_k: {},
-            llm=object(),
+            answer_with_langgraph=fake_answer_with_langgraph,
+            graph="graph",
         )
         return types.SimpleNamespace(**runtime.__dict__, calls=calls)
 
     def build_dependencies(
         self,
-        answer_with_langchain: object | None = None,
         build_groq_llm: object | None = None,
+        build_langgraph_rag: object | None = None,
+        answer_with_langgraph: object | None = None,
         chroma_retriever: object | None = None,
         open_existing_collection: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
-            answer_with_langchain=answer_with_langchain or (lambda question, retriever, llm, top_k: object()),
             build_groq_llm=build_groq_llm or (lambda: object()),
+            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, top_k: object()),
+            answer_with_langgraph=answer_with_langgraph or (lambda question, graph: object()),
             chroma_retriever=chroma_retriever or (lambda collection: lambda question, top_k: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
         )

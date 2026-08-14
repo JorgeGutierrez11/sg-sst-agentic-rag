@@ -1,13 +1,13 @@
-"""Minimal LangGraph RAG flow for normative consultation."""
+"""LangGraph RAG flow for normative consultation."""
 
+import os
 from collections.abc import Callable
 from typing import Any, TypedDict
 
-from agents.consulta_normativa.manual_implementation.config import DEFAULT_TOP_K
-from agents.consulta_normativa.langchain_rag.chain import generate_answer, invoke_llm, insufficient_evidence_answer
+from agents.consulta_normativa.langchain_rag.config import DEFAULT_GROQ_MODEL, DEFAULT_TEMPERATURE, DEFAULT_TOP_K
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
-from agents.consulta_normativa.manual_implementation.prompts import build_base_prompt
+from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
 
 Retriever = Callable[[str, int], dict[str, Any]]
 
@@ -16,16 +16,34 @@ class RagGraphState(TypedDict, total=False):
     """State passed through the minimal LangGraph RAG flow."""
 
     question: str
+    raw_results: dict[str, Any]
     documents: list[RetrievedDocument]
+    has_evidence: bool
     context: str
     references: list[str]
+    messages: list[Any]
     prompt: str
     answer: str
-    result: LangChainRagResult
+    result: LangChainRagResult # Retorna algo que retorne arriba?
+
+
+def build_groq_llm() -> Any:
+    """Build the default Groq LangChain chat model lazily."""
+
+    if not os.environ.get("GROQ_API_KEY"):
+        raise ValueError("GROQ_API_KEY is not configured in the environment.")
+
+    try:
+        # pyrefly: ignore [missing-import]
+        from langchain_groq import ChatGroq
+    except ModuleNotFoundError as error:
+        raise ModuleNotFoundError(f"langchain_groq is not installed: {error}") from error
+
+    return ChatGroq(model=DEFAULT_GROQ_MODEL, temperature=DEFAULT_TEMPERATURE)
 
 
 def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
-    """Build the minimal LangGraph equivalent of the linear RAG pipeline."""
+    """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
         # pyrefly: ignore [missing-import]
@@ -35,13 +53,26 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
     workflow = StateGraph(RagGraphState)
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
+    workflow.add_node("normalize_documents", normalize_documents_node)
+    workflow.add_node("assess_evidence", assess_evidence_node)
+    workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
-    workflow.add_node("generate", generate_node(llm))
+    workflow.add_node("build_messages", build_messages_node)
+    workflow.add_node("generate_answer", generate_answer_node(llm))
     workflow.add_node("format_result", format_result_node)
+
     workflow.set_entry_point("retrieve")
-    workflow.add_edge("retrieve", "format_context")
-    workflow.add_edge("format_context", "generate")
-    workflow.add_edge("generate", "format_result")
+    workflow.add_edge("retrieve", "normalize_documents")
+    workflow.add_edge("normalize_documents", "assess_evidence")
+    workflow.add_conditional_edges(
+        "assess_evidence", # Nodo desde donde sale la arista condicional.
+        evidence_route,    # Funcion que retorna la arista que se debe tomar.
+        {"with_evidence": "format_context", "without_evidence": "fallback_answer"}, # Diccionario que mapea el retorno de la funcion con el siguiente nodo.
+    )
+    workflow.add_edge("fallback_answer", "format_result")
+    workflow.add_edge("format_context", "build_messages")
+    workflow.add_edge("build_messages", "generate_answer")
+    workflow.add_edge("generate_answer", "format_result")
     workflow.add_edge("format_result", END)
     return workflow.compile()
 
@@ -49,56 +80,111 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
-    state = graph.invoke({"question": question})
+    state = graph.invoke({"question": question}) # Ejecuta el grafo
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")
     return result
 
 
-def answer_with_linear_graph(question: str, retriever: Retriever, llm: Any, top_k: int = DEFAULT_TOP_K) -> LangChainRagResult:
-    """Run the same node sequence without requiring LangGraph."""
-
-    state: RagGraphState = {"question": question}
-    state.update(retrieve_node(retriever, top_k)(state))
-    state.update(format_context_node(state))
-    state.update(generate_node(llm)(state))
-    state.update(format_result_node(state))
-    return state["result"]
-
-
 def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState], RagGraphState]:
-    """Build a graph node that retrieves and normalizes documents."""
+    """Build a graph node that retrieves raw Chroma-like results."""
 
     def run(state: RagGraphState) -> RagGraphState:
-        return {"documents": recovered_documents(retriever(state["question"], top_k))}
+        return {"raw_results": retriever(state["question"], top_k)}
 
     return run
 
 
+def normalize_documents_node(state: RagGraphState) -> RagGraphState:
+    """Normalize raw retrieval output into retrieved documents."""
 
-def format_context_node(state: RagGraphState) -> RagGraphState:
-    """Build context, references, and prompt from retrieved documents."""
+    return {"documents": recovered_documents(state.get("raw_results", {}))}
 
-    documents = state.get("documents", [])
-    context = build_context(documents)
+
+def assess_evidence_node(state: RagGraphState) -> RagGraphState:
+    """Assess if there is enough evidence to answer the question."""
+
+    return {"has_evidence": bool(state.get("documents", []))}
+
+
+def evidence_route(state: RagGraphState) -> str:
+    """Return the next graph route based on evidence availability."""
+
+    return "with_evidence" if state.get("has_evidence") else "without_evidence"
+
+
+def fallback_answer_node(state: RagGraphState) -> RagGraphState:
+    """Return the deterministic manual fallback without invoking the LLM."""
+    context = "No se recuperó contexto."
+
     return {
         "context": context,
+        "references": [],
+        "prompt": build_base_prompt(state["question"], context),
+        "answer": "La evidencia recuperada es insuficiente para responder la pregunta",
+    }
+
+
+def format_context_node(state: RagGraphState) -> RagGraphState:
+    """Build context and references from retrieved documents."""
+
+    documents = state.get("documents", [])
+    return {
+        "context": build_context(documents),
         "references": build_references(documents),
+    }
+
+
+def build_messages_node(state: RagGraphState) -> RagGraphState:
+    """Build LangChain chat messages equivalent to the manual prompt input."""
+
+    try:
+        # pyrefly: ignore [missing-import]
+        from langchain_core.messages import HumanMessage, SystemMessage
+    except ModuleNotFoundError as error:
+        raise ModuleNotFoundError(f"langchain is not installed: {error}") from error
+
+    context = state["context"]
+    return {
+        "messages": [
+            SystemMessage(content=BASE_SYSTEM_INSTRUCTIONS),
+            HumanMessage(content=build_human_prompt(state["question"], context)),
+        ],
         "prompt": build_base_prompt(state["question"], context),
     }
 
 
-def generate_node(llm: Any) -> Callable[[RagGraphState], RagGraphState]:
-    """Build a graph node that invokes the LLM when evidence exists."""
+def generate_answer_node(llm: Any) -> Callable[[RagGraphState], RagGraphState]:
+    """Build a graph node that invokes the LLM with LangChain messages."""
 
     def run(state: RagGraphState) -> RagGraphState:
-        documents = state.get("documents", [])
-        answer = invoke_llm(llm, state["prompt"]) if documents else insufficient_evidence_answer()
-        return {"answer": answer}
+        response = llm.invoke(state["messages"])
+        return {"answer": extract_response_content(response)}
 
     return run
 
+
+def extract_response_content(response: Any) -> str:
+    """Extract text from an AIMessage-like response, with message-list protection."""
+
+    content = getattr(response, "content", None)
+    if content is not None:
+        return str(content)
+    if isinstance(response, list):
+        for message in reversed(response):
+            message_content = getattr(message, "content", None)
+            if message_content:
+                return str(message_content)
+    return str(response)
+
+
+def fallback_answer(context: str, references: list[str]) -> str:
+    """Replicate the manual deterministic fallback answer exactly."""
+
+    if context == "No se recuperó contexto.":
+        return "La evidencia recuperada es insuficiente para responder la pregunta."
+    return "\n".join(["Borrador fundamentado solo en el contexto recuperado:", context, "Referencias:", *references])
 
 
 def format_result_node(state: RagGraphState) -> RagGraphState:
