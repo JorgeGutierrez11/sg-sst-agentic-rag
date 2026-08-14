@@ -52,7 +52,7 @@ También acepta `--output-dir`, `--min-tokens`, `--max-tokens` y múltiples pare
 
 ## Evidencia del reporte existente
 
-`docs/resumen-evaluacion-semantic-chunking.md` registra una comparación más rica que incluye métricas cuantitativas, revisión de offsets, referencias de tablas y evaluación cualitativa. En ese reporte:
+`docs/experiments/resumen-evaluacion-semantic-chunking.md` registra una comparación más rica que incluye métricas cuantitativas, revisión de offsets, referencias de tablas y evaluación cualitativa. En ese reporte:
 
 | Estrategia | Chunks | Máximo tokens | Offsets no resueltos | Veredicto reportado |
 |---|---:|---:|---:|---|

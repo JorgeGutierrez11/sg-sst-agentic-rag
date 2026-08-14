@@ -28,7 +28,7 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 - `evaluation/results/`: processed/anonymized evaluation outputs, including ARES runs, expert validation, user-study summaries, and integrated reports.
 - `evaluation/resultados_usuarios/`: confidential raw company interactions; anonymize identifiers and confirm consent before storing anything. Its contents are ignored except README.
 - `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable data areas; do not assume source DOCX or generated corpus files are versioned.
-- `docs/decisiones/` legacy planning docs were removed; do not recreate ADR/decision files unless explicitly requested.
+- `docs/decisiones/` contains planning and decision records. Do not create new decision files there unless explicitly requested.
 
 ## Methodology constraints
 
@@ -51,12 +51,12 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 - DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes Markdown and extracted HTML tables under `data/interim/`, and requires Pandoc plus `pypandoc`.
 - Markdown cleaning: `python pipeline/cleaning/markdown_cleaner.py` reads `data/interim/*.md` and writes `data/processed/*.md`.
 - Chunking CLI: `python -m pipeline.chunking.main --help`.
-- Corpus rebuild runbook: `docs/operations/corpus-build.md`; table processing runbook: `docs/operations/table-processing.md`; vectorization/RAG runbook: `docs/operations/vectorization-and-rag.md`.
+- Corpus rebuild runbook: `docs/operations/corpus-build.md`; table processing runbook: `docs/operations/table-processing.md`; vectorization runbook: `docs/operations/vectorization.md`; RAG runbooks: `docs/operations/rag-langgraph.md` and `docs/operations/rag-manual.md`.
 - Recommended chunking path: `build-parents`, `build-sliding-window`, `build-regex-constrained-semantic`; use `python -m pipeline.tables.main ...` for table auditing and table document generation.
 - `build-regex-constrained-semantic` is the current recommended child-chunk strategy for SG-SST because it preserves exact offsets and legal traceability; keep `build-sliding-window` as a baseline and avoid pure `semantic_chunking` as final output.
 - Table references use logical metadata such as `source_stem` + `table_index`; do not persist physical HTML paths in chunks or Chroma metadata.
 - Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` and `data/processed/table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
 - Vector ingestion uses upsert and does not delete stale Chroma records; remove/move `data/processed/chroma` for a clean rebuild.
-- Base consultation CLI: set `GROQ_API_KEY` in the environment, then run `python -m agents.consulta_normativa.main`; it opens an existing Chroma collection and must not create an empty one during consultation.
+- Current consultation CLI: set `GROQ_API_KEY` in the environment, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing Chroma collection and must not create an empty one during consultation.
 - Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default Groq generation model is `openai/gpt-oss-120b` at temperature `0`.
 - Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the current output directory name is intentionally misspelled as `data/processed/tables_htlm`.
