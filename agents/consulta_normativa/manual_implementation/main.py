@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from agents.consulta_normativa.config import (
+from agents.consulta_normativa.manual_implementation.config import (
     DEFAULT_CHROMA_PATH,
     DEFAULT_COLLECTION_NAME,
     DEFAULT_GROQ_MODEL,
@@ -209,7 +209,7 @@ def load_rag_dependencies() -> RagDependencies:
     """Load RAG dependencies lazily so missing optional packages fail cleanly."""
 
     try:
-        from agents.consulta_normativa.rag_base import answer_question, chroma_retriever
+        from agents.consulta_normativa.manual_implementation.rag_base import answer_question, chroma_retriever
         from agents.shared.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise DependencyLoadError(f"Required runtime dependency is not installed: {error}") from error
