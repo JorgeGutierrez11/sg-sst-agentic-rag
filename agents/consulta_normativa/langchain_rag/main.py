@@ -91,7 +91,8 @@ def load_dependencies() -> RuntimeDependencies:
     """Load optional runtime dependencies lazily so failures stay controlled."""
 
     try:
-        from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_groq_llm, build_langgraph_rag
+        from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
+        from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
         from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
         from agents.shared.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:

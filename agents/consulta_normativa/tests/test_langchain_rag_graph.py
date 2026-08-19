@@ -87,11 +87,35 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(result.answer, "Generated from fake LLM.")
         self.assertIn("Contenido:\nContexto normativo", result.context)
         self.assertEqual(result.references, ["Resolución 0312 de 2019, tabla 1 (table)"])
-        self.assertEqual(len(llm.messages), 1)
-        system_message, human_message = llm.messages[0]
+        self.assertEqual(len(llm.messages), 2)
+        system_message, human_message = llm.messages[-1]
         self.assertIn("Responde ÚNICAMENTE", system_message.content)
         self.assertIn("Contexto recuperado:", human_message.content)
         self.assertIn("¿Qué exige la norma?", human_message.content)
+
+    def test_build_langgraph_rag_retrieves_with_rewritten_query(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm(responses=["consulta normativa reescrita SG-SST", "Generated from fake LLM."])
+        retrieved_queries: list[str] = []
+
+        def retriever(question: str, top_k: int) -> dict[str, object]:
+            retrieved_queries.append(question)
+            return self.fake_retriever(question, top_k)
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, retriever, top_k=1)
+
+        result = answer_with_langgraph("¿Qué tiene que hacer el empleador?", graph)
+
+        self.assertEqual(result.answer, "Generated from fake LLM.")
+        self.assertEqual(retrieved_queries, ["consulta normativa reescrita SG-SST"])
 
     def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -99,7 +123,11 @@ class LangGraphRagTest(unittest.TestCase):
 
         with patch.dict(
             sys.modules,
-            {"langgraph": types.SimpleNamespace(), "langgraph.graph": fake_graph_module},
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
         ):
             graph = build_langgraph_rag(llm, lambda question, top_k: {"documents": [[]], "metadatas": [[]]}, top_k=1)
 
@@ -108,7 +136,7 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(result.answer, "La evidencia recuperada es insuficiente para responder la pregunta.")
         self.assertEqual(result.context, "No se recuperó contexto.")
         self.assertEqual(result.references, [])
-        self.assertEqual(llm.messages, [])
+        self.assertEqual(len(llm.messages), 1)
 
     def test_context_references_and_generation_input_match_manual_for_fixture(self) -> None:
         raw_results = self.fake_retriever("¿Qué exige la norma?", 1)
@@ -178,12 +206,14 @@ class LangGraphRagTest(unittest.TestCase):
 class FakeLlm:
     """Small LangChain-like fake that records message input."""
 
-    def __init__(self) -> None:
+    def __init__(self, responses: list[str] | None = None) -> None:
         self.messages: list[list[object]] = []
+        self.responses = responses or ["Generated from fake LLM."]
 
     def invoke(self, messages: list[object]) -> object:
         self.messages.append(messages)
-        return types.SimpleNamespace(content="Generated from fake LLM.")
+        response = self.responses[min(len(self.messages) - 1, len(self.responses) - 1)]
+        return types.SimpleNamespace(content=response)
 
 
 def fake_message_module() -> object:

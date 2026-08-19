@@ -1,33 +1,19 @@
 """LangGraph RAG flow for normative consultation."""
 
-import os
 from collections.abc import Callable
 from typing import Any
 
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_GROQ_MODEL, DEFAULT_TEMPERATURE, DEFAULT_TOP_K
+from agents.consulta_normativa.langchain_rag.config import DEFAULT_TOP_K
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
+from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
 from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
+from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
 
 Retriever = Callable[[str, int], dict[str, Any]]
-
-
-def build_groq_llm() -> Any:
-    """Build the default Groq LangChain chat model lazily."""
-
-    if not os.environ.get("GROQ_API_KEY"):
-        raise ValueError("GROQ_API_KEY is not configured in the environment.")
-
-    try:
-        # pyrefly: ignore [missing-import]
-        from langchain_groq import ChatGroq
-    except ModuleNotFoundError as error:
-        raise ModuleNotFoundError(f"langchain_groq is not installed: {error}") from error
-
-    return ChatGroq(model=DEFAULT_GROQ_MODEL, temperature=DEFAULT_TEMPERATURE)
 
 
 def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
@@ -40,6 +26,10 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
         raise ModuleNotFoundError(f"langgraph is not installed: {error}") from error
 
     workflow = StateGraph(RagGraphState)
+    
+    # Rewrite Quety Node
+    workflow.add_node("rewrite_query", rewrite_query_node(llm))
+
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
@@ -49,7 +39,10 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("generate_answer", generate_answer_node(llm))
     workflow.add_node("format_result", format_result_node)
 
-    workflow.set_entry_point("retrieve")
+    # Construccion del grafo
+    workflow.set_entry_point("rewrite_query")
+    workflow.add_edge("rewrite_query", "retrieve")
+    
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
@@ -79,7 +72,8 @@ def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState],
     """Build a graph node that retrieves raw Chroma-like results."""
 
     def run(state: RagGraphState) -> RagGraphState:
-        return {"raw_results": retriever(state["question"], top_k)}
+        retrieval_query = state.get("retrieval_query") or state["question"]
+        return {"raw_results": retriever(retrieval_query, top_k)}
 
     return run
 
@@ -135,24 +129,9 @@ def generate_answer_node(llm: Any) -> Callable[[RagGraphState], RagGraphState]:
     """Build a graph node that invokes the LLM with LangChain messages."""
 
     def run(state: RagGraphState) -> RagGraphState:
-        response = llm.invoke(state["messages"])
-        return {"answer": extract_response_content(response)}
+        return {"answer": invoke_llm_text(llm, state["messages"])}
 
     return run
-
-
-def extract_response_content(response: Any) -> str:
-    """Extract text from an AIMessage-like response, with message-list protection."""
-
-    content = getattr(response, "content", None)
-    if content is not None:
-        return str(content)
-    if isinstance(response, list):
-        for message in reversed(response):
-            message_content = getattr(message, "content", None)
-            if message_content:
-                return str(message_content)
-    return str(response)
 
 
 def fallback_answer(context: str, references: list[str]) -> str:

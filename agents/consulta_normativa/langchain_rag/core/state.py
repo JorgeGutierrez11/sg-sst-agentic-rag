@@ -18,3 +18,7 @@ class RagGraphState(TypedDict, total=False):
     prompt: str
     answer: str
     result: LangChainRagResult
+
+    # Rewrite Query
+    retrieval_query: str
+    query_rewrite_trace: dict[str, Any]
