@@ -5,9 +5,10 @@ import types
 import unittest
 from unittest.mock import patch
 
+from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.graph import (
-    assess_evidence_node,
     answer_with_langgraph,
     build_langgraph_rag,
     build_messages_node,
@@ -125,9 +126,17 @@ class LangGraphRagTest(unittest.TestCase):
         system_message, human_message = message_state["messages"]
         self.assertEqual(f"{system_message.content}\n\n{human_message.content}", message_state["prompt"])
 
-    def test_assess_evidence_matches_manual_bool_documents_criterion(self) -> None:
-        self.assertEqual(assess_evidence_node({"documents": []}), {"has_evidence": False})
-        self.assertEqual(assess_evidence_node({"documents": [object()]}), {"has_evidence": True})
+    def test_evidence_route_matches_manual_bool_documents_criterion(self) -> None:
+        self.assertEqual(evidence_route({"documents": []}), "without_evidence")
+        self.assertEqual(evidence_route({"documents": [object()]}), "with_evidence")
+
+    def test_retrieval_trace_does_not_change_selected_documents(self) -> None:
+        documents = [object()]
+
+        update = record_retrieval_trace_node({"documents": documents})
+
+        self.assertNotIn("documents", update)
+        self.assertEqual(update, {"retrieval_traces": [{"document_count": 1}]})
 
     def test_fallback_answer_matches_manual_text_and_logic(self) -> None:
         self.assertEqual(

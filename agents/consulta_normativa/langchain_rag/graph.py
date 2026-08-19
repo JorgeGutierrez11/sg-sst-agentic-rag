@@ -2,29 +2,17 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import Any
 
 from agents.consulta_normativa.langchain_rag.config import DEFAULT_GROQ_MODEL, DEFAULT_TEMPERATURE, DEFAULT_TOP_K
+from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
+from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
-from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
 
 Retriever = Callable[[str, int], dict[str, Any]]
-
-
-class RagGraphState(TypedDict, total=False):
-    """State passed through the minimal LangGraph RAG flow."""
-
-    question: str
-    raw_results: dict[str, Any]
-    documents: list[RetrievedDocument]
-    has_evidence: bool
-    context: str
-    references: list[str]
-    messages: list[Any]
-    prompt: str
-    answer: str
-    result: LangChainRagResult # Retorna algo que retorne arriba?
 
 
 def build_groq_llm() -> Any:
@@ -54,7 +42,7 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow = StateGraph(RagGraphState)
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
-    workflow.add_node("assess_evidence", assess_evidence_node)
+    workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
     workflow.add_node("build_messages", build_messages_node)
@@ -63,11 +51,11 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
     workflow.set_entry_point("retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
-    workflow.add_edge("normalize_documents", "assess_evidence")
+    workflow.add_edge("normalize_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
-        "assess_evidence", # Nodo desde donde sale la arista condicional.
-        evidence_route,    # Funcion que retorna la arista que se debe tomar.
-        {"with_evidence": "format_context", "without_evidence": "fallback_answer"}, # Diccionario que mapea el retorno de la funcion con el siguiente nodo.
+        "record_retrieval_trace",
+        evidence_route,
+        {"with_evidence": "format_context", "without_evidence": "fallback_answer"},
     )
     workflow.add_edge("fallback_answer", "format_result")
     workflow.add_edge("format_context", "build_messages")
@@ -80,7 +68,7 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
-    state = graph.invoke({"question": question}) # Ejecuta el grafo
+    state = graph.invoke({"question": question})
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")
@@ -102,18 +90,6 @@ def normalize_documents_node(state: RagGraphState) -> RagGraphState:
     return {"documents": recovered_documents(state.get("raw_results", {}))}
 
 
-def assess_evidence_node(state: RagGraphState) -> RagGraphState:
-    """Assess if there is enough evidence to answer the question."""
-
-    return {"has_evidence": bool(state.get("documents", []))}
-
-
-def evidence_route(state: RagGraphState) -> str:
-    """Return the next graph route based on evidence availability."""
-
-    return "with_evidence" if state.get("has_evidence") else "without_evidence"
-
-
 def fallback_answer_node(state: RagGraphState) -> RagGraphState:
     """Return the deterministic manual fallback without invoking the LLM."""
     context = "No se recuperó contexto."
@@ -122,7 +98,7 @@ def fallback_answer_node(state: RagGraphState) -> RagGraphState:
         "context": context,
         "references": [],
         "prompt": build_base_prompt(state["question"], context),
-        "answer": "La evidencia recuperada es insuficiente para responder la pregunta",
+        "answer": fallback_answer(context, []),
     }
 
 

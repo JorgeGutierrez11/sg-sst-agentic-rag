@@ -1,0 +1,20 @@
+"""State contract for the LangGraph RAG flow."""
+
+from typing import Any, TypedDict
+
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
+
+
+class RagGraphState(TypedDict, total=False):
+    """State passed through the minimal LangGraph RAG flow."""
+
+    question: str
+    raw_results: dict[str, Any]
+    documents: list[RetrievedDocument]
+    retrieval_traces: list[dict[str, Any]]
+    context: str
+    references: list[str]
+    messages: list[Any]
+    prompt: str
+    answer: str
+    result: LangChainRagResult

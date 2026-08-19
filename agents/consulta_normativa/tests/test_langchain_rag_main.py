@@ -6,7 +6,7 @@ import io
 import types
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 from agents.consulta_normativa.langchain_rag import main as cli
 
@@ -127,21 +127,22 @@ class LangChainRagMainTest(unittest.TestCase):
             calls.append(f"retriever:{collection}")
             return "retriever"
 
+        graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or "graph",
+            build_langgraph_rag=lambda llm, retriever, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or graph,
             open_existing_collection=fake_open_existing_collection,
             chroma_retriever=fake_chroma_retriever,
         )
 
-        with patch.object(cli, "load_dependencies", return_value=dependencies):
+        with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
             runtime = cli.build_runtime()
 
         self.assertEqual(
             calls,
             [f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag", "retriever:collection", "graph:llm:retriever:5"],
         )
-        self.assertEqual(runtime.graph, "graph")
+        self.assertIs(runtime.graph, graph)
 
     def build_runtime(self, fail_first: bool = False) -> object:
         calls: list[str] = []
@@ -173,6 +174,15 @@ class LangChainRagMainTest(unittest.TestCase):
             chroma_retriever=chroma_retriever or (lambda collection: lambda question, top_k: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
         )
+
+class FakeDrawableGraph:
+    """Small compiled-graph fake with drawing support for runtime construction tests."""
+
+    def get_graph(self) -> object:
+        return self
+
+    def draw_mermaid_png(self) -> bytes:
+        return b"graph"
 
 
 if __name__ == "__main__":

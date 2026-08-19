@@ -24,8 +24,8 @@ def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
 def build_context(documents: list[RetrievedDocument]) -> str:
     """Build compact textual context from retrieved documents."""
 
-    # if not documents:
-    #     return "No se recuperó contexto."
+    if not documents:
+        return "No se recuperó contexto."
 
     context_blocks: list[str] = []
     for index, item in enumerate(documents, start=1):

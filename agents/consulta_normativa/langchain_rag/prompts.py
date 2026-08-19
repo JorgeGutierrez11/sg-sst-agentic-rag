@@ -25,20 +25,17 @@ fragmentos citados con su referencia normativa completa."""
 
 def build_base_prompt(question: str, context: str) -> str:
     """Build the base grounded-answer prompt."""
-    return f"""
-        {BASE_SYSTEM_INSTRUCTIONS}
-        {build_human_prompt(question, context)}
-    """
+
+    return f"{BASE_SYSTEM_INSTRUCTIONS}\n\n{build_human_prompt(question, context)}"
 
 
 def build_human_prompt(question: str, context: str) -> str:
     """Build the user message content equivalent to the manual base prompt body."""
-    return f"""    
-        Contexto recuperado:
-        {context}
 
-        Pregunta:
-        {question}
+    return f"""    Contexto recuperado:
+    {context}
 
-        Respuesta fundamentada (cita cada afirmación con [n]): si se recupero contexto de lo contrario no cites nada 
-    """
+    Pregunta:
+    {question}
+
+    Respuesta fundamentada (cita cada afirmación con [n]):"""
