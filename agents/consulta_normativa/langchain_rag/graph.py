@@ -42,7 +42,7 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     # Construccion del grafo
     workflow.set_entry_point("rewrite_query")
     workflow.add_edge("rewrite_query", "retrieve")
-    
+
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
@@ -62,6 +62,12 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
     state = graph.invoke({"question": question})
+
+    print("***********************************")
+    print("Retrieval query:")
+    print(state.get("retrieval_query"))
+    print("***********************************")
+
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")

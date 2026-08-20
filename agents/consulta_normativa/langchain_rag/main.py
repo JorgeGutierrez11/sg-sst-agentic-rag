@@ -1,6 +1,6 @@
 """Direct executable entrypoint for the experimental LangChain RAG variant."""
 
-from __future__ import annotations
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 
 import argparse
 import sys
@@ -134,19 +134,23 @@ def run_once(runtime: RagRuntime, question: str) -> int:
     except Exception as error:  # noqa: BLE001 - direct CLI should report RAG failures without traceback.
         return fail("RAG execution", OperationalError(str(error)))
 
-    print_answer(result.answer, result.references)
+    print_answer(result)
     return 0
 
 
-def print_answer(answer: str, references: list[str]) -> None:
-    """Print the answer and its source references."""
-
+def print_answer(result: LangChainRagResult) -> None:
+    # print("-----------------------------------")
+    # print("Prompt sent to model:")
+    # print(result.prompt)
+    print("-----------------------------------")
+    print()
     print("Answer:")
-    print(answer)
-    if references:
+    print(result.answer)
+    print("-----------------------------------")
+    if result.references:
         print()
         print("References:")
-        for reference in references:
+        for reference in result.references:
             print(f"- {reference}")
 
 
