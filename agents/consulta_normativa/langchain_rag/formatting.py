@@ -7,15 +7,20 @@ from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
     """Normalize ChromaDB query output into one list of retrieved documents."""
 
+    ids = first_result_list(results, "ids")
     documents = first_result_list(results, "documents")
     metadatas = first_result_list(results, "metadatas")
 
     recovered: list[RetrievedDocument] = []
     for index, document in enumerate(documents):
+        metadata = dict(metadata_at(metadatas, index))
+        if index < len(ids) and has_metadata_value(ids[index]):
+            metadata["_chroma_id"] = str(ids[index])
+
         recovered.append(
             RetrievedDocument(
                 document=str(document),
-                metadata=metadata_at(metadatas, index),
+                metadata=metadata,
             )
         )
     return recovered
@@ -102,7 +107,13 @@ def metadata_context(metadata: dict[str, Any]) -> str:
                 ("Fila sobredimensionada", "oversized_row"),
             ],
         ),
-        ("Trazabilidad técnica", [("ID padre", "parent_id"), ("Inicio", "start_char"), ("Fin", "end_char")]),
+        ("Trazabilidad técnica",
+         [
+            ("ID Chroma", "_chroma_id"),
+            ("ID padre", "parent_id"),
+            ("Inicio", "start_char"),
+            ("Fin", "end_char")
+         ]),
     ]
 
     rendered_sections: list[str] = []

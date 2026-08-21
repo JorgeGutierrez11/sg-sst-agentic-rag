@@ -1,6 +1,7 @@
 """State contract for the LangGraph RAG flow."""
 
-from typing import Any, TypedDict
+from operator import add
+from typing import Annotated, Any, TypedDict
 
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 
@@ -22,3 +23,8 @@ class RagGraphState(TypedDict, total=False):
     # Rewrite Query
     retrieval_query: str
     query_rewrite_trace: dict[str, Any]
+
+    # Multi-Query implementation.
+    query_variants: list[str]
+    multi_query_trace: dict[str, Any]
+    retrieved_lists: Annotated[list[list[RetrievedDocument]], add]

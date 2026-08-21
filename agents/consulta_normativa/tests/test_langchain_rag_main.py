@@ -130,7 +130,10 @@ class LangChainRagMainTest(unittest.TestCase):
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or graph,
+            build_langgraph_rag=lambda llm, retriever, top_k, max_variants, top_k_per_variant, rrf_k: calls.append(
+                f"graph:{llm}:{retriever}:{top_k}:{max_variants}:{top_k_per_variant}:{rrf_k}"
+            )
+            or graph,
             open_existing_collection=fake_open_existing_collection,
             chroma_retriever=fake_chroma_retriever,
         )
@@ -140,7 +143,12 @@ class LangChainRagMainTest(unittest.TestCase):
 
         self.assertEqual(
             calls,
-            [f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag", "retriever:collection", "graph:llm:retriever:5"],
+            [
+                f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
+                "retriever:collection",
+                "graph:llm:retriever:"
+                f"{cli.DEFAULT_TOP_K}:{cli.MULTI_QUERY_MAX_VARIANTS}:{cli.MULTI_QUERY_TOP_K_PER_VARIANT}:{cli.RRF_K}",
+            ],
         )
         self.assertIs(runtime.graph, graph)
 
@@ -151,7 +159,11 @@ class LangChainRagMainTest(unittest.TestCase):
             calls.append(f"{question}:{graph}")
             if fail_first and question == "fail":
                 raise RuntimeError("fake RAG failure")
-            return types.SimpleNamespace(answer="Generated answer.", references=["Decreto 1072"])
+            return types.SimpleNamespace(
+                answer="Generated answer.",
+                references=["Decreto 1072"],
+                prompt="Prompt sent to model.",
+            )
 
         runtime = cli.RagRuntime(
             answer_with_langgraph=fake_answer_with_langgraph,

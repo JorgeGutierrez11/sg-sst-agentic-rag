@@ -1,5 +1,6 @@
 """Direct executable entrypoint for the experimental LangChain RAG variant."""
 
+from agents.consulta_normativa.langchain_rag.config import RRF_K, MULTI_QUERY_TOP_K_PER_VARIANT, MULTI_QUERY_MAX_VARIANTS
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 
 import argparse
@@ -70,7 +71,7 @@ def build_runtime() -> RagRuntime:
     try:
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         retriever = dependencies.chroma_retriever(collection)
-        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K)
+        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K, MULTI_QUERY_MAX_VARIANTS, MULTI_QUERY_TOP_K_PER_VARIANT, RRF_K)
 
         # Guardar diagrama en disco
         png_bytes = graph.get_graph().draw_mermaid_png()
@@ -92,7 +93,11 @@ def load_dependencies() -> RuntimeDependencies:
 
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
-        from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
+        #from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
+        from agents.consulta_normativa.langchain_rag.graph import (
+            answer_with_langgraph,
+            build_langgraph_rag_multiquery_rrf,
+        )
         from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
         from agents.shared.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
@@ -100,7 +105,8 @@ def load_dependencies() -> RuntimeDependencies:
 
     return RuntimeDependencies(
         build_groq_llm=build_groq_llm,
-        build_langgraph_rag=build_langgraph_rag,
+        # build_langgraph_rag=build_langgraph_rag,
+        build_langgraph_rag=build_langgraph_rag_multiquery_rrf,
         answer_with_langgraph=answer_with_langgraph,
         chroma_retriever=chroma_retriever,
         open_existing_collection=open_existing_collection,
@@ -139,9 +145,9 @@ def run_once(runtime: RagRuntime, question: str) -> int:
 
 
 def print_answer(result: LangChainRagResult) -> None:
-    # print("-----------------------------------")
-    # print("Prompt sent to model:")
-    # print(result.prompt)
+    print("-----------------------------------")
+    print("Prompt sent to model:")
+    print(result.prompt)
     print("-----------------------------------")
     print()
     print("Answer:")

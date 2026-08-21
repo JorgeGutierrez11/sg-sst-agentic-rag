@@ -11,6 +11,7 @@ from agents.consulta_normativa.langchain_rag.formatting import build_context, bu
 from agents.consulta_normativa.langchain_rag.graph import (
     answer_with_langgraph,
     build_langgraph_rag,
+    build_langgraph_rag_multiquery_rrf,
     build_messages_node,
     fallback_answer,
     fallback_answer_node,
@@ -29,7 +30,7 @@ class FakeStateGraph:
     def __init__(self, state_type: object) -> None:
         self.nodes: dict[str, object] = {}
         self.edges: dict[str, str] = {}
-        self.conditional: tuple[str, object, dict[str, str]] | None = None
+        self.conditional: dict[str, tuple[object, object]] = {}
         self.entry_point = ""
 
     def add_node(self, name: str, node: object) -> None:
@@ -41,8 +42,8 @@ class FakeStateGraph:
     def add_edge(self, start: str, end: str) -> None:
         self.edges[start] = end
 
-    def add_conditional_edges(self, start: str, router: object, routes: dict[str, str]) -> None:
-        self.conditional = (start, router, routes)
+    def add_conditional_edges(self, start: str, router: object, routes: object) -> None:
+        self.conditional[start] = (router, routes)
 
     def compile(self) -> object:
         nodes = self.nodes
@@ -55,14 +56,39 @@ class FakeStateGraph:
                 name = entry_point
                 while name != "__end__":
                     state.update(nodes[name](state))
-                    if conditional and name == conditional[0]:
-                        route = conditional[1](state)
-                        name = conditional[2][route]
+                    if name in conditional:
+                        router, routes = conditional[name]
+                        route = router(state)
+                        if isinstance(route, list):
+                            state = run_sends(nodes, edges, state, route)
+                            name = edges[route[0].node] if route else "__end__"
+                        elif isinstance(routes, dict):
+                            name = routes[route]
+                        else:
+                            name = route
                     else:
                         name = edges[name]
                 return state
 
         return CompiledGraph()
+
+
+def run_sends(
+    nodes: dict[str, object],
+    edges: dict[str, str],
+    state: dict[str, object],
+    sends: list[object],
+) -> dict[str, object]:
+    """Run fake Send workers and concatenate reducer-style list writes."""
+
+    for send in sends:
+        update = nodes[send.node](send.arg)
+        for key, value in update.items():
+            if key == "retrieved_lists":
+                state[key] = [*state.get(key, []), *value]
+            else:
+                state[key] = value
+    return state
 
 
 class LangGraphRagTest(unittest.TestCase):
@@ -116,6 +142,44 @@ class LangGraphRagTest(unittest.TestCase):
 
         self.assertEqual(result.answer, "Generated from fake LLM.")
         self.assertEqual(retrieved_queries, ["consulta normativa reescrita SG-SST"])
+
+    def test_build_langgraph_rag_multiquery_rrf_retrieves_each_variant_and_returns_result(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm(responses=["obligaciones SG-SST\nevidencia documental", "Generated from fake LLM."])
+        retrieved_queries: list[str] = []
+
+        def retriever(question: str, top_k: int) -> dict[str, object]:
+            retrieved_queries.append(question)
+            self.assertEqual(top_k, 1)
+            return {
+                "documents": [[f"Contexto para {question}"]],
+                "metadatas": [[{"source_stem": question, "parent_id": "p", "start_char": 0, "end_char": 10}]],
+            }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langgraph.types": types.SimpleNamespace(Send=FakeSend),
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag_multiquery_rrf(
+                llm,
+                retriever,
+                max_variants=2,
+                top_k_per_variant=1,
+                rrf_k=60,
+                top_k=2,
+            )
+
+        result = answer_with_langgraph("Pregunta original", graph)
+
+        self.assertEqual(retrieved_queries, ["Pregunta original", "obligaciones SG-SST", "evidencia documental"])
+        self.assertEqual(result.answer, "Generated from fake LLM.")
+        self.assertIn("Contexto para Pregunta original", result.context)
+        self.assertIsInstance(result.references, list)
 
     def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -214,6 +278,14 @@ class FakeLlm:
         self.messages.append(messages)
         response = self.responses[min(len(self.messages) - 1, len(self.responses) - 1)]
         return types.SimpleNamespace(content=response)
+
+
+class FakeSend:
+    """Tiny LangGraph Send replacement for fan-out tests."""
+
+    def __init__(self, node: str, arg: dict[str, object]) -> None:
+        self.node = node
+        self.arg = arg
 
 
 def fake_message_module() -> object:
