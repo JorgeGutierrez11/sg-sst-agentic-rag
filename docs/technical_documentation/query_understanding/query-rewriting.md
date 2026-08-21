@@ -119,10 +119,15 @@ def build_langgraph_rag_with_rewrite(
 
     workflow = StateGraph(RagGraphState)
 
+    #Query Understanding
     workflow.add_node("rewrite_query", rewrite_query_node(llm))
+    
+    #Retrieval
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
+    
+    #Response Generation
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
     workflow.add_node("build_messages", build_messages_node)

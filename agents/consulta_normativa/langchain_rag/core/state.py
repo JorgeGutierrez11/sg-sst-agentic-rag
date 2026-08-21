@@ -13,6 +13,7 @@ class RagGraphState(TypedDict, total=False):
     raw_results: dict[str, Any]
     documents: list[RetrievedDocument]
     retrieval_traces: list[dict[str, Any]]
+    reranking_trace: dict[str, Any]
     context: str
     references: list[str]
     messages: list[Any]

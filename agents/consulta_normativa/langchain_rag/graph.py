@@ -8,6 +8,11 @@ from agents.consulta_normativa.langchain_rag.config import (
     MULTI_QUERY_MAX_VARIANTS,
     MULTI_QUERY_TOP_K_PER_VARIANT,
     MULTIQUERY_RRF_TOP_K,
+
+    RERANKER_CANDIDATE_POOL_SIZE,
+    RERANKER_FINAL_TOP_K,
+    RERANKER_MAX_LENGTH,
+    RERANKER_MODEL_NAME,
     RRF_K,
 )
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
@@ -25,6 +30,8 @@ from agents.consulta_normativa.langchain_rag.retrieval.fusion import (
     rrf_fuse_node,
 )
 
+from agents.consulta_normativa.langchain_rag.retrieval.reranking import get_reranker, rerank_node
+
 Retriever = Callable[[str, int], dict[str, Any]]
 
 
@@ -38,9 +45,6 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
         raise ModuleNotFoundError(f"langgraph is not installed: {error}") from error
 
     workflow = StateGraph(RagGraphState)
-    
-    # Rewrite Quety Node
-    workflow.add_node("rewrite_query", rewrite_query_node(llm))
 
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
@@ -52,60 +56,9 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("rewrite_query")
-    workflow.add_edge("rewrite_query", "retrieve")
-
+    workflow.set_entry_point("retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
-    workflow.add_conditional_edges(
-        "record_retrieval_trace",
-        evidence_route,
-        {"with_evidence": "format_context", "without_evidence": "fallback_answer"},
-    )
-    workflow.add_edge("fallback_answer", "format_result")
-    workflow.add_edge("format_context", "build_messages")
-    workflow.add_edge("build_messages", "generate_answer")
-    workflow.add_edge("generate_answer", "format_result")
-    workflow.add_edge("format_result", END)
-    return workflow.compile()
-
-
-def build_langgraph_rag_multiquery_rrf(
-    llm: Any,
-    retriever: Retriever,
-    top_k: int = MULTIQUERY_RRF_TOP_K,
-    # Multi-Query parameters.
-    max_variants: int = MULTI_QUERY_MAX_VARIANTS,
-    top_k_per_variant: int = MULTI_QUERY_TOP_K_PER_VARIANT,
-    # RRF parameters.
-    rrf_k: int = RRF_K,
-) -> Any:
-    """Build the experimental Multi-Query + RRF LangGraph RAG pipeline."""
-
-    try:
-        # pyrefly: ignore [missing-import]
-        from langgraph.graph import END, StateGraph
-    except ModuleNotFoundError as error:
-        raise ModuleNotFoundError(f"langgraph is not installed: {error}") from error
-
-    workflow = StateGraph(RagGraphState)
-
-    # Multi-Query implementation.
-    workflow.add_node("generate_query_variants", generate_query_variants_node(llm, max_variants))
-    workflow.add_node("retrieve_variant", retrieve_variant_node(retriever, top_k_per_variant))
-    workflow.add_node("rrf_fuse", rrf_fuse_node(rrf_k, top_k))
-
-    workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
-    workflow.add_node("fallback_answer", fallback_answer_node)
-    workflow.add_node("format_context", format_context_node)
-    workflow.add_node("build_messages", build_messages_node)
-    workflow.add_node("generate_answer", generate_answer_node(llm))
-    workflow.add_node("format_result", format_result_node)
-
-    workflow.set_entry_point("generate_query_variants")
-    workflow.add_conditional_edges("generate_query_variants", fanout_retrieve_variants, ["retrieve_variant"])
-    workflow.add_edge("retrieve_variant", "rrf_fuse")
-    workflow.add_edge("rrf_fuse", "record_retrieval_trace")
     workflow.add_conditional_edges(
         "record_retrieval_trace",
         evidence_route,
@@ -133,6 +86,12 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")
     return result
+
+
+def default_reranker_loader() -> Any:
+    """Load the default CrossEncoder reranker lazily."""
+
+    return get_reranker(RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH)
 
 # Estos son unificables
 def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState], RagGraphState]:

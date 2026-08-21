@@ -8,13 +8,22 @@ from agents.shared.chroma_retrieval import DEFAULT_COLLECTION_NAME
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
-DEFAULT_TOP_K = 3
+DEFAULT_TOP_K = 5
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 DEFAULT_TEMPERATURE = 0
 
 # Multi-Query implementation.
-MULTI_QUERY_MAX_VARIANTS = 3                       # Número de variantes de la consulta a generar.
-MULTI_QUERY_TOP_K_PER_VARIANT = DEFAULT_TOP_K      # Número de documentos a recuperar por variante.
-RRF_K = 60                                         # K representa el coeficiente de ponderación para Reciprocal Rank Fusion. Un valor más alto da más peso a los documentos que aparecen en los primeros puestos de las listas de resultados.
-# Dejar Default_Top_K no conviene
-MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K               # Número de documentos a recuperar después de la fusión RRF.
+MULTI_QUERY_MAX_VARIANTS = 4        # Número de variantes de la consulta a generar.
+MULTI_QUERY_TOP_K_PER_VARIANT = 3   # Número de documentos a recuperar por variante.
+
+# Reciprocal Rank Fusion.
+RRF_K = 60                              # K representa el coeficiente de ponderación para Reciprocal Rank Fusion. Un valor más alto da más peso a los documentos que aparecen en los primeros puestos de las listas de resultados.
+MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K    # Número de documentos a recuperar después de la fusión RRF.
+
+# Reranking with Cross-Encoder.
+RERANKER_MODEL_NAME = "BAAI/bge-reranker-v2-m3"                                           # Modelo de re-ranking con Cross-Encoder.
+RERANKER_MAX_LENGTH = 512                                                                 # Longitud máxima (tokens) de los documentos a procesar por el modelo.
+RERANKER_FINAL_TOP_K = DEFAULT_TOP_K                                                    # Número de documentos a recuperar después del re-ranking.
+
+# Este cambia acorde la tecnica elegida para mejorar la consulta. 
+RERANKER_CANDIDATE_POOL_SIZE = MULTI_QUERY_MAX_VARIANTS * MULTI_QUERY_TOP_K_PER_VARIANT   # Número de documentos candidatos a recuperar para el re-ranking.

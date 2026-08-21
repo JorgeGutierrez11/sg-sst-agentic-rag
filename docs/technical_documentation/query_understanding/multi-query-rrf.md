@@ -137,10 +137,15 @@ def build_langgraph_rag_multiquery_rrf(
 
     workflow = StateGraph(RagGraphState)
 
+    #Query Understanding
     workflow.add_node("generate_query_variants", generate_query_variants_node(llm, max_variants))
+    
+    #Retrieval
     workflow.add_node("retrieve_variant", retrieve_variant_node(retriever, top_k_per_variant))
     workflow.add_node("rrf_fuse", rrf_fuse_node(rrf_k, top_k))
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
+    
+    #Response Generation
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
     workflow.add_node("build_messages", build_messages_node)
