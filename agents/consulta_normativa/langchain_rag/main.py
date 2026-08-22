@@ -1,15 +1,13 @@
 """Direct executable entrypoint for the experimental LangChain RAG variant."""
 
-from agents.consulta_normativa.langchain_rag.config import RRF_K, MULTI_QUERY_TOP_K_PER_VARIANT, MULTI_QUERY_MAX_VARIANTS
-from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
-
 import argparse
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, DEFAULT_TOP_K
+from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -25,7 +23,7 @@ class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
     build_groq_llm: Callable[[], Any]
-    build_langgraph_rag: Callable[[Any, Retriever, int], Any]
+    build_langgraph_rag: Callable[[Any, Retriever], Any]
     answer_with_langgraph: Callable[[str, Any], Any]
     chroma_retriever: Callable[[Any], Retriever]
     open_existing_collection: Callable[[Any, str], Any]
@@ -71,7 +69,7 @@ def build_runtime() -> RagRuntime:
     try:
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         retriever = dependencies.chroma_retriever(collection)
-        
+
         graph = dependencies.build_langgraph_rag(
             llm,
             retriever,

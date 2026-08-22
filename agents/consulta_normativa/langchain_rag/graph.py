@@ -5,15 +5,6 @@ from typing import Any
 
 from agents.consulta_normativa.langchain_rag.config import (
     DEFAULT_TOP_K,
-    MULTI_QUERY_MAX_VARIANTS,
-    MULTI_QUERY_TOP_K_PER_VARIANT,
-    MULTIQUERY_RRF_TOP_K,
-
-    RERANKER_CANDIDATE_POOL_SIZE,
-    RERANKER_FINAL_TOP_K,
-    RERANKER_MAX_LENGTH,
-    RERANKER_MODEL_NAME,
-    RRF_K,
 )
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
 from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
@@ -22,15 +13,7 @@ from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
-from agents.consulta_normativa.langchain_rag.query_understanding.multi_query import generate_query_variants_node
 from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
-from agents.consulta_normativa.langchain_rag.retrieval.fusion import (
-    fanout_retrieve_variants,
-    retrieve_variant_node,
-    rrf_fuse_node,
-)
-
-from agents.consulta_normativa.langchain_rag.retrieval.reranking import get_reranker, rerank_node
 
 Retriever = Callable[[str, int], dict[str, Any]]
 
@@ -46,6 +29,7 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
     workflow = StateGraph(RagGraphState)
 
+    workflow.add_node("rewrite_query", rewrite_query_node(llm))
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
@@ -56,7 +40,8 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("retrieve")
+    workflow.set_entry_point("rewrite_query")
+    workflow.add_edge("rewrite_query", "retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
@@ -79,7 +64,7 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
 
     print("***********************************")
     print("Retrieval query:")
-    print(state.get("query_variants"))
+    print(state.get("retrieval_query"))
     print("***********************************")
 
     result = state.get("result") if isinstance(state, dict) else None
@@ -88,10 +73,10 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
     return result
 
 
-def default_reranker_loader() -> Any:
-    """Load the default CrossEncoder reranker lazily."""
+# def default_reranker_loader() -> Any:
+#     """Load the default CrossEncoder reranker lazily."""
 
-    return get_reranker(RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH)
+#     return get_reranker(RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH)
 
 # Estos son unificables
 def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState], RagGraphState]:

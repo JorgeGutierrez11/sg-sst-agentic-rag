@@ -67,9 +67,9 @@ def rerank_documents(
     candidate_pairs = [(query, document_text_for_reranking(document)) for document in documents]
     scores = reranker.predict(candidate_pairs)
     ranked_documents = sorted(
-        zip(documents, scores, strict=False), 
-        key=lambda item: item[1], 
-        reverse=True
+        zip(documents, scores, strict=False),
+        key=lambda item: item[1],
+        reverse=True,
     )
     return [document for document, _score in ranked_documents[:final_top_k]]
 

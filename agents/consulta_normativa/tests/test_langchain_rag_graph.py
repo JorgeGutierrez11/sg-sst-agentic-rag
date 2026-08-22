@@ -11,10 +11,6 @@ from agents.consulta_normativa.langchain_rag.formatting import build_context, bu
 from agents.consulta_normativa.langchain_rag.graph import (
     answer_with_langgraph,
     build_langgraph_rag,
-    build_langgraph_rag_multiquery_rrf,
-
-    build_langgraph_rag_multiquery_rrf_with_reranking,
-    build_langgraph_rag_with_reranking,
     build_messages_node,
     fallback_answer,
     fallback_answer_node,
@@ -110,8 +106,7 @@ class LangGraphRagTest(unittest.TestCase):
             },
         ):
             graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-
-        result = answer_with_langgraph("¿Qué exige la norma?", graph)
+            result = answer_with_langgraph("¿Qué exige la norma?", graph)
 
         self.assertEqual(result.answer, "Generated from fake LLM.")
         self.assertIn("Contenido:\nContexto normativo", result.context)
@@ -140,81 +135,10 @@ class LangGraphRagTest(unittest.TestCase):
             },
         ):
             graph = build_langgraph_rag(llm, retriever, top_k=1)
-
-        result = answer_with_langgraph("¿Qué tiene que hacer el empleador?", graph)
+            result = answer_with_langgraph("¿Qué tiene que hacer el empleador?", graph)
 
         self.assertEqual(result.answer, "Generated from fake LLM.")
         self.assertEqual(retrieved_queries, ["consulta normativa reescrita SG-SST"])
-
-    def test_build_langgraph_rag_multiquery_rrf_retrieves_each_variant_and_returns_result(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(responses=["obligaciones SG-SST\nevidencia documental", "Generated from fake LLM."])
-        retrieved_queries: list[str] = []
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            retrieved_queries.append(question)
-            self.assertEqual(top_k, 1)
-            return {
-                "documents": [[f"Contexto para {question}"]],
-                "metadatas": [[{"source_stem": question, "parent_id": "p", "start_char": 0, "end_char": 10}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langgraph.types": types.SimpleNamespace(Send=FakeSend),
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag_multiquery_rrf(
-                llm,
-                retriever,
-                max_variants=2,
-                top_k_per_variant=1,
-                rrf_k=60,
-                top_k=2,
-            )
-
-        result = answer_with_langgraph("Pregunta original", graph)
-
-        self.assertEqual(retrieved_queries, ["Pregunta original", "obligaciones SG-SST", "evidencia documental"])
-        self.assertEqual(result.answer, "Generated from fake LLM.")
-        self.assertIn("Contexto para Pregunta original", result.context)
-        self.assertIsInstance(result.references, list)
-
-    def test_build_langgraph_rag_with_reranking_reranks_after_normalization(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(responses=["consulta normativa reescrita SG-SST", "Generated from fake LLM."])
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            self.assertEqual(top_k, 2)
-            return {
-                "documents": [["low relevance", "high relevance"]],
-                "metadatas": [[{"source_stem": "low"}, {"source_stem": "high"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag_with_reranking(
-                llm,
-                retriever,
-                candidate_pool_size=2,
-                final_top_k=1,
-                reranker=FakeReranker([0.1, 0.9]),
-            )
-
-        result = answer_with_langgraph("Pregunta original", graph)
-
-        self.assertIn("high relevance", result.context)
-        self.assertNotIn("low relevance", result.context)
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -236,52 +160,13 @@ class LangGraphRagTest(unittest.TestCase):
             },
         ):
             graph = build_langgraph_rag(llm, retriever, top_k=2)
-
-        state = graph.invoke({"question": "Pregunta original"})
+            state = graph.invoke({"question": "Pregunta original"})
 
         self.assertNotIn("reranking_trace", state)
         self.assertEqual(
             [document.document for document in state["documents"]],
             ["first document", "second document"],
         )
-
-    def test_build_langgraph_rag_multiquery_rrf_with_reranking_uses_candidate_pool(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(responses=["variant one\nvariant two", "Generated from fake LLM."])
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            self.assertEqual(top_k, 2)
-            return {
-                "documents": [[f"{question} low", f"{question} high"]],
-                "metadatas": [[{"source_stem": f"{question}-low"}, {"source_stem": f"{question}-high"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langgraph.types": types.SimpleNamespace(Send=FakeSend),
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag_multiquery_rrf_with_reranking(
-                llm,
-                retriever,
-                candidate_pool_size=4,
-                final_top_k=1,
-                max_variants=2,
-                top_k_per_variant=2,
-                rrf_k=60,
-                reranker=FakeReranker([0.1, 0.2, 0.3, 0.9]),
-            )
-
-        state = graph.invoke({"question": "Pregunta original"})
-
-        self.assertEqual(len(state["documents"]), 1)
-        self.assertEqual(state["reranking_trace"]["candidate_count"], 4)
-        self.assertFalse(state["reranking_trace"]["fallback"])
-
 
     def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -296,8 +181,7 @@ class LangGraphRagTest(unittest.TestCase):
             },
         ):
             graph = build_langgraph_rag(llm, lambda question, top_k: {"documents": [[]], "metadatas": [[]]}, top_k=1)
-
-        result = answer_with_langgraph("¿Qué exige la norma?", graph)
+            result = answer_with_langgraph("¿Qué exige la norma?", graph)
 
         self.assertEqual(result.answer, "La evidencia recuperada es insuficiente para responder la pregunta.")
         self.assertEqual(result.context, "No se recuperó contexto.")
@@ -381,23 +265,6 @@ class FakeLlm:
         response = self.responses[min(len(self.messages) - 1, len(self.responses) - 1)]
         return types.SimpleNamespace(content=response)
 
-
-class FakeSend:
-    """Tiny LangGraph Send replacement for fan-out tests."""
-
-    def __init__(self, node: str, arg: dict[str, object]) -> None:
-        self.node = node
-        self.arg = arg
-
-
-class FakeReranker:
-    """Fake CrossEncoder-like reranker returning deterministic scores."""
-
-    def __init__(self, scores: list[float]) -> None:
-        self.scores = scores
-
-    def predict(self, pairs: list[tuple[str, str]]) -> list[float]:
-        return self.scores
 
 def fake_message_module() -> object:
     """Return fake LangChain message classes for lazy-import tests."""

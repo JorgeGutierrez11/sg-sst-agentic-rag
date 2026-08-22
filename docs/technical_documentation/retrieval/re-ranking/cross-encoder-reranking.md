@@ -54,7 +54,7 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 
 | Aspecto | Implementación actual |
 |---|---|
-| Técnica experimental | El re-ranking vive en builders alternos. No se activa en `build_langgraph_rag(...)` por defecto. |
+| Técnica experimental | El re-ranking vive como nodo reutilizable. No se activa en `build_langgraph_rag(...)` en la limpieza actual. |
 | Modelo local | Usa `sentence-transformers` con Cross-Encoder; no llama a Groq ni a otro LLM. |
 | Import perezoso | `CrossEncoder` se importa dentro de `get_reranker`, no al cargar el módulo. |
 | Caché | `get_reranker` usa `lru_cache` para no recargar el mismo modelo en cada consulta. |
@@ -102,13 +102,13 @@ La traza registra el tipo de error cuando existe:
 - Es una técnica experimental: debe compararse contra RAG base y contra Multi-Query + RRF sin reranking.
 - No mezclar el score del Cross-Encoder con distancia Chroma o score RRF sin calibración; son escalas distintas.
 - Medir latencia: el Cross-Encoder evalúa pares consulta-documento y puede ser costoso sin GPU.
-- Validar el entorno real con `sentence-transformers` instalado antes de usar el builder con modelo real.
+- Validar el entorno real con `sentence-transformers` instalado antes de cablear el nodo con el modelo real.
 - Pruebas enfocadas: `python -m unittest agents.consulta_normativa.tests.test_langchain_rag_reranking agents.consulta_normativa.tests.test_langchain_rag_fusion agents.consulta_normativa.tests.test_langchain_rag_graph`.
 
 ## Ejemplo de integración en LangGraph
 
 ```python
-def build_langgraph_rag_multiquery_rrf_with_reranking(
+def build_experimental_multiquery_rrf_with_reranking_graph(
     llm: Any,
     retriever: Retriever,
 

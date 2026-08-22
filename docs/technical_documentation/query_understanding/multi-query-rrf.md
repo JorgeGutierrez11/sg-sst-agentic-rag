@@ -45,16 +45,16 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 
 | Parámetro | Valor actual | Uso |
 |---|---:|---|
-| `MULTI_QUERY_MAX_VARIANTS` | `3` | Máximo de variantes generadas por el LLM. |
-| `MULTI_QUERY_TOP_K_PER_VARIANT` | `DEFAULT_TOP_K` (`3`) | Documentos recuperados por cada variante. |
-| `MULTIQUERY_RRF_TOP_K` | `DEFAULT_TOP_K` (`3`) | Documentos finales después de la fusión RRF. |
+| `MULTI_QUERY_MAX_VARIANTS` | `4` | Máximo de variantes generadas por el LLM. |
+| `MULTI_QUERY_TOP_K_PER_VARIANT` | `3` | Documentos recuperados por cada variante. |
+| `MULTIQUERY_RRF_TOP_K` | `DEFAULT_TOP_K` (`5`) | Documentos finales después de la fusión RRF. |
 | `RRF_K` | `60` | Constante de ponderación en `1 / (k + rank)`. |
 
 ## Decisiones y guardrails importantes
 
 | Aspecto | Implementación actual |
 |---|---|
-| Técnica experimental | El builder separado `build_langgraph_rag_multiquery_rrf(...)` mantiene aislado el flujo Multi-Query + RRF del RAG base. |
+| Técnica experimental | Los nodos de Multi-Query + RRF permanecen aislados del grafo activo. El módulo `graph.py` expone solo `build_langgraph_rag(...)` en la limpieza actual. |
 | Pregunta original incluida | `query_variants` inicia con `question`, seguida de variantes generadas. Así la recuperación no depende únicamente del LLM. |
 | Variación controlada | El parser elimina líneas vacías, marcadores simples, comillas envolventes, duplicados y variantes iguales a la pregunta original. |
 | Fan-out con LangGraph | `fanout_retrieve_variants` usa `langgraph.types.Send` para ejecutar recuperación por variante. |
@@ -93,7 +93,7 @@ Después de ese punto no hay un fallback específico adicional para RRF. Si la r
 
 ## Ejemplo de integración en LangGraph
 
-El siguiente ejemplo replica la estructura actual de `build_langgraph_rag_multiquery_rrf(...)`:
+El siguiente ejemplo muestra cómo integrar la técnica en un grafo experimental separado. No describe el grafo activo de `graph.py`, que actualmente expone solo `build_langgraph_rag(...)`:
 
 ```python
 from collections.abc import Callable
@@ -125,7 +125,7 @@ from agents.consulta_normativa.langchain_rag.retrieval.fusion import (
 Retriever = Callable[[str, int], dict[str, Any]]
 
 
-def build_langgraph_rag_multiquery_rrf(
+def build_experimental_multiquery_rrf_graph(
     llm: Any,
     retriever: Retriever,
     top_k: int = MULTIQUERY_RRF_TOP_K,
