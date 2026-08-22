@@ -13,6 +13,12 @@ from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
 from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
 
+# ************ NELSON: SUFFICIENT-CONTEXT GATE
+from agents.consulta_normativa.langchain_rag.core.routes import (sufficient_context_route)
+from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate import (sufficient_context_gate_node)
+
+
+
 Retriever = Callable[[str, int], dict[str, Any]]
 
 
@@ -27,31 +33,56 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
     workflow = StateGraph(RagGraphState)
     
-    # Rewrite Quety Node
-    workflow.add_node("rewrite_query", rewrite_query_node(llm))
+
 
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
+
+    
+    
+
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
+
+    # ************ NELSON: SUFFICIENT-CONTEXT GATE
+    workflow.add_node("assess_sufficient_context",sufficient_context_gate_node(llm))
+
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("rewrite_query")
-    workflow.add_edge("rewrite_query", "retrieve")
+    workflow.set_entry_point("retrieve")
     
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
+
+    
     workflow.add_conditional_edges(
         "record_retrieval_trace",
         evidence_route,
-        {"with_evidence": "format_context", "without_evidence": "fallback_answer"},
-    )
+        {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
+    
     workflow.add_edge("fallback_answer", "format_result")
-    workflow.add_edge("format_context", "build_messages")
+    #workflow.add_edge("format_context", "build_messages")
+
+    # ************ NELSON: SUFFICIENT-CONTEXT GATE
+    workflow.add_edge(
+        "format_context",
+        "assess_sufficient_context",
+    )
+
+    workflow.add_conditional_edges(
+        "assess_sufficient_context",
+        sufficient_context_route,
+        {
+            "answerable": "build_messages",
+            "insufficient": "fallback_answer",
+        },
+    )
+
+
     workflow.add_edge("build_messages", "generate_answer")
     workflow.add_edge("generate_answer", "format_result")
     workflow.add_edge("format_result", END)

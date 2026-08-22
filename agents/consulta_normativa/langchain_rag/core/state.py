@@ -22,3 +22,10 @@ class RagGraphState(TypedDict, total=False):
     # Rewrite Query
     retrieval_query: str
     query_rewrite_trace: dict[str, Any]
+
+    # Retrieval Relevance Grading
+    relevance_grading_trace: dict[str, Any]
+
+    # Sufficient-Context Gate
+    context_sufficiency: str
+    sufficient_context_trace: dict[str, Any]
