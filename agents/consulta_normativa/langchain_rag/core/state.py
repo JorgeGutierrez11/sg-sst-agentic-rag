@@ -24,6 +24,7 @@ class RagGraphState(TypedDict, total=False):
     # Rewrite Query
     retrieval_query: str
     query_rewrite_trace: dict[str, Any]
+    query_expansion_trace: dict[str, Any]
 
     # Multi-Query implementation.
     query_variants: list[str]

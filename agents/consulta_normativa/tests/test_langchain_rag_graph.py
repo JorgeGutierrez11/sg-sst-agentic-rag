@@ -117,9 +117,9 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertIn("Contexto recuperado:", human_message.content)
         self.assertIn("¿Qué exige la norma?", human_message.content)
 
-    def test_build_langgraph_rag_retrieves_with_rewritten_query(self) -> None:
+    def test_build_langgraph_rag_retrieves_with_expanded_query(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(responses=["consulta normativa reescrita SG-SST", "Generated from fake LLM."])
+        llm = FakeLlm(expansion_terms=["consulta normativa expandida SG-SST"])
         retrieved_queries: list[str] = []
 
         def retriever(question: str, top_k: int) -> dict[str, object]:
@@ -135,14 +135,16 @@ class LangGraphRagTest(unittest.TestCase):
             },
         ):
             graph = build_langgraph_rag(llm, retriever, top_k=1)
-            result = answer_with_langgraph("¿Qué tiene que hacer el empleador?", graph)
+            state = graph.invoke({"question": "¿Qué tiene que hacer el empleador?"})
 
-        self.assertEqual(result.answer, "Generated from fake LLM.")
-        self.assertEqual(retrieved_queries, ["consulta normativa reescrita SG-SST"])
+        self.assertEqual(state["answer"], "Generated from fake LLM.")
+        self.assertEqual(retrieved_queries, ["¿Qué tiene que hacer el empleador? consulta normativa expandida SG-SST"])
+        self.assertEqual(state["query_expansion_trace"]["technique"], "llm_query_expansion")
+        self.assertEqual(state["query_expansion_trace"]["expansion_terms"], ["consulta normativa expandida SG-SST"])
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(responses=["consulta normativa reescrita SG-SST", "Generated from fake LLM."])
+        llm = FakeLlm()
 
         def retriever(question: str, top_k: int) -> dict[str, object]:
             self.assertEqual(top_k, 2)
@@ -256,13 +258,26 @@ class LangGraphRagTest(unittest.TestCase):
 class FakeLlm:
     """Small LangChain-like fake that records message input."""
 
-    def __init__(self, responses: list[str] | None = None) -> None:
+    def __init__(self, responses: list[str] | None = None, expansion_terms: list[str] | None = None) -> None:
         self.messages: list[list[object]] = []
         self.responses = responses or ["Generated from fake LLM."]
+        self.expansion_terms = expansion_terms or []
+        self.answer_count = 0
+
+    def with_structured_output(self, schema: object, method: str) -> object:
+        llm = self
+
+        class StructuredLlm:
+            def invoke(self, messages: list[object]) -> object:
+                llm.messages.append(messages)
+                return types.SimpleNamespace(expansion_terms=llm.expansion_terms)
+
+        return StructuredLlm()
 
     def invoke(self, messages: list[object]) -> object:
         self.messages.append(messages)
-        response = self.responses[min(len(self.messages) - 1, len(self.responses) - 1)]
+        response = self.responses[min(self.answer_count, len(self.responses) - 1)]
+        self.answer_count += 1
         return types.SimpleNamespace(content=response)
 
 
