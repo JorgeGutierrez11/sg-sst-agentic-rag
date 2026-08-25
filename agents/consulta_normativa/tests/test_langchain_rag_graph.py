@@ -139,8 +139,7 @@ class LangGraphRagTest(unittest.TestCase):
 
         self.assertEqual(state["answer"], "Generated from fake LLM.")
         self.assertEqual(retrieved_queries, ["¿Qué tiene que hacer el empleador? consulta normativa expandida SG-SST"])
-        self.assertEqual(state["query_expansion_trace"]["technique"], "llm_query_expansion")
-        self.assertEqual(state["query_expansion_trace"]["expansion_terms"], ["consulta normativa expandida SG-SST"])
+        self.assertEqual(state["query_expansion_trace"], {"changed": True, "fallback": False, "error": None})
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")

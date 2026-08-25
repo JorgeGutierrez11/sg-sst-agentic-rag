@@ -116,26 +116,35 @@ class LangChainRagMainTest(unittest.TestCase):
         self.assertIn("langchain_groq", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
-    def test_build_runtime_uses_existing_config_and_retriever_boundary(self) -> None:
+    def test_build_runtime_opens_dense_and_sparse_indexes_and_uses_hybrid_retriever_boundary(self) -> None:
         calls: list[str] = []
 
         def fake_open_existing_collection(path: object, collection_name: str) -> str:
             calls.append(f"collection:{path}:{collection_name}")
             return "collection"
 
-        def fake_chroma_retriever(collection: object) -> object:
-            calls.append(f"retriever:{collection}")
-            return "retriever"
+        def fake_open_existing_index(path: object) -> str:
+            calls.append(f"index:{path}")
+            return "index"
+
+        def fake_hybrid_retriever(
+            collection: object,
+            sparse_index: object,
+            *,
+            candidate_top_k: int,
+            final_top_k: int,
+            rrf_k: int,
+        ) -> object:
+            calls.append(f"retriever:{collection}:{sparse_index}:{candidate_top_k}:{final_top_k}:{rrf_k}")
+            return "hybrid-retriever"
 
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, top_k, max_variants, top_k_per_variant, rrf_k: calls.append(
-                f"graph:{llm}:{retriever}:{top_k}:{max_variants}:{top_k_per_variant}:{rrf_k}"
-            )
-            or graph,
+            build_langgraph_rag=lambda llm, retriever: calls.append(f"graph:{llm}:{retriever}") or graph,
             open_existing_collection=fake_open_existing_collection,
-            chroma_retriever=fake_chroma_retriever,
+            open_existing_index=fake_open_existing_index,
+            hybrid_retriever=fake_hybrid_retriever,
         )
 
         with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
@@ -145,9 +154,9 @@ class LangChainRagMainTest(unittest.TestCase):
             calls,
             [
                 f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
-                "retriever:collection",
-                "graph:llm:retriever:"
-                f"{cli.DEFAULT_TOP_K}:{cli.MULTI_QUERY_MAX_VARIANTS}:{cli.MULTI_QUERY_TOP_K_PER_VARIANT}:{cli.RRF_K}",
+                f"index:{cli.DEFAULT_BM25_PATH}",
+                f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_FINAL_TOP_K}:{cli.HYBRID_RRF_K}",
+                "graph:llm:hybrid-retriever",
             ],
         )
         self.assertIs(runtime.graph, graph)
@@ -176,15 +185,17 @@ class LangChainRagMainTest(unittest.TestCase):
         build_groq_llm: object | None = None,
         build_langgraph_rag: object | None = None,
         answer_with_langgraph: object | None = None,
-        chroma_retriever: object | None = None,
+        hybrid_retriever: object | None = None,
         open_existing_collection: object | None = None,
+        open_existing_index: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
             build_groq_llm=build_groq_llm or (lambda: object()),
-            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, top_k: object()),
+            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever: object()),
             answer_with_langgraph=answer_with_langgraph or (lambda question, graph: object()),
-            chroma_retriever=chroma_retriever or (lambda collection: lambda question, top_k: {}),
+            hybrid_retriever=hybrid_retriever or (lambda collection, sparse_index, **kwargs: lambda question, top_k: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
+            open_existing_index=open_existing_index or (lambda path: object()),
         )
 
 class FakeDrawableGraph:

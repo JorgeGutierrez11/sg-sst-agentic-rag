@@ -251,8 +251,6 @@ def query_expansion_node(
         return {
             "retrieval_query": retrieval_query,
             "query_expansion_trace": {
-                "technique": "llm_query_expansion",
-                "expansion_terms": expansion_terms,
                 "changed": bool(expansion_terms),
                 "fallback": False,
                 "error": None,
@@ -364,8 +362,6 @@ def fallback_expansion(
     return {
         "retrieval_query": question,
         "query_expansion_trace": {
-            "technique": "llm_query_expansion",
-            "expansion_terms": [],
             "changed": False,
             "fallback": True,
             "error": error,

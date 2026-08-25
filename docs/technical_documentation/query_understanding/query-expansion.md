@@ -1,12 +1,12 @@
 # LLM-Based Query Expansion para recuperación normativa
 
-LLM-Based Query Expansion normaliza la pregunta del usuario y, cuando aporta valor, añade términos normativos controlados para mejorar la recuperación semántica sobre el corpus SG-SST colombiano. La técnica conserva la pregunta original para la generación de respuesta y usa la consulta expandida solo para recuperación.
+LLM-Based Query Expansion conserva la pregunta original y añade términos técnicos o normativos controlados para mejorar la recuperación semántica sobre el corpus SG-SST colombiano. La técnica no reescribe ni sustituye la consulta del usuario: genera términos adicionales y el sistema los anexa a la consulta usada por el retriever.
 
 ## Propósito
 
-La consulta del usuario puede ser coloquial, incompleta o no usar el vocabulario normativo exacto del corpus. Query Expansion busca acercar esa consulta al lenguaje técnico de SG-SST y ampliar la cobertura de búsqueda con pocos términos relevantes.
+La consulta del usuario puede ser coloquial, incompleta o no usar el vocabulario normativo exacto del corpus. Query Expansion busca ampliar la cobertura de búsqueda con términos relevantes que ayuden a encontrar documentos donde el mismo concepto aparece con vocabulario técnico.
 
-El objetivo no es responder la pregunta ni generar múltiples consultas. El objetivo es producir una sola consulta de recuperación más rica, sin cambiar la intención original del usuario.
+El objetivo no es responder la pregunta, reescribirla ni generar múltiples consultas. El objetivo es producir una sola consulta de recuperación más rica, manteniendo intacta la intención original.
 
 ## Ubicación en el pipeline LangGraph
 
@@ -32,19 +32,23 @@ Archivos principales:
 
 1. Lee `state["question"]`.
 2. Normaliza espacios con `strip()` para validar si hay contenido real.
-3. Invoca el LLM mediante `invoke_llm_text(llm, messages)`.
+3. Crea un expander con `llm.with_structured_output(QueryExpansionOutput, method="function_calling")`.
 4. Construye los mensajes con `build_query_expansion_messages(question)` usando imports diferidos de `langchain_core.messages`.
-5. Valida la salida con guardrails determinísticos.
-6. Escribe `retrieval_query` y `query_expansion_trace` en el estado.
+5. Invoca el expander estructurado y recibe `expansion_terms`.
+6. Limpia términos vacíos, duplicados, ya presentes en la pregunta o inseguros.
+7. Construye `retrieval_query` anexando los términos aceptados a la pregunta original.
+8. Escribe `retrieval_query` y `query_expansion_trace` en el estado.
 
 El prompt del sistema está especializado en SG-SST colombiano e incluye:
 
 - corpus normativo disponible;
-- normalización de expresiones coloquiales hacia términos técnicos;
-- adición máxima de dos términos normativos estrechamente relacionados;
+- instrucción explícita de no reescribir, reformular, sustituir ni eliminar información de la consulta original;
+- generación máxima de seis términos o expresiones de expansión;
+- generación de denominaciones técnicas, siglas, categorías normativas o expresiones formales relacionadas;
+- regla de especificidad mínima para evitar términos amplios como `SG-SST`, `normativa`, `empresa`, `empleador` o `trabajador` cuando no discriminan documentos relevantes;
 - preservación literal de normas, artículos, años, tablas, códigos CIIU y otros identificadores;
 - prohibición de inventar normas, obligaciones, cifras, entidades o requisitos;
-- regla de audiencia por defecto: si la pregunta no especifica perspectiva, se orienta hacia el responsable SG-SST/empleador; si el usuario explicita que pregunta como trabajador, conserva esa perspectiva.
+- ejemplos positivos y negativos para preguntas de clasificación de riesgo por actividad económica.
 
 ## Decisiones y guardrails importantes
 
@@ -52,34 +56,38 @@ El prompt del sistema está especializado en SG-SST colombiano e incluye:
 |---|---|
 | Técnica activa | `build_langgraph_rag(...)` registra `expand_query` como nodo de query understanding antes de recuperación. |
 | Separación recuperación/respuesta | `retrieval_query` solo afecta la recuperación. `build_messages_node` arma el prompt final con `state["question"]`. |
-| Expansión controlada | El prompt permite máximo dos términos normativos adicionales y prohíbe agregar normas o CIIU no mencionados. |
-| Preservación de identificadores | `_preserves_citations` exige que los identificadores citables del original y la expansión sean iguales. |
-| Límite de expansión | `_added_words` limita palabras nuevas con `MAX_ADDED_WORDS` como proxy generoso, no como conteo exacto de términos conceptuales. |
-| Observabilidad | `query_expansion_trace` incluye `technique = "llm_query_expansion"`, `changed`, `fallback` y `error`. |
+| Structured Output | `QueryExpansionOutput` define `expansion_terms: list[str]` para evitar parsing manual de texto libre. |
+| Expansión controlada | El prompt permite máximo `MAX_EXPANSION_TERMS` términos y prohíbe agregar normas, CIIU, años o clasificaciones no mencionadas. |
+| Limpieza determinística | `clean_expansion_terms` elimina términos vacíos, duplicados, ya presentes en la pregunta o inseguros. |
+| Preservación de identificadores | `is_safe_expansion_term` rechaza términos que introducen identificadores normativos no presentes en la pregunta original. |
+| Observabilidad | `query_expansion_trace` sigue el patrón de `query_rewrite_trace`: `changed`, `fallback` y `error`. |
 | Dependencias opcionales | Los mensajes de LangChain se importan dentro de `build_query_expansion_messages`, no al cargar el módulo. |
 
 ## Guardrail de identificadores normativos
 
-`NORMATIVE_CITATION_PATTERN` protege identificadores que no deben perderse ni aparecer si el usuario no los mencionó explícitamente.
+`NORMATIVE_IDENTIFIER_PATTERNS` protege identificadores que no deben aparecer en términos de expansión si el usuario no los mencionó explícitamente.
 
 Actualmente cubre:
 
-- leyes, decretos, resoluciones, artículos, tablas, capítulos y títulos con número;
+- leyes, decretos y resoluciones con número;
 - años de cuatro dígitos;
-- códigos CIIU, incluyendo formas como `CIIU 6920` y `código CIIU 4711`;
+- códigos CIIU, por ejemplo `CIIU 6920`;
+- artículos, por ejemplo `artículo 2`;
 - numerales, por ejemplo `numeral 4.1`;
 - literales, por ejemplo `literal a`;
-- parágrafos, por ejemplo `parágrafo 1`.
+- parágrafos, por ejemplo `parágrafo 1`;
+- tablas, por ejemplo `tabla 1`;
+- clases de riesgo, por ejemplo `riesgo II`.
 
-Este guardrail no decide si la expansión es buena; solo evita que el LLM pierda o invente identificadores normativos citables.
+Este guardrail no decide si la expansión es buena; solo evita que el LLM agregue identificadores normativos o clasificaciones concretas no mencionadas por el usuario. Como la pregunta original siempre se conserva en `retrieval_query`, el problema principal no es perder identificadores, sino inventarlos en los términos añadidos.
 
 ## Campos de estado
 
 | Campo | Uso |
 |---|---|
 | `question` | Pregunta original del usuario. Es obligatoria para el nodo. |
-| `retrieval_query` | Consulta expandida usada por el retriever. Si falla la expansión, contiene la pregunta original. |
-| `query_expansion_trace` | Traza de observabilidad/evaluación: `technique`, `changed`, `fallback`, `error`. |
+| `retrieval_query` | Pregunta original más términos de expansión aceptados. Si falla la expansión, contiene la pregunta original. |
+| `query_expansion_trace` | Traza de observabilidad/evaluación: `changed`, `fallback`, `error`. |
 | `raw_results` | Resultado crudo de recuperación escrito por `retrieve_node`. |
 | `documents` | Documentos normalizados usados por las etapas posteriores. |
 
@@ -93,7 +101,6 @@ La función `fallback_expansion(question, error)` conserva la pregunta original 
 {
     "retrieval_query": question,
     "query_expansion_trace": {
-        "technique": "llm_query_expansion",
         "changed": False,
         "fallback": True,
         "error": error,
@@ -104,18 +111,19 @@ La función `fallback_expansion(question, error)` conserva la pregunta original 
 Casos cubiertos:
 
 - pregunta en blanco: `error = "blank_question"`, no invoca el LLM;
-- salida vacía del modelo: `error = "blank_model_output"`;
-- excepción al invocar el LLM: `error = type(error).__name__` y se registra un log de error;
-- violación de guardrails: `error = "guardrail_violation"`.
+- excepción al invocar el expander estructurado: `error = type(error).__name__` y se registra un log de error.
 
-Este fallback evita que una falla de expansión bloquee el RAG: el sistema recupera con la pregunta original.
+Si el modelo devuelve una lista vacía o todos los términos se filtran por limpieza/guardrails, no se considera fallo operativo: `retrieval_query` queda igual a la pregunta original, `fallback = False` y `changed = False`.
+
+Este fallback evita que una falla operativa de expansión bloquee el RAG: el sistema recupera con la pregunta original.
 
 ## Notas operativas y de evaluación
 
 - Es una técnica de query understanding: debe compararse contra Query Rewriting y Multi-Query + RRF usando métricas de contexto relevante, fidelidad y relevancia de respuesta.
 - No debe evaluarse como mejora de generación: la respuesta sigue dependiendo del contexto recuperado y del prompt final.
-- Revisar `query_expansion_trace` para medir cambios, fallbacks y bloqueos por guardrail.
-- Ajustar `MAX_ADDED_WORDS` solo después de revisar expansiones reales sobre preguntas de prueba; el valor actual es un proxy, no una garantía semántica perfecta.
+- Revisar `retrieval_query` para auditar qué vocabulario agregó el LLM y detectar términos demasiado generales.
+- Ajustar `MAX_EXPANSION_TERMS` solo después de revisar expansiones reales sobre preguntas de prueba.
+- Los guardrails regex protegen identificadores concretos, pero no reemplazan evaluación semántica ni validación experta del resultado recuperado.
 - Pruebas enfocadas: `python -m unittest agents.consulta_normativa.tests.test_langchain_rag_query_expansion agents.consulta_normativa.tests.test_langchain_rag_graph`.
 
 ## Ejemplo de integración en LangGraph

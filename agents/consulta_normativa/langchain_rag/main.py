@@ -6,8 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME
+from agents.consulta_normativa.langchain_rag.config import (
+    DEFAULT_CHROMA_PATH,
+    DEFAULT_COLLECTION_NAME,
+    HYBRID_CANDIDATE_TOP_K,
+    HYBRID_FINAL_TOP_K,
+    HYBRID_RRF_K,
+)
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
+from agents.shared.bm25_retrieval import DEFAULT_BM25_PATH
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -25,8 +32,9 @@ class RuntimeDependencies:
     build_groq_llm: Callable[[], Any]
     build_langgraph_rag: Callable[[Any, Retriever], Any]
     answer_with_langgraph: Callable[[str, Any], Any]
-    chroma_retriever: Callable[[Any], Retriever]
+    hybrid_retriever: Callable[..., Retriever]
     open_existing_collection: Callable[[Any, str], Any]
+    open_existing_index: Callable[[Any], Any]
 
 
 @dataclass(frozen=True)
@@ -57,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_runtime() -> RagRuntime:
-    """Build the Chroma retriever and Groq-backed LLM for the session."""
+    """Build the hybrid retriever and Groq-backed LLM for the session."""
 
     dependencies = load_dependencies()
 
@@ -68,7 +76,14 @@ def build_runtime() -> RagRuntime:
 
     try:
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
-        retriever = dependencies.chroma_retriever(collection)
+        sparse_index = dependencies.open_existing_index(DEFAULT_BM25_PATH)
+        retriever = dependencies.hybrid_retriever(
+            collection,
+            sparse_index,
+            candidate_top_k=HYBRID_CANDIDATE_TOP_K,
+            final_top_k=HYBRID_FINAL_TOP_K,
+            rrf_k=HYBRID_RRF_K,
+        )
 
         graph = dependencies.build_langgraph_rag(
             llm,
@@ -96,8 +111,9 @@ def load_dependencies() -> RuntimeDependencies:
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
-        from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
+        from agents.shared.bm25_retrieval import open_existing_index
         from agents.shared.chroma_retrieval import open_existing_collection
+        from agents.shared.hybrid_retrieval import hybrid_retriever
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
@@ -105,8 +121,9 @@ def load_dependencies() -> RuntimeDependencies:
         build_groq_llm=build_groq_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
-        chroma_retriever=chroma_retriever,
+        hybrid_retriever=hybrid_retriever,
         open_existing_collection=open_existing_collection,
+        open_existing_index=open_existing_index,
     )
 
 

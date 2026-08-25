@@ -20,10 +20,15 @@ MULTI_QUERY_TOP_K_PER_VARIANT = 3   # Número de documentos a recuperar por vari
 RRF_K = 60                              # K representa el coeficiente de ponderación para Reciprocal Rank Fusion. Un valor más alto da más peso a los documentos que aparecen en los primeros puestos de las listas de resultados.
 MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K    # Número de documentos a recuperar después de la fusión RRF.
 
+# Hybrid Retrieval.
+HYBRID_CANDIDATE_TOP_K = 10
+HYBRID_FINAL_TOP_K = DEFAULT_TOP_K
+HYBRID_RRF_K = RRF_K
+
 # Reranking with Cross-Encoder.
-RERANKER_MODEL_NAME = "BAAI/bge-reranker-v2-m3"                                           # Modelo de re-ranking con Cross-Encoder.
-RERANKER_MAX_LENGTH = 512                                                                 # Longitud máxima (tokens) de los documentos a procesar por el modelo.
-RERANKER_FINAL_TOP_K = DEFAULT_TOP_K                                                    # Número de documentos a recuperar después del re-ranking.
+RERANKER_MODEL_NAME = "BAAI/bge-reranker-v2-m3"    # Modelo de re-ranking con Cross-Encoder.
+RERANKER_MAX_LENGTH = 512                          # Longitud máxima (tokens) de los documentos a procesar por el modelo.
+RERANKER_FINAL_TOP_K = DEFAULT_TOP_K               # Número de documentos a recuperar después del re-ranking.
 
 # Este cambia acorde la tecnica elegida para mejorar la consulta. 
 RERANKER_CANDIDATE_POOL_SIZE = MULTI_QUERY_MAX_VARIANTS * MULTI_QUERY_TOP_K_PER_VARIANT   # Número de documentos candidatos a recuperar para el re-ranking.

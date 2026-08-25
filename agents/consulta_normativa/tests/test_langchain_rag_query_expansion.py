@@ -25,8 +25,6 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
         self.assertEqual(
             update["query_expansion_trace"],
             {
-                "technique": "llm_query_expansion",
-                "expansion_terms": ["COPASST", "Comité Paritario de Seguridad y Salud en el Trabajo"],
                 "changed": True,
                 "fallback": False,
                 "error": None,
@@ -42,8 +40,6 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
         self.assertEqual(
             update["query_expansion_trace"],
             {
-                "technique": "llm_query_expansion",
-                "expansion_terms": [],
                 "changed": False,
                 "fallback": True,
                 "error": "blank_question",
@@ -57,7 +53,6 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
             update = query_expansion.query_expansion_node(llm)({"question": "Pregunta original"})
 
         self.assertEqual(update["retrieval_query"], "Pregunta original")
-        self.assertEqual(update["query_expansion_trace"]["expansion_terms"], [])
         self.assertEqual(update["query_expansion_trace"]["fallback"], False)
         self.assertEqual(update["query_expansion_trace"]["changed"], False)
         self.assertIsNone(update["query_expansion_trace"]["error"])
@@ -69,7 +64,6 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
             update = query_expansion.query_expansion_node(llm)({"question": "Pregunta original"})
 
         self.assertEqual(update["retrieval_query"], "Pregunta original")
-        self.assertEqual(update["query_expansion_trace"]["expansion_terms"], [])
         self.assertEqual(update["query_expansion_trace"]["fallback"], True)
         self.assertEqual(update["query_expansion_trace"]["error"], "RuntimeError")
 
@@ -80,7 +74,7 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
             update = query_expansion.query_expansion_node(llm)({"question": "Obligaciones del empleador SG-SST"})
 
         self.assertEqual(update["retrieval_query"], "Obligaciones del empleador SG-SST COPASST")
-        self.assertEqual(update["query_expansion_trace"]["expansion_terms"], ["COPASST"])
+        self.assertTrue(update["query_expansion_trace"]["changed"])
 
     def test_terms_that_introduce_normative_identifiers_are_removed(self) -> None:
         llm = FakeStructuredLlm(
@@ -103,7 +97,7 @@ class LangChainRagQueryExpansionTest(unittest.TestCase):
             update = query_expansion.query_expansion_node(llm)({"question": "¿Qué debe hacer la empresa?"})
 
         self.assertEqual(update["retrieval_query"], "¿Qué debe hacer la empresa? COPASST")
-        self.assertEqual(update["query_expansion_trace"]["expansion_terms"], ["COPASST"])
+        self.assertTrue(update["query_expansion_trace"]["changed"])
 
     def test_allows_identifiers_already_present_in_original_question(self) -> None:
         original = "CIIU 6920 numeral 4.1 literal a parágrafo 1"
