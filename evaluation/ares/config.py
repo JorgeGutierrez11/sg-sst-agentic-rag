@@ -13,8 +13,10 @@ ppi_config = {
     "checkpoints": [],
     "labels": ["Context_Relevance_Label", "Answer_Faithfulness_Label", "Answer_Relevance_Label"],
     "gold_label_paths": [GOLD_TSV],
-    "llm_judge": "claude-haiku-4-5-20251001",
-    "model_choice": "claude-haiku-4-5-20251001",
+    "llm_judge": "deepseek-v4-flash",
+    "model_choice": "deepseek-v4-flash",
+    #"llm_judge": "claude-haiku-4-5-20251001",
+    #"model_choice": "claude-haiku-4-5-20251001",
     "rag_type": "question_answering",
 }
 

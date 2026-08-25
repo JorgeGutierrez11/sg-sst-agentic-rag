@@ -1,0 +1,88 @@
+
+## 1. Python 3.11.15
+
+3.11 (no 3.12+, por conflicto de scipy con ares-ai)
+
+## 2. Paquete base
+
+```bash
+pip install ares-ai
+```
+
+## 3. Pines obligatorios (se rompen con las versiones que trae ares-ai por defecto):
+
+```bash
+pip install "pandas>=2.0.1,<3"
+pip install "pyarrow==12.0.1"
+pip install "datasets==2.14.0"
+pip install "dill==0.3.7"
+pip install "multiprocess==0.70.15"
+pip install "fsspec==2023.9.2"
+pip install "huggingface-hub==0.23.0"
+```
+
+## 4. Torch (CPU-only, reinstalado limpio)
+
+```bash
+pip uninstall torch -y
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+## 5. Extra
+
+```bash
+pip install python-dotenv
+```
+
+## 6. Dos parches manuales al código fuente instalado (sin esto, ares.evaluate_RAG() truena):
+
+En LLMJudge_RAG_Compared_Scoring.py:
+
+```bash
+# Parche 1 — bug .nelement() de PyTorch usado sobre array de NumPy
+sed -i 's/total_references\.nelement()/total_references.size/' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+
+# Parche 2 — filtrado cruzado indebido entre labels
+sed -i 's/if label != label_column:/if False:  # patched: disabled cross-label filtering bug/' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+```
+
+## 7. Variable de entorno (.env en la raíz del repo)
+
+```text
+OPENAI_API_KEY=sk-api deepseek
+OPENAI_BASE_URL=https://api.deepseek.com
+```
+
+
+## 8. Parches nuevos
+
+```bash
+grep -n '"gpt" in llm_judge' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+sed -i 's/"gpt" in llm_judge/("gpt" in llm_judge or "deepseek" in llm_judge)/g' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+```
+
+verificar que funcionó
+
+```bash
+grep -n 'deepseek' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+```
+
+siguiente parche
+
+```bash
+grep -n "def load_api_model" -A 20 .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+sed -n '545p' .venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/LLMJudge_RAG_Compared_Scoring.py
+```
+
+## 9. Para verificar que funciona, sin gastar nada:
+
+```bash
+source .venv/bin/activate
+python -c "from ares import ARES; print('OK')"
+```
+
+## 10. Ejecutar ARES consumiendo API
+
+```bash
+python evaluation/ares/config.py
+```
