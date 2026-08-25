@@ -4,18 +4,19 @@ Esta guía cubre la ejecución de la implementación RAG actual en `agents/consu
 
 ## Propósito
 
-Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existente, ejecuta el grafo LangGraph y genera respuestas fundamentadas con Groq.
+Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existente, abre un índice BM25 existente, ejecuta recuperación híbrida en LangGraph y genera respuestas fundamentadas con Groq.
 
 ## Prerrequisitos
 
 | Requisito | Detalle |
 |---|---|
 | Vector store | Debe existir `data/processed/chroma` con la colección `sg_sst_base_rag`. |
+| Índice BM25 | Debe existir `data/processed/bm25`. |
 | API key | `GROQ_API_KEY` debe estar en el entorno. |
 | Dependencias | Instalar `requirements.txt`, incluyendo Chroma, LangChain, LangGraph y `langchain_groq`. |
 | Modelo | `langchain_rag/config.py` usa `openai/gpt-oss-120b` con temperatura `0`. |
 
-La consulta abre la colección existente con `open_existing_collection(...)`; no debe crear una colección vacía durante la operación.
+La consulta abre la colección existente con `open_existing_collection(...)` y el índice BM25 existente con `open_existing_index(...)`; no debe crear índices vacíos durante la operación. El top-k final sale de `RETRIEVAL_TOP_K`, mientras `HYBRID_CANDIDATE_TOP_K` controla el pool candidato por motor antes de la fusión.
 
 ## Ruta rápida
 
@@ -59,11 +60,13 @@ Si la carpeta no existe o no hay permisos de escritura, la inicialización puede
 |---|---|---|
 | `GROQ_API_KEY is not configured` | Falta la variable de entorno. | Exportar `GROQ_API_KEY` antes de iniciar. |
 | Error al abrir Chroma | Falta `data/processed/chroma` o la colección `sg_sst_base_rag`. | Ejecutar primero [`vectorization.md`](vectorization.md). |
+| Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar primero [`bm25-sparse-retrieval.md`](bm25-sparse-retrieval.md). |
 | Error al guardar `base_rag_graph.png` | Falta `data/images/` o no hay permisos. | Crear/verificar la carpeta antes de ejecutar. |
-| Respuesta de evidencia insuficiente | Chroma no devolvió documentos. | Revisar corpus, vectorización y formulación de la pregunta. |
+| Respuesta de evidencia insuficiente | La recuperación híbrida no devolvió documentos. | Revisar corpus, vectorización, índice BM25 y formulación de la pregunta. |
 
 ## Documentos relacionados
 
 - Arquitectura de esta implementación: [`../architecture/retrieval-langgraph.md`](../architecture/retrieval-langgraph.md).
 - Línea base manual congelada: [`rag-manual.md`](rag-manual.md).
 - Vectorización previa: [`vectorization.md`](vectorization.md).
+- Índice BM25 previo: [`bm25-sparse-retrieval.md`](bm25-sparse-retrieval.md).

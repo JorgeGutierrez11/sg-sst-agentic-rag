@@ -8,7 +8,11 @@ from agents.shared.chroma_retrieval import DEFAULT_COLLECTION_NAME
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
-DEFAULT_TOP_K = 5
+
+# Por que son iguales? 
+RETRIEVAL_TOP_K = 5
+DEFAULT_TOP_K = RETRIEVAL_TOP_K
+
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 DEFAULT_TEMPERATURE = 0
 
@@ -21,8 +25,7 @@ RRF_K = 60                              # K representa el coeficiente de pondera
 MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K    # Número de documentos a recuperar después de la fusión RRF.
 
 # Hybrid Retrieval.
-HYBRID_CANDIDATE_TOP_K = 10
-HYBRID_FINAL_TOP_K = DEFAULT_TOP_K
+HYBRID_CANDIDATE_TOP_K = 50
 HYBRID_RRF_K = RRF_K
 
 # Reranking with Cross-Encoder.

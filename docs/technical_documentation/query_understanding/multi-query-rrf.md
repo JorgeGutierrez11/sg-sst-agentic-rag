@@ -47,7 +47,7 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 |---|---:|---|
 | `MULTI_QUERY_MAX_VARIANTS` | `4` | Máximo de variantes generadas por el LLM. |
 | `MULTI_QUERY_TOP_K_PER_VARIANT` | `3` | Documentos recuperados por cada variante. |
-| `MULTIQUERY_RRF_TOP_K` | `DEFAULT_TOP_K` (`5`) | Documentos finales después de la fusión RRF. |
+| `MULTIQUERY_RRF_TOP_K` | `RETRIEVAL_TOP_K` (`5`) | Documentos finales después de la fusión RRF; `DEFAULT_TOP_K` queda como alias de compatibilidad. |
 | `RRF_K` | `60` | Constante de ponderación en `1 / (k + rank)`. |
 
 ## Decisiones y guardrails importantes
@@ -59,7 +59,7 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 | Variación controlada | El parser elimina líneas vacías, marcadores simples, comillas envolventes, duplicados y variantes iguales a la pregunta original. |
 | Fan-out con LangGraph | `fanout_retrieve_variants` usa `langgraph.types.Send` para ejecutar recuperación por variante. |
 | Acumulación de listas | `retrieved_lists` usa `Annotated[..., add]` en `RagGraphState` para combinar resultados de los workers. |
-| Deduplicación RRF | `document_identity` usa `_chroma_id` si existe; si no, usa referencia derivada de metadata más hash del texto. |
+| Deduplicación RRF | `document_identity` usa `_document_id`, luego `document_id`; si no existen, usa referencia derivada de metadata más hash del texto. |
 | Estabilidad de orden | En empates, RRF conserva prioridad por primer encuentro (`first_seen`). |
 
 ## Campos de estado

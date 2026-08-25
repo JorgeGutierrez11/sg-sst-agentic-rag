@@ -45,6 +45,7 @@ class Bm25RetrievalTest(unittest.TestCase):
             result = bm25_retrieval.query_top_k(index, "¿Qué exige el SG-SST?", top_k=2)
 
         self.assertEqual(fake_bm25s.tokenized_queries, ["¿Qué exige el SG-SST?"])
+        self.assertEqual(fake_bm25s.tokenized_stopwords, "es")
         self.assertEqual(index.last_query_tokens, ["query-token:¿Qué exige el SG-SST?"])
         self.assertEqual(index.last_k, 2)
         self.assertEqual(index.last_return_as, "tuple")
@@ -81,6 +82,17 @@ class Bm25RetrievalTest(unittest.TestCase):
             bm25_retrieval.EMPTY_QUERY_RESULT,
         )
 
+    def test_bm25_retriever_delegates_to_query_top_k(self) -> None:
+        index = object()
+        expected_result = {"ids": [["child-1"]], "documents": [["Texto."]], "metadatas": [[{}]], "scores": [[1.0]]}
+
+        with patch.object(bm25_retrieval, "query_top_k", return_value=expected_result) as query_top_k:
+            retrieve = bm25_retrieval.bm25_retriever(index)
+            result = retrieve("pregunta", 3)
+
+        self.assertIs(result, expected_result)
+        query_top_k.assert_called_once_with(index, "pregunta", 3)
+
     @unittest.skipIf(importlib.util.find_spec("bm25s") is None, "bm25s is not installed")
     def test_query_top_k_with_real_bm25s_index_returns_saved_corpus_records(self) -> None:
         import bm25s
@@ -93,7 +105,7 @@ class Bm25RetrievalTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             persist_path = Path(temporary_directory) / "bm25"
             retriever = bm25s.BM25()
-            retriever.index(bm25s.tokenize([record["document"] for record in corpus]))
+            retriever.index(bm25s.tokenize([record["document"] for record in corpus], stopwords="es"))
             retriever.save(str(persist_path), corpus=corpus)
 
             loaded_index = bm25_retrieval.open_existing_index(persist_path)
@@ -115,10 +127,12 @@ class FakeBm25sModule:
         self.loaded_path = ""
         self.load_corpus = False
         self.tokenized_queries: list[str] = []
+        self.tokenized_stopwords: str | None = None
         self.BM25 = FakeBm25Loader(self)
 
-    def tokenize(self, queries: list[str]) -> list[str]:
+    def tokenize(self, queries: list[str], *, stopwords: str | None = None) -> list[str]:
         self.tokenized_queries = queries
+        self.tokenized_stopwords = stopwords
         return [f"query-token:{query}" for query in queries]
 
 

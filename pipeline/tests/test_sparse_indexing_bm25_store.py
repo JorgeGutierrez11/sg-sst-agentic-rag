@@ -34,6 +34,8 @@ class SparseIndexingBm25StoreTest(unittest.TestCase):
             retriever, corpus = bm25_store.build_bm25_index(records)
 
         self.assertEqual(fake_bm25s.tokenized_texts, ["Primero.", "Segundo."])
+        self.assertEqual(fake_bm25s.tokenized_stopwords, "es")
+        self.assertEqual(fake_bm25s.bm25_constructor_call_count, 1)
         self.assertEqual(retriever.indexed_tokens, ["token:Primero.", "token:Segundo."])
         self.assertEqual([record["id"] for record in corpus], ["child-1", "table-1"])
 
@@ -54,12 +56,16 @@ class FakeBm25sModule:
 
     def __init__(self) -> None:
         self.tokenized_texts: list[str] = []
+        self.tokenized_stopwords: str | None = None
+        self.bm25_constructor_call_count = 0
 
-    def tokenize(self, texts: list[str]) -> list[str]:
+    def tokenize(self, texts: list[str], *, stopwords: str | None = None) -> list[str]:
         self.tokenized_texts = texts
+        self.tokenized_stopwords = stopwords
         return [f"token:{text}" for text in texts]
 
     def BM25(self) -> "FakeRetriever":
+        self.bm25_constructor_call_count += 1
         return FakeRetriever()
 
 

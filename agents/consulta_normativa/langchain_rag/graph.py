@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 from agents.consulta_normativa.langchain_rag.config import (
-    DEFAULT_TOP_K,
+    RETRIEVAL_TOP_K,
 )
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
 from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
@@ -18,7 +18,7 @@ from agents.consulta_normativa.langchain_rag.query_understanding.query_expansion
 Retriever = Callable[[str, int], dict[str, Any]]
 
 
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
+def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = RETRIEVAL_TOP_K) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -40,8 +40,8 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("expand_query")
-    workflow.add_edge("expand_query", "retrieve")
+    # workflow.set_entry_point("expand_query")
+    workflow.set_entry_point("expand_query", "retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
@@ -80,7 +80,7 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
 
 # Estos son unificables
 def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState], RagGraphState]:
-    """Build a graph node that retrieves raw Chroma-like results."""
+    """Build a graph node that retrieves raw results."""
 
     def run(state: RagGraphState) -> RagGraphState:
         retrieval_query = state.get("retrieval_query") or state["question"]

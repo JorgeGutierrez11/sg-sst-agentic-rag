@@ -132,16 +132,15 @@ class LangChainRagMainTest(unittest.TestCase):
             sparse_index: object,
             *,
             candidate_top_k: int,
-            final_top_k: int,
             rrf_k: int,
         ) -> object:
-            calls.append(f"retriever:{collection}:{sparse_index}:{candidate_top_k}:{final_top_k}:{rrf_k}")
+            calls.append(f"retriever:{collection}:{sparse_index}:{candidate_top_k}:{rrf_k}")
             return "hybrid-retriever"
 
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever: calls.append(f"graph:{llm}:{retriever}") or graph,
+            build_langgraph_rag=lambda llm, retriever, *, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or graph,
             open_existing_collection=fake_open_existing_collection,
             open_existing_index=fake_open_existing_index,
             hybrid_retriever=fake_hybrid_retriever,
@@ -155,8 +154,8 @@ class LangChainRagMainTest(unittest.TestCase):
             [
                 f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
                 f"index:{cli.DEFAULT_BM25_PATH}",
-                f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_FINAL_TOP_K}:{cli.HYBRID_RRF_K}",
-                "graph:llm:hybrid-retriever",
+                f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
+                f"graph:llm:hybrid-retriever:{cli.RETRIEVAL_TOP_K}",
             ],
         )
         self.assertIs(runtime.graph, graph)

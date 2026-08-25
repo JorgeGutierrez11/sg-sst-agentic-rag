@@ -65,6 +65,7 @@ class LangChainRagFormattingTest(unittest.TestCase):
                 "document_type": "child_chunk",
                 "source_document_id": "decreto_1072_2015",
                 "parent_id": "parent-1",
+                "_document_id": "doc-1",
                 "start_char": 10,
                 "end_char": 250,
                 "has_tables": True,
@@ -76,6 +77,7 @@ class LangChainRagFormattingTest(unittest.TestCase):
         self.assertIn("Tablas:", context)
         self.assertIn("- Contiene tablas: sí", context)
         self.assertIn("Trazabilidad técnica:", context)
+        self.assertIn("- ID documento: doc-1", context)
         self.assertIn("- ID padre: parent-1", context)
 
     def test_recovered_documents_normalizes_chroma_result_shape(self) -> None:
@@ -87,6 +89,31 @@ class LangChainRagFormattingTest(unittest.TestCase):
         )
 
         self.assertEqual(documents, [RetrievedDocument(document="contenido", metadata={"source_stem": "Decreto"})])
+
+    def test_recovered_documents_sets_document_id_from_raw_ids(self) -> None:
+        documents = recovered_documents(
+            {
+                "ids": [["raw-id"]],
+                "documents": [["contenido"]],
+                "metadatas": [[{"source_stem": "Decreto"}]],
+            }
+        )
+
+        self.assertEqual(documents[0].metadata["_document_id"], "raw-id")
+        self.assertNotIn("_chroma_id", documents[0].metadata)
+
+    def test_recovered_documents_preserves_existing_document_ids(self) -> None:
+        documents = recovered_documents(
+            {
+                "ids": [["raw-id"]],
+                "documents": [["contenido"]],
+                "metadatas": [[{"document_id": "public-id", "_document_id": "existing-id", "_chroma_id": "existing-chroma"}]],
+            }
+        )
+
+        self.assertEqual(documents[0].metadata["document_id"], "public-id")
+        self.assertEqual(documents[0].metadata["_document_id"], "existing-id")
+        self.assertEqual(documents[0].metadata["_chroma_id"], "existing-chroma")
 
 
 if __name__ == "__main__":

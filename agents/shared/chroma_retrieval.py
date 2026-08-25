@@ -1,15 +1,13 @@
-"""Canonical query-only ChromaDB helpers for runtime retrieval.
+"""Canonical query-only ChromaDB helpers for runtime retrieval."""
 
-The vectorization pipeline re-exports these helpers for backward-compatible imports,
-but collection creation and upsert remain in ``pipeline.vectorization``.
-"""
-
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL
 
 DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
+Retriever = Callable[[str, int], dict[str, Any]]
 
 
 def open_existing_collection(
@@ -55,3 +53,12 @@ def query_top_k(collection: Any, question: str, top_k: int = 5) -> dict[str, Any
         n_results=top_k,
         include=["documents", "metadatas", "distances"],
     )
+
+
+def chroma_retriever(collection: Any) -> Retriever:
+    """Build a graph-compatible retriever callable from a ChromaDB collection."""
+
+    def retrieve(question: str, top_k: int) -> dict[str, Any]:
+        return query_top_k(collection, question, top_k)
+
+    return retrieve

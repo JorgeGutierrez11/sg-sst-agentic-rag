@@ -14,10 +14,23 @@ from agents.consulta_normativa.langchain_rag.retrieval.fusion import (
 class LangChainRagFusionTest(unittest.TestCase):
     """Verify document identity, variant retrieval, and RRF behavior."""
 
-    def test_document_identity_uses_chroma_id_first(self) -> None:
+    def test_document_identity_uses_document_id_first(self) -> None:
+        document = RetrievedDocument(
+            "texto",
+            {"_document_id": "canonical", "document_id": "public", "_chroma_id": "chroma", "source_stem": "source"},
+        )
+
+        self.assertEqual(document_identity(document), "id:canonical")
+
+    def test_document_identity_uses_flat_document_id_fallback(self) -> None:
+        document = RetrievedDocument("texto", {"document_id": "public", "_chroma_id": "chroma", "source_stem": "source"})
+
+        self.assertEqual(document_identity(document), "id:public")
+
+    def test_document_identity_ignores_chroma_id_for_compatibility(self) -> None:
         document = RetrievedDocument("texto", {"_chroma_id": "chunk-1", "chunk_id": "chunk-1", "source_stem": "source"})
 
-        self.assertEqual(document_identity(document), "id:chunk-1")
+        self.assertTrue(document_identity(document).startswith("fallback:source (tipo desconocido):"))
 
     def test_document_identity_falls_back_for_chunk_metadata_without_chroma_id(self) -> None:
         document = RetrievedDocument(
@@ -47,10 +60,10 @@ class LangChainRagFusionTest(unittest.TestCase):
         self.assertTrue(identity.startswith("fallback:res-0312 (tipo desconocido):"))
 
     def test_reciprocal_rank_fusion_deduplicates_and_boosts_repeated_documents(self) -> None:
-        top_once = RetrievedDocument("solo top", {"_chroma_id": "top-once"})
-        repeated_low_first = RetrievedDocument("repetido", {"_chroma_id": "repeated"})
-        middle_once = RetrievedDocument("solo medio", {"_chroma_id": "middle-once"})
-        repeated_high_second = RetrievedDocument("repetido actualizado", {"_chroma_id": "repeated"})
+        top_once = RetrievedDocument("solo top", {"_document_id": "top-once"})
+        repeated_low_first = RetrievedDocument("repetido", {"_document_id": "repeated"})
+        middle_once = RetrievedDocument("solo medio", {"_document_id": "middle-once"})
+        repeated_high_second = RetrievedDocument("repetido actualizado", {"_document_id": "repeated"})
 
         fused = reciprocal_rank_fusion(
             [[top_once, middle_once, repeated_low_first], [repeated_high_second]],
@@ -61,8 +74,8 @@ class LangChainRagFusionTest(unittest.TestCase):
         self.assertIs(fused[0], repeated_low_first)
 
     def test_rrf_fuse_node_writes_documents_only(self) -> None:
-        first = RetrievedDocument("first", {"_chroma_id": "first"})
-        second = RetrievedDocument("second", {"_chroma_id": "second"})
+        first = RetrievedDocument("first", {"_document_id": "first"})
+        second = RetrievedDocument("second", {"_document_id": "second"})
 
         update = rrf_fuse_node(rrf_k=60, top_k=1)({"retrieved_lists": [[first], [second]]})
 

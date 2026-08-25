@@ -1,6 +1,6 @@
 # Guía operativa: recuperación sparse BM25
 
-Esta guía cubre únicamente la operación del índice BM25 local para el corpus SG-SST. BM25 se construye desde los JSONL canónicos del pipeline y se consulta en runtime como un helper de solo lectura; no opera la integración híbrida ni modifica LangGraph.
+Esta guía cubre la operación del índice BM25 local para el corpus SG-SST. BM25 se construye desde los JSONL canónicos del pipeline y se consulta en runtime como un helper de solo lectura; el RAG LangGraph actual lo usa dentro de la recuperación híbrida junto con Chroma.
 
 ## Ruta rápida
 
@@ -62,7 +62,7 @@ mv data/processed/bm25 data/processed/bm25.backup
 python -m pipeline.sparse_indexing.main
 ```
 
-La reconstrucción limpia depende de los JSONL actuales. No hace sincronización contra Chroma ni elimina registros en Chroma.
+La reconstrucción limpia depende de los JSONL actuales. No hace sincronización contra Chroma ni elimina registros en Chroma. Si cambian metadatos de identidad como `document_id`, reconstruye índices reales para evitar trazabilidad mezclada entre versiones.
 
 ## Uso runtime
 
@@ -77,7 +77,7 @@ result = query_top_k(index, "¿Qué exige la Resolución 0312?", top_k=5)
 
 `open_existing_index(...)` carga un índice BM25S ya persistido con `load_corpus=True`. Si la ruta no existe, falla con `ValueError` en lugar de crear un índice vacío.
 
-`query_top_k(...)` devuelve una estructura compatible con Chroma:
+`query_top_k(...)` tokeniza la consulta con `stopwords="es"` y devuelve una estructura compatible con Chroma:
 
 ```python
 {
@@ -123,4 +123,4 @@ python -m compileall pipeline/vectorization pipeline/sparse_indexing agents/shar
 
 ## Fuera de alcance
 
-Esta guía no documenta operación de recuperación híbrida, RRF, Multi-Query ni cambios en LangGraph. Esos pasos pertenecen a una fase posterior.
+Esta guía no documenta Multi-Query, query rewriting, reranking ni evaluación comparativa. La operación completa del runtime híbrido está en [`rag-langgraph.md`](rag-langgraph.md).

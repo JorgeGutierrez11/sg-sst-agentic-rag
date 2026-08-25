@@ -10,8 +10,8 @@ from agents.consulta_normativa.langchain_rag.config import (
     DEFAULT_CHROMA_PATH,
     DEFAULT_COLLECTION_NAME,
     HYBRID_CANDIDATE_TOP_K,
-    HYBRID_FINAL_TOP_K,
     HYBRID_RRF_K,
+    RETRIEVAL_TOP_K,
 )
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.shared.bm25_retrieval import DEFAULT_BM25_PATH
@@ -30,7 +30,7 @@ class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
     build_groq_llm: Callable[[], Any]
-    build_langgraph_rag: Callable[[Any, Retriever], Any]
+    build_langgraph_rag: Callable[..., Any]
     answer_with_langgraph: Callable[[str, Any], Any]
     hybrid_retriever: Callable[..., Retriever]
     open_existing_collection: Callable[[Any, str], Any]
@@ -71,32 +71,35 @@ def build_runtime() -> RagRuntime:
 
     try:
         llm = dependencies.build_groq_llm()
-    except Exception as error:  # noqa: BLE001 - keep missing key/package/provider errors controlled.
+    except Exception as error:  
         raise OperationalError(str(error)) from error
 
     try:
+        # Cargar Chroma y el índice de BM25
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         sparse_index = dependencies.open_existing_index(DEFAULT_BM25_PATH)
+
+        # Crear el retriever
         retriever = dependencies.hybrid_retriever(
             collection,
             sparse_index,
             candidate_top_k=HYBRID_CANDIDATE_TOP_K,
-            final_top_k=HYBRID_FINAL_TOP_K,
             rrf_k=HYBRID_RRF_K,
         )
 
         graph = dependencies.build_langgraph_rag(
             llm,
             retriever,
+            top_k=RETRIEVAL_TOP_K,
         )
 
         # Guardar diagrama en disco
         png_bytes = graph.get_graph().draw_mermaid_png()
         with open("data/images/base_rag_graph.png", "wb") as f:
             f.write(png_bytes)
-
         print("Grafo guardado exitosamente como 'base_rag_graph.png'")
-    except Exception as error:  # noqa: BLE001 - Chroma path, package, and collection failures are operational.
+
+    except Exception as error:
         raise OperationalError(str(error)) from error
 
     return RagRuntime(
@@ -121,6 +124,8 @@ def load_dependencies() -> RuntimeDependencies:
         build_groq_llm=build_groq_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
+
+        # Aqui seleccionar el Retriever
         hybrid_retriever=hybrid_retriever,
         open_existing_collection=open_existing_collection,
         open_existing_index=open_existing_index,
@@ -151,7 +156,7 @@ def run_once(runtime: RagRuntime, question: str) -> int:
 
     try:
         result = runtime.answer_with_langgraph(question, runtime.graph)
-    except Exception as error:  # noqa: BLE001 - direct CLI should report RAG failures without traceback.
+    except Exception as error:
         return fail("RAG execution", OperationalError(str(error)))
 
     print_answer(result)

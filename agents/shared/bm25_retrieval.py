@@ -1,10 +1,12 @@
 """Canonical query-only BM25S helpers for runtime sparse retrieval."""
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 DEFAULT_BM25_PATH = Path(__file__).resolve().parents[2] / "data" / "processed" / "bm25"
 EMPTY_QUERY_RESULT = {"ids": [[]], "documents": [[]], "metadatas": [[]], "scores": [[]]}
+Retriever = Callable[[str, int], dict[str, Any]]
 
 
 def open_existing_index(persist_path: Path = DEFAULT_BM25_PATH) -> Any:
@@ -31,6 +33,15 @@ def query_top_k(index: Any, question: str, top_k: int = 5) -> dict[str, Any]:
         retrieval_output = index.retrieve(query_tokens, k=effective_top_k)
 
     return normalize_retrieval_results(retrieval_output)
+
+
+def bm25_retriever(index: Any) -> Retriever:
+    """Build a graph-compatible retriever callable from a loaded BM25S index."""
+
+    def retrieve(question: str, top_k: int) -> dict[str, Any]:
+        return query_top_k(index, question, top_k)
+
+    return retrieve
 
 
 def empty_query_result() -> dict[str, Any]:

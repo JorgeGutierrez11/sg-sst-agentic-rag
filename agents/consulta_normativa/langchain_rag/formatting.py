@@ -5,7 +5,7 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 
 def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
-    """Normalize ChromaDB query output into one list of retrieved documents."""
+    """Normalize query output into one list of retrieved documents."""
 
     ids = first_result_list(results, "ids")
     documents = first_result_list(results, "documents")
@@ -15,7 +15,7 @@ def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
     for index, document in enumerate(documents):
         metadata = dict(metadata_at(metadatas, index))
         if index < len(ids) and has_metadata_value(ids[index]):
-            metadata["_chroma_id"] = str(ids[index])
+            metadata.setdefault("_document_id", str(ids[index]))
 
         recovered.append(
             RetrievedDocument(
@@ -109,7 +109,8 @@ def metadata_context(metadata: dict[str, Any]) -> str:
         ),
         ("Trazabilidad técnica",
          [
-            ("ID Chroma", "_chroma_id"),
+            ("ID documento", "_document_id"),
+            ("Técnicas de recuperación", "_retrieval_sources"),
             ("ID padre", "parent_id"),
             ("Inicio", "start_char"),
             ("Fin", "end_char")
@@ -186,4 +187,6 @@ def render_metadata_value(value: Any) -> str:
 
     if isinstance(value, bool):
         return "sí" if value else "no"
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value)
     return str(value)

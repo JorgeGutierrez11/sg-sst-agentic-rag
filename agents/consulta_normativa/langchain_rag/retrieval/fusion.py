@@ -64,9 +64,9 @@ def document_identity(document: RetrievedDocument) -> str:
     """Return a stable identity for RRF deduplication."""
 
     metadata = document.metadata
-    chroma_id = metadata.get("_chroma_id")
-    if has_value(chroma_id):
-        return f"id:{chroma_id}"
+    document_id = metadata.get("_document_id") or metadata.get("document_id")
+    if has_value(document_id):
+        return f"id:{document_id}"
 
     text_hash = hashlib.sha256(document.document.encode("utf-8")).hexdigest()[:12]
     return f"fallback:{reference_from_metadata(metadata)}:{text_hash}"
