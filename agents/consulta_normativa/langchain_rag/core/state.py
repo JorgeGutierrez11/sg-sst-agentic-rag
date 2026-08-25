@@ -29,3 +29,6 @@ class RagGraphState(TypedDict, total=False):
     # Sufficient-Context Gate
     context_sufficiency: str
     sufficient_context_trace: dict[str, Any]
+
+    # Self-Refine
+    self_refine_trace: dict[str, Any]

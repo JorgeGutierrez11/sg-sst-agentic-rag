@@ -102,7 +102,7 @@ Por esto, el primer paso no debe ser agregar una técnica avanzada, sino **instr
 | Contexto empresarial | Context-Aware Query Rewriting | Reformula la consulta usando perfil empresarial o historial relevante. | Antes de `retrieve`, después de disponer del perfil/contexto. | Puede contaminar la consulta con contexto irrelevante; comparar contra filtros estructurados simples. |
 | Validación y control | Retrieval Relevance Grading / CRAG | Evalúa si los documentos recuperados son relevantes antes de generar respuesta. | Sustituye o amplía `assess_evidence` con rutas condicionales. | Un grader también falla; exigir salida estructurada y límite de reintentos. |
 | Validación y control | Answerability / Sufficient-Context Gate | Determina si el contexto contiene evidencia suficiente para responder completa o parcialmente. | Después de recuperación/reranking y antes de generación. | Puede generar abstenciones excesivas; evaluar casos respondibles, parcialmente respondibles y no respondibles. |
-| Validación y control | Claim-Level Citation Verification | Verifica si cada afirmación generada está respaldada por la evidencia citada. | Después de `generate_answer` y antes de entregar el resultado final. | Costosa y no infalible; no confundir referencias deduplicadas con verificación de citas. |
+| Validación y control | Self-Refine | Genera feedback sobre la respuesta inicial y la refina para producir una salida potencialmente mejor. | Después de `generate_answer` | Aumenta costo y el modelo puede producir feedback incorrecto.|
 
 ### Relevancia para SG-SST
 
@@ -152,3 +152,12 @@ Estas técnicas pueden aparecer en revisión bibliográfica o exploración futur
 - Nogueira, R., & Cho, K. (2019). *Passage Re-ranking with BERT*. https://arxiv.org/abs/1901.04085
 - Yan, S.-Q., Gu, J.-C., Zhu, Y., & Ling, Z.-H. (2024). *Corrective Retrieval Augmented Generation*. https://arxiv.org/abs/2401.15884
 - Joren, H. et al. (2024). *Sufficient Context: A New Lens on Retrieval Augmented Generation Systems*. https://arxiv.org/abs/2411.06037
+
+
+
+
+
+sef-refine
+
+Dhuliawala, S., et al. (2024). Chain-of-Verification Reduces Hallucination in Large Language Models. Findings of ACL 2024, pp. 3563–3578. DOI: 10.18653/v1/2024.findings-acl.212.
+https://aclanthology.org/2024.findings-acl.212/
