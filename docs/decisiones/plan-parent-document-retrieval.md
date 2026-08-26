@@ -68,7 +68,7 @@ child_chunk → expandir a parent
 table       → conservar como evidencia directa
 ```
 
-### No hace falta truncar parents inicialmente
+### No hace falta truncar parents individualmente
 
 Los parent chunks tienen un tamaño acotado por el proceso de chunking. Además, el cambio previsto hacia una API DeepSeek con ventana de 1M tokens reduce la presión de truncamiento.
 
@@ -81,6 +81,61 @@ no cortar por tokens
 ```
 
 Si después las pruebas muestran latencia, costo o ruido excesivo, se puede agregar una ventana alrededor del child recuperado. No implementarlo ahora.
+
+### No crear un límite nuevo de parents expandidos
+
+La expansión opera sobre los documentos finales que ya sobrevivieron el retrieval, RRF o reranking. Por eso no se agrega un hiperparámetro adicional como `MAX_EXPANDED_PARENTS`.
+
+Regla inicial:
+
+```text
+expandir todos los child chunks finales
+deduplicar por parent_id
+mantener tablas directas
+```
+
+Si llegan 5 o 10 chunks finales, esos son los únicos candidatos a expansión. La expansión aumenta el contexto de cada evidencia seleccionada; no aumenta cuántas evidencias entran.
+
+### Mantener orden de ranking original
+
+Aunque fuentes externas como Liu et al. (*Lost in the Middle*) y el informe de Chroma sobre *context rot* advierten que los modelos pueden usar peor la información en el medio de contextos largos, esta primera implementación no reordena documentos por estrategia de inicio/final.
+
+Decisión inicial:
+
+```text
+orden final de retrieval/reranking
+        ↓
+expansión
+        ↓
+mismo orden en build_context
+```
+
+El reordenamiento estratégico del contexto queda como mejora posterior, no como parte de este plan.
+
+### Expansión incondicional
+
+Todo `child_chunk` final con `parent_id` válido se expande a su parent. No se implementa auto-merging con umbral en esta fase.
+
+Motivo:
+
+- no requiere contar cuántos children tiene cada parent;
+- no introduce umbrales que deban calibrarse;
+- evita perder evidencia cuando un único child final es suficiente para justificar el parent.
+
+Auto-merging con umbral queda como alternativa posterior si la evaluación muestra contexto diluido por matches únicos débiles.
+
+### Verificar correspondencia `chunk_id` ↔ `parent_id` antes de integrar
+
+La expansión depende de que `child.metadata.parent_id` apunte exactamente a `parent.chunk_id` en `parents.jsonl`.
+
+Antes de escribir la integración del grafo, debe existir una prueba o verificación que confirme:
+
+```text
+para todo child_chunk indexable con parent_id:
+    parent_id existe en parents.jsonl
+```
+
+Si esto falla masivamente, el fallback de “parent faltante, conservar child” ocultaría el problema y la técnica parecería funcionar sin expandir nada. Este es el guardrail más importante del plan.
 
 ## 4. Diseño propuesto
 
@@ -97,6 +152,8 @@ agents/consulta_normativa/langchain_rag/graph.py
         retrieve
           ↓
         normalize_documents
+          ↓
+        reranking si aplica
           ↓
         expand_parent_documents
           ↓
@@ -116,6 +173,8 @@ Chroma o BM25 retrieval
   ↓
 normalize documents
   ↓
+reranking si aplica
+  ↓
 expand child chunks to parents
   ↓
 build context
@@ -129,16 +188,22 @@ query
 Chroma child/table top-k
 BM25 child/table top-k
   ↓
+normalize dense/sparse rankings
+  ↓
 RRF sobre child/table ids
   ↓
-normalize fused documents
+raw fused results
+  ↓
+normalize_documents del grafo
+  ↓
+reranking si aplica
   ↓
 expand child chunks to parents
   ↓
 build context
 ```
 
-La expansión debe ocurrir **después de RRF**, no antes. Primero se decide qué child/table evidence importa; luego se busca el parent solo para los child chunks seleccionados.
+La expansión debe ocurrir **después de RRF y después de reranking cuando esos pasos existan**, no antes. Primero se decide qué child/table evidence importa; luego se busca el parent solo para los child chunks finales.
 
 ## 5. Componentes afectados
 
@@ -154,7 +219,7 @@ Responsabilidades:
 | Archivo | Responsabilidad |
 |---|---|
 | `agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py` | Cargar parents, construir lookup `parent_id -> parent`, expandir child chunks recuperados y preservar tablas como evidencia directa. |
-| `agents/consulta_normativa/tests/test_parent_document_retrieval.py` | Validar expansión, deduplicación, orden, trazabilidad y fallback por parent faltante. |
+| `agents/consulta_normativa/tests/test_parent_document_retrieval.py` | Validar correspondencia `parent_id`, expansión, deduplicación, orden, trazabilidad y fallback por parent faltante. |
 
 ### Archivos a modificar
 
@@ -194,22 +259,22 @@ Motivo: la técnica ya tiene corpus e índices base. Esta fase solo agrega expan
 
 ### 1. Definir configuración del path de parents
 
-**Acción**  
+**Acción**
 Reutilizar `DEFAULT_PARENT_CHUNKS_PATH` desde `pipeline.chunking.core.config` o exponerlo en la config runtime si el import directo no es conveniente.
 
-**Ubicación**  
+**Ubicación**
 `agents/consulta_normativa/langchain_rag/config.py`
 
-**Motivo**  
+**Motivo**
 El runtime necesita ubicar `data/processed/chunks/parents.jsonl` sin hardcodear rutas.
 
-**Dependencias**  
+**Dependencias**
 Ninguna.
 
 ### 2. Crear loader runtime de parents
 
-**Acción**  
-Crear en `agents/shared/parent_document_retrieval.py` una función:
+**Acción**
+Crear en `agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py` una función:
 
 ```python
 load_parent_documents(parents_path: Path) -> dict[str, RetrievedDocument]
@@ -223,16 +288,41 @@ Debe:
 - conservar el texto completo del parent;
 - conservar metadata normativa útil para referencias/contexto.
 
-**Ubicación**  
-`agents/shared/parent_document_retrieval.py`
+**Ubicación**
+`agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`
 
-**Motivo**  
+**Motivo**
 Separar I/O de parents del grafo y de los retrievers.
 
-**Dependencias**  
+**Dependencias**
 Paso 1.
 
-### 3. Definir contrato de expansión
+### 3. Verificar correspondencia real entre children y parents
+
+**Acción**
+Agregar una verificación en tests que cargue registros reales o fixtures representativos y confirme que todo `parent_id` de child chunk existe como `chunk_id` en el lookup de parents.
+
+La verificación debe reportar al menos:
+
+```text
+total_child_chunks
+children_with_parent_id
+children_with_missing_parent
+missing_parent_ratio
+```
+
+Para fixtures controlados, `children_with_missing_parent` debe ser `0`. Para datos reales, cualquier mismatch debe revisarse antes de continuar con la integración.
+
+**Ubicación**
+`agents/consulta_normativa/tests/test_parent_document_retrieval.py`
+
+**Motivo**
+Evitar un fallo silencioso donde todos los children se conserven sin expandir porque el lookup usa una clave diferente a la metadata.
+
+**Dependencias**
+Paso 2.
+
+### 4. Definir contrato de expansión
 
 **Acción**  
 Crear una función pura:
@@ -253,15 +343,15 @@ Reglas:
 - preservar el orden del ranking original.
 
 **Ubicación**  
-`agents/shared/parent_document_retrieval.py`
+`agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`
 
 **Motivo**  
 La expansión debe ser común para Chroma, BM25 e Hybrid Retrieval.
 
 **Dependencias**  
-Paso 2.
+Paso 3.
 
-### 4. Preservar trazabilidad del match original
+### 5. Preservar trazabilidad del match original
 
 **Acción**  
 Cuando un child se expanda a parent, agregar metadata de trazabilidad al documento expandido:
@@ -280,15 +370,37 @@ expanded_from_child_ids
 ```
 
 **Ubicación**  
-`agents/shared/parent_document_retrieval.py`
+`agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`
 
 **Motivo**  
 Evitar pérdida de evidencia fina: el contexto usa parent, pero la auditoría debe saber qué child disparó la recuperación.
 
 **Dependencias**  
-Paso 3.
+Paso 4.
 
-### 5. No implementar truncamiento de parents
+### 6. Aplicar límite B por deduplicación, no por hiperparámetro
+
+**Acción**
+No crear `MAX_EXPANDED_PARENTS` en esta fase. Expandir todos los child chunks finales recibidos por la función y deduplicar por `parent_id`.
+
+Si varios children apuntan al mismo parent:
+
+```text
+parent aparece una sola vez
+expanded_from_child_ids conserva todos los children que lo activaron
+posición final = primera aparición en el ranking
+```
+
+**Ubicación**
+`agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`
+
+**Motivo**
+Evitar repetición de contexto sin agregar un límite adicional. Los retrievers/rerankers ya controlan cuántos documentos finales llegan a expansión.
+
+**Dependencias**
+Paso 5.
+
+### 7. No implementar truncamiento de parents
 
 **Acción**  
 No cortar texto del parent por tokens en esta fase.
@@ -296,21 +408,21 @@ No cortar texto del parent por tokens en esta fase.
 Solo deduplicar parents y conservar el orden por ranking.
 
 **Ubicación**  
-`agents/shared/parent_document_retrieval.py`
+`agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`
 
 **Motivo**  
 Los parents tienen tamaño acotado y se planea usar una ventana de contexto amplia. Truncar puede cortar justo la sección importante.
 
 **Dependencias**  
-Paso 4.
+Paso 6.
 
-### 6. Insertar nodo común en LangGraph
+### 8. Insertar nodo común en LangGraph
 
 **Acción**  
-Agregar un nodo después de `normalize_documents`:
+Agregar un nodo después de `normalize_documents` y después de reranking si el flujo activo lo usa:
 
 ```text
-normalize_documents → expand_parent_documents → record_retrieval_trace
+normalize_documents → reranking si aplica → expand_parent_documents → record_retrieval_trace
 ```
 
 El nodo recibe `state["documents"]`, aplica expansión y reemplaza `state["documents"]` por documentos expandidos.
@@ -322,9 +434,9 @@ El nodo recibe `state["documents"]`, aplica expansión y reemplaza `state["docum
 Un solo punto de integración sirve para retrieval denso, BM25 o Hybrid, siempre que todos entreguen documentos normalizados.
 
 **Dependencias**  
-Pasos 2-5.
+Pasos 2-7.
 
-### 7. Cablear parent lookup en runtime
+### 9. Cablear parent lookup en runtime
 
 **Acción**  
 En `agents/consulta_normativa/langchain_rag/main.py`, cargar parents durante `build_runtime` y pasarlos al builder del grafo.
@@ -344,9 +456,9 @@ Si `parent_lookup` es `None`, el grafo conserva comportamiento actual sin expans
 Mantener compatibilidad con tests y usos que construyen el grafo sin parent expansion.
 
 **Dependencias**  
-Paso 6.
+Paso 8.
 
-### 8. Agregar trazabilidad al estado solo si es necesaria
+### 10. Agregar trazabilidad al estado solo si es necesaria
 
 **Acción**  
 Si los tests o debugging lo requieren, agregar a `RagGraphState` un campo opcional:
@@ -362,6 +474,7 @@ input_document_count
 expanded_parent_count
 preserved_table_count
 missing_parent_count
+deduplicated_parent_count
 ```
 
 **Ubicación**  
@@ -371,9 +484,9 @@ missing_parent_count
 Observabilidad mínima sin inflar el estado con documentos duplicados.
 
 **Dependencias**  
-Paso 7.
+Paso 9.
 
-### 9. Probar expansión aislada
+### 11. Probar expansión aislada
 
 **Acción**  
 Crear tests unitarios para `expand_parent_documents`.
@@ -383,6 +496,7 @@ Casos mínimos:
 - child con `parent_id` válido se reemplaza por parent;
 - tabla se conserva intacta;
 - dos children del mismo parent producen un solo parent;
+- varios children del mismo parent preservan `expanded_from_child_ids`;
 - parent faltante conserva child y marca fallback;
 - orden sigue el ranking original;
 - metadata de trazabilidad se conserva.
@@ -394,9 +508,9 @@ Casos mínimos:
 Validar la lógica central sin depender de Chroma, BM25 ni LLM.
 
 **Dependencias**  
-Pasos 2-5.
+Pasos 2-7.
 
-### 10. Probar integración en grafo
+### 12. Probar integración en grafo
 
 **Acción**  
 Actualizar tests del grafo para verificar:
@@ -406,6 +520,7 @@ Actualizar tests del grafo para verificar:
 - nodo de expansión cambia el contexto final al texto parent;
 - fallback sin evidencia sigue funcionando;
 - tablas no se expanden.
+- la expansión ocurre después del ranking final disponible.
 
 **Ubicación**  
 `agents/consulta_normativa/tests/test_langchain_rag_graph.py`
@@ -414,9 +529,9 @@ Actualizar tests del grafo para verificar:
 Asegurar que Small-to-Big afecta el contexto final sin romper el flujo RAG.
 
 **Dependencias**  
-Pasos 6-8.
+Pasos 8-10.
 
-### 11. Probar wiring runtime
+### 13. Probar wiring runtime
 
 **Acción**  
 Actualizar tests de `main.py` para verificar que `build_runtime` carga:
@@ -432,7 +547,7 @@ Actualizar tests de `main.py` para verificar que `build_runtime` carga:
 Evitar que la expansión exista como helper pero no quede conectada al runtime real.
 
 **Dependencias**  
-Paso 7.
+Paso 9.
 
 ## 7. Cambios de estado o contratos
 
@@ -544,7 +659,13 @@ Mitigación: deduplicar por `parent_id` manteniendo la primera posición de rank
 
 Los parents pueden ser más largos que los children. Por ahora no se truncarán porque el tamaño actual no representa un problema real y se prevé usar DeepSeek con ventana de 1M tokens.
 
-Mitigación inicial: observar conteos y tamaño aproximado del contexto. Si las pruebas muestran problemas, agregar después ventana alrededor del child recuperado.
+Mitigación inicial: expandir solo documentos finales y deduplicar por `parent_id`. Si las pruebas muestran problemas, agregar después ventana alrededor del child recuperado.
+
+### Medio — Lost in the middle / context rot
+
+Una ventana de contexto grande no garantiza que el modelo use igual de bien toda la información. Liu et al. muestran caída de rendimiento cuando la evidencia queda en medio del contexto, y Chroma reporta degradación con contextos largos en modelos recientes.
+
+Mitigación inicial: mantener ranking original y no aumentar el número de evidencias; medir antes de introducir reordenamiento estratégico.
 
 ### Bajo — Tablas sin expansión
 
@@ -558,15 +679,17 @@ Mitigación: ubicarla después de `recovered_documents()`.
 
 ## 10. Criterios de aceptación
 
-- Existe `agents/shared/parent_document_retrieval.py`.
+- Existe `agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py`.
 - El runtime puede cargar `parents.jsonl` como lookup `parent_id -> parent`.
 - Los child chunks recuperados se expanden a su parent completo.
 - Las tablas recuperadas se conservan sin expansión.
 - Varios children del mismo parent producen un solo parent en contexto.
+- Varios children del mismo parent agregan trazabilidad en `expanded_from_child_ids`.
 - El orden del contexto respeta el ranking original.
 - La metadata conserva qué child originó cada parent expandido.
 - No se implementa truncamiento de parents en esta fase.
-- La expansión ocurre después de retrieval en variantes individuales y después de RRF en Hybrid Retrieval.
+- No se crea un hiperparámetro nuevo para limitar parents; se expanden los documentos finales y se deduplican parents repetidos.
+- La expansión ocurre después de retrieval, RRF y reranking según el flujo activo.
 - No se modifican los índices ni el chunking.
 - Tests unitarios, integración de grafo y wiring runtime pasan.
 
@@ -577,3 +700,6 @@ Mitigación: ubicarla después de `recovered_documents()`.
 - `pipeline/vectorization/documents.py` — metadata `parent_id` en child chunks indexados.
 - `agents/consulta_normativa/langchain_rag/formatting.py` — normalización a `RetrievedDocument` y construcción de contexto.
 - `agents/consulta_normativa/langchain_rag/graph.py` — punto de integración post-retrieval.
+- Liu et al., “Lost in the Middle: How Language Models Use Long Contexts” — riesgo de degradación posicional en contextos largos.
+- Chroma, “Context Rot: How Increasing Input Tokens Impacts LLM Performance” — riesgo de degradación por longitud de contexto incluso en modelos recientes.
+- LangChain Parent/MultiVector Retriever docs — patrón de recuperar chunks pequeños y devolver documentos padres.

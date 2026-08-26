@@ -97,7 +97,13 @@ def metadata_context(metadata: dict[str, Any]) -> str:
                 ("Literal", "literal"),
             ],
         ),
-        ("Tablas", [("Contiene tablas", "has_tables"), ("Claves de tabla", "table_keys")]),
+        (
+            "Tablas", 
+            [
+                ("Contiene tablas", "has_tables"), 
+                ("Claves de tabla", "table_keys")
+            ]
+        ),
         (
             "Tabla",
             [
@@ -107,14 +113,23 @@ def metadata_context(metadata: dict[str, Any]) -> str:
                 ("Fila sobredimensionada", "oversized_row"),
             ],
         ),
-        ("Trazabilidad técnica",
-         [
-            ("ID documento", "_document_id"),
-            ("Técnicas de recuperación", "_retrieval_sources"),
-            ("ID padre", "parent_id"),
-            ("Inicio", "start_char"),
-            ("Fin", "end_char")
-         ]),
+        (
+            "Trazabilidad técnica",
+            [
+                ("ID documento", "_document_id"),
+                ("Técnicas de recuperación", "_retrieval_sources"),
+                ("Expansión parent aplicada", "parent_expansion_applied"),
+                ("ID parent expandido", "expanded_parent_id"),
+                ("ID child original", "expanded_from_child_id"),
+                ("IDs child originales", "expanded_from_child_ids"),
+                ("Tipo original recuperado", "expanded_from_document_type"),
+                ("Fallback expansión parent", "parent_expansion_fallback"),
+                ("Estrategia parent", "parent_strategy"),
+                ("ID padre", "parent_id"),
+                ("Inicio", "start_char"),
+                ("Fin", "end_char"),
+            ],
+        ),
     ]
 
     rendered_sections: list[str] = []

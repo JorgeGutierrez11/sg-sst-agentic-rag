@@ -15,6 +15,7 @@ from agents.consulta_normativa.langchain_rag.graph import (
     fallback_answer,
     fallback_answer_node,
 )
+from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 from agents.consulta_normativa.manual_implementation.prompts import build_base_prompt as build_manual_prompt
 from agents.consulta_normativa.manual_implementation.rag_base import (
     build_context as build_manual_context,
@@ -111,35 +112,11 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(result.answer, "Generated from fake LLM.")
         self.assertIn("Contenido:\nContexto normativo", result.context)
         self.assertEqual(result.references, ["Resolución 0312 de 2019, tabla 1 (table)"])
-        self.assertEqual(len(llm.messages), 2)
+        self.assertEqual(len(llm.messages), 1)
         system_message, human_message = llm.messages[-1]
         self.assertIn("Responde ÚNICAMENTE", system_message.content)
         self.assertIn("Contexto recuperado:", human_message.content)
         self.assertIn("¿Qué exige la norma?", human_message.content)
-
-    def test_build_langgraph_rag_retrieves_with_expanded_query(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(expansion_terms=["consulta normativa expandida SG-SST"])
-        retrieved_queries: list[str] = []
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            retrieved_queries.append(question)
-            return self.fake_retriever(question, top_k)
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, retriever, top_k=1)
-            state = graph.invoke({"question": "¿Qué tiene que hacer el empleador?"})
-
-        self.assertEqual(state["answer"], "Generated from fake LLM.")
-        self.assertEqual(retrieved_queries, ["¿Qué tiene que hacer el empleador? consulta normativa expandida SG-SST"])
-        self.assertEqual(state["query_expansion_trace"], {"changed": True, "fallback": False, "error": None})
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -187,7 +164,85 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(result.answer, "La evidencia recuperada es insuficiente para responder la pregunta.")
         self.assertEqual(result.context, "No se recuperó contexto.")
         self.assertEqual(result.references, [])
-        self.assertEqual(len(llm.messages), 1)
+        self.assertEqual(len(llm.messages), 0)
+
+    def test_build_langgraph_rag_context_uses_parent_text_after_child_retrieval(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm()
+        parent_lookup = {
+            "parent-1": RetrievedDocument(
+                "Full parent context text",
+                {"document_id": "parent-1", "document_type": "parent_chunk", "source_stem": "Decreto 1072"},
+            )
+        }
+
+        def retriever(question: str, top_k: int) -> dict[str, object]:
+            return {
+                "ids": [["child-1"]],
+                "documents": [["Small child text"]],
+                "metadatas": [[{"document_type": "child_chunk", "parent_id": "parent-1", "source_stem": "Decreto 1072"}]],
+            }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, retriever, top_k=1, parent_lookup=parent_lookup)
+            result = answer_with_langgraph("¿Qué exige la norma?", graph)
+
+        self.assertIn("Contenido:\nFull parent context text", result.context)
+        self.assertNotIn("Small child text", result.context)
+
+    def test_build_langgraph_rag_preserves_table_result_with_parent_lookup(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm()
+        parent_lookup = {"parent-1": RetrievedDocument("Parent text", {"document_type": "parent_chunk"})}
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1, parent_lookup=parent_lookup)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertEqual(state["documents"][0].document, "Contexto normativo")
+        self.assertEqual(state["documents"][0].metadata["document_type"], "table")
+
+    def test_build_langgraph_rag_works_unchanged_without_parent_lookup(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm()
+        retrieved_queries: list[str] = []
+
+        def retriever(question: str, top_k: int) -> dict[str, object]:
+            retrieved_queries.append(question)
+            return {
+                "ids": [["child-1"]],
+                "documents": [["Small child text"]],
+                "metadatas": [[{"document_type": "child_chunk", "parent_id": "parent-1", "source_stem": "Decreto 1072"}]],
+            }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, retriever, top_k=1)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertIn("Contenido:\nSmall child text", state["context"])
+        self.assertEqual(retrieved_queries, ["¿Qué exige la norma?"])
+        self.assertNotIn("query_expansion_trace", state)
 
     def test_context_references_and_generation_input_match_manual_for_fixture(self) -> None:
         raw_results = self.fake_retriever("¿Qué exige la norma?", 1)

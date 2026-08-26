@@ -3,22 +3,25 @@
 from collections.abc import Callable
 from typing import Any
 
-from agents.consulta_normativa.langchain_rag.config import (
-    RETRIEVAL_TOP_K,
-)
+from agents.consulta_normativa.langchain_rag.config import RETRIEVAL_TOP_K
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
 from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
 from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
-from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
-from agents.consulta_normativa.langchain_rag.query_understanding.query_expansion import query_expansion_node
+from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import expand_parent_documents
 
 Retriever = Callable[[str, int], dict[str, Any]]
 
 
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = RETRIEVAL_TOP_K) -> Any:
+def build_langgraph_rag(
+    llm: Any,
+    retriever: Retriever,
+    top_k: int = RETRIEVAL_TOP_K,
+    parent_lookup: dict[str, RetrievedDocument] | None = None,
+) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -29,9 +32,9 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = RETRIEVAL_T
 
     workflow = StateGraph(RagGraphState)
 
-    workflow.add_node("expand_query", query_expansion_node(llm))
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
+    workflow.add_node("expand_parent_documents", expand_parent_documents_node(parent_lookup))
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
@@ -40,10 +43,10 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = RETRIEVAL_T
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    # workflow.set_entry_point("expand_query")
-    workflow.set_entry_point("expand_query", "retrieve")
+    workflow.set_entry_point("retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
-    workflow.add_edge("normalize_documents", "record_retrieval_trace")
+    workflow.add_edge("normalize_documents", "expand_parent_documents")
+    workflow.add_edge("expand_parent_documents", "record_retrieval_trace")
     workflow.add_conditional_edges(
         "record_retrieval_trace",
         evidence_route,
@@ -62,10 +65,10 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
 
     state = graph.invoke({"question": question})
 
-    print("***********************************")
-    print("Retrieval query:")
-    print(state.get("retrieval_query"))
-    print("***********************************")
+    # print("***********************************")
+    # print("Retrieval query:")
+    # print(state.get("retrieval_query"))
+    # print("***********************************")
 
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
@@ -78,7 +81,7 @@ def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
 
 #     return get_reranker(RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH)
 
-# Estos son unificables
+
 def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState], RagGraphState]:
     """Build a graph node that retrieves raw results."""
 
@@ -88,11 +91,24 @@ def retrieve_node(retriever: Retriever, top_k: int) -> Callable[[RagGraphState],
 
     return run
 
-# Me puedo unir con el anterior
+
 def normalize_documents_node(state: RagGraphState) -> RagGraphState:
     """Normalize raw retrieval output into retrieved documents."""
 
     return {"documents": recovered_documents(state.get("raw_results", {}))}
+
+
+def expand_parent_documents_node(
+    parent_lookup: dict[str, RetrievedDocument] | None,
+) -> Callable[[RagGraphState], RagGraphState]:
+    """Build a graph node that optionally expands child chunks to parent chunks."""
+
+    def run(state: RagGraphState) -> RagGraphState:
+        if parent_lookup is None:
+            return {}
+        return {"documents": expand_parent_documents(state.get("documents", []), parent_lookup)}
+
+    return run
 
 
 def fallback_answer_node(state: RagGraphState) -> RagGraphState:

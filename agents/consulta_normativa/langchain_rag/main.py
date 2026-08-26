@@ -9,11 +9,12 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.config import (
     DEFAULT_CHROMA_PATH,
     DEFAULT_COLLECTION_NAME,
+    DEFAULT_PARENT_CHUNKS_PATH,
     HYBRID_CANDIDATE_TOP_K,
     HYBRID_RRF_K,
     RETRIEVAL_TOP_K,
 )
-from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 from agents.shared.bm25_retrieval import DEFAULT_BM25_PATH
 
 OPERATIONAL_ERROR_CODE = 2
@@ -33,6 +34,7 @@ class RuntimeDependencies:
     build_langgraph_rag: Callable[..., Any]
     answer_with_langgraph: Callable[[str, Any], Any]
     hybrid_retriever: Callable[..., Retriever]
+    load_parent_documents: Callable[[Any], dict[str, RetrievedDocument]]
     open_existing_collection: Callable[[Any, str], Any]
     open_existing_index: Callable[[Any], Any]
 
@@ -78,6 +80,7 @@ def build_runtime() -> RagRuntime:
         # Cargar Chroma y el índice de BM25
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         sparse_index = dependencies.open_existing_index(DEFAULT_BM25_PATH)
+        parent_lookup = dependencies.load_parent_documents(DEFAULT_PARENT_CHUNKS_PATH)
 
         # Crear el retriever
         retriever = dependencies.hybrid_retriever(
@@ -91,6 +94,7 @@ def build_runtime() -> RagRuntime:
             llm,
             retriever,
             top_k=RETRIEVAL_TOP_K,
+            parent_lookup=parent_lookup,
         )
 
         # Guardar diagrama en disco
@@ -114,6 +118,7 @@ def load_dependencies() -> RuntimeDependencies:
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
+        from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import load_parent_documents
         from agents.shared.bm25_retrieval import open_existing_index
         from agents.shared.chroma_retrieval import open_existing_collection
         from agents.shared.hybrid_retrieval import hybrid_retriever
@@ -127,6 +132,7 @@ def load_dependencies() -> RuntimeDependencies:
 
         # Aqui seleccionar el Retriever
         hybrid_retriever=hybrid_retriever,
+        load_parent_documents=load_parent_documents,
         open_existing_collection=open_existing_collection,
         open_existing_index=open_existing_index,
     )

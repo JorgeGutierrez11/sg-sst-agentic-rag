@@ -140,7 +140,11 @@ class LangChainRagMainTest(unittest.TestCase):
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, *, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or graph,
+            build_langgraph_rag=lambda llm, retriever, *, top_k, parent_lookup: calls.append(
+                f"graph:{llm}:{retriever}:{top_k}:{parent_lookup}"
+            )
+            or graph,
+            load_parent_documents=lambda path: calls.append(f"parents:{path}") or {"parent-1": "parent"},
             open_existing_collection=fake_open_existing_collection,
             open_existing_index=fake_open_existing_index,
             hybrid_retriever=fake_hybrid_retriever,
@@ -154,8 +158,9 @@ class LangChainRagMainTest(unittest.TestCase):
             [
                 f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
                 f"index:{cli.DEFAULT_BM25_PATH}",
+                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
                 f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
-                f"graph:llm:hybrid-retriever:{cli.RETRIEVAL_TOP_K}",
+                f"graph:llm:hybrid-retriever:{cli.RETRIEVAL_TOP_K}:{{'parent-1': 'parent'}}",
             ],
         )
         self.assertIs(runtime.graph, graph)
@@ -185,14 +190,16 @@ class LangChainRagMainTest(unittest.TestCase):
         build_langgraph_rag: object | None = None,
         answer_with_langgraph: object | None = None,
         hybrid_retriever: object | None = None,
+        load_parent_documents: object | None = None,
         open_existing_collection: object | None = None,
         open_existing_index: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
             build_groq_llm=build_groq_llm or (lambda: object()),
-            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever: object()),
+            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, **kwargs: object()),
             answer_with_langgraph=answer_with_langgraph or (lambda question, graph: object()),
             hybrid_retriever=hybrid_retriever or (lambda collection, sparse_index, **kwargs: lambda question, top_k: {}),
+            load_parent_documents=load_parent_documents or (lambda path: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
             open_existing_index=open_existing_index or (lambda path: object()),
         )
