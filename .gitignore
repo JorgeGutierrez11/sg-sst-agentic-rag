@@ -17,3 +17,6 @@ node_modules/
 .atl/
 .idea/
 .vscode/
+
+# temporal files
+.~lock.*#
