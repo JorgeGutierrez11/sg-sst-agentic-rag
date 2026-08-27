@@ -4,6 +4,7 @@ evaluation/resultados_usuarios/*
 
 # entornos
 .venv/
+.venv-rag/
 __pycache__/
 node_modules/
 .env

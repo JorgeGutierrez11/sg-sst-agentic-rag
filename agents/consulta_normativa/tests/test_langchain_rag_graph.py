@@ -27,7 +27,10 @@ from agents.consulta_normativa.manual_implementation.rag_base import (
 class FakeStateGraph:
     """Tiny LangGraph replacement that preserves node and edge behavior for tests."""
 
+    latest: "FakeStateGraph | None" = None
+
     def __init__(self, state_type: object) -> None:
+        FakeStateGraph.latest = self
         self.nodes: dict[str, object] = {}
         self.edges: dict[str, str] = {}
         self.conditional: dict[str, tuple[object, object]] = {}
@@ -113,10 +116,17 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertIn("Contenido:\nContexto normativo", result.context)
         self.assertEqual(result.references, ["Resolución 0312 de 2019, tabla 1 (table)"])
         self.assertEqual(len(llm.messages), 1)
+        self.assertEqual(llm.answer_count, 1)
         system_message, human_message = llm.messages[-1]
         self.assertIn("Responde ÚNICAMENTE", system_message.content)
         self.assertIn("Contexto recuperado:", human_message.content)
         self.assertIn("¿Qué exige la norma?", human_message.content)
+        self.assertIsNotNone(FakeStateGraph.latest)
+        self.assertIn("retrieval_relevance_grading", FakeStateGraph.latest.nodes)
+        self.assertNotIn("self_refine", FakeStateGraph.latest.nodes)
+        self.assertEqual(FakeStateGraph.latest.edges["expand_parent_documents"], "retrieval_relevance_grading")
+        self.assertEqual(FakeStateGraph.latest.edges["retrieval_relevance_grading"], "record_retrieval_trace")
+        self.assertEqual(FakeStateGraph.latest.edges["generate_answer"], "format_result")
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -145,6 +155,8 @@ class LangGraphRagTest(unittest.TestCase):
             [document.document for document in state["documents"]],
             ["first document", "second document"],
         )
+        self.assertIn("relevance_grading_trace", state)
+        self.assertEqual(state["relevance_grading_trace"]["relevant_count"], 2)
 
     def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -244,6 +256,38 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(retrieved_queries, ["¿Qué exige la norma?"])
         self.assertNotIn("query_expansion_trace", state)
 
+    def test_build_langgraph_rag_filters_relevance_before_context_and_trace(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm(
+            relevance_grades=[
+                {"relevant": False, "reason": "No aporta evidencia útil."},
+                {"relevant": True, "reason": "Aporta evidencia normativa directa."},
+            ]
+        )
+
+        def retriever(question: str, top_k: int) -> dict[str, object]:
+            return {
+                "documents": [["Documento no relevante", "Documento relevante"]],
+                "metadatas": [[{"source_stem": "Fuente 1"}, {"source_stem": "Fuente 2"}]],
+            }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, retriever, top_k=2)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertEqual([document.document for document in state["documents"]], ["Documento relevante"])
+        self.assertNotIn("Documento no relevante", state["context"])
+        self.assertIn("Documento relevante", state["context"])
+        self.assertEqual(state["retrieval_traces"], [{"document_count": 1}])
+        self.assertEqual(state["relevance_grading_trace"]["rejected_count"], 1)
+
     def test_context_references_and_generation_input_match_manual_for_fixture(self) -> None:
         raw_results = self.fake_retriever("¿Qué exige la norma?", 1)
         documents = recovered_documents(raw_results)
@@ -312,18 +356,30 @@ class LangGraphRagTest(unittest.TestCase):
 class FakeLlm:
     """Small LangChain-like fake that records message input."""
 
-    def __init__(self, responses: list[str] | None = None, expansion_terms: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        responses: list[str] | None = None,
+        expansion_terms: list[str] | None = None,
+        relevance_grades: list[object] | None = None,
+    ) -> None:
         self.messages: list[list[object]] = []
+        self.grade_messages: list[list[object]] = []
         self.responses = responses or ["Generated from fake LLM."]
         self.expansion_terms = expansion_terms or []
+        self.relevance_grades = iter(relevance_grades or [])
         self.answer_count = 0
 
-    def with_structured_output(self, schema: object, method: str) -> object:
+    def with_structured_output(self, schema: object, method: str | None = None) -> object:
         llm = self
 
         class StructuredLlm:
             def invoke(self, messages: list[object]) -> object:
-                llm.messages.append(messages)
+                llm.grade_messages.append(messages)
+                if getattr(schema, "__name__", "") == "RelevanceGrade":
+                    return next(
+                        llm.relevance_grades,
+                        {"relevant": True, "reason": "El documento contiene evidencia normativa directa."},
+                    )
                 return types.SimpleNamespace(expansion_terms=llm.expansion_terms)
 
         return StructuredLlm()

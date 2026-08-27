@@ -30,3 +30,13 @@ class RagGraphState(TypedDict, total=False):
     query_variants: list[str]
     multi_query_trace: dict[str, Any]
     retrieved_lists: Annotated[list[list[RetrievedDocument]], add]
+
+    # Retrieval Relevance Grading
+    relevance_grading_trace: dict[str, Any]
+
+    # Sufficient-Context Gate
+    context_sufficiency: str
+    sufficient_context_trace: dict[str, Any]
+
+    # Self-Refine
+    self_refine_trace: dict[str, Any]

@@ -36,8 +36,8 @@ def hybrid_retriever(
         dense_documents = recovered_documents(dense_raw)
         sparse_documents = recovered_documents(sparse_raw)
 
-        log_raw_retrieval_results("chroma", dense_raw, query)
-        log_raw_retrieval_results("bm25", sparse_raw, query)
+        # log_raw_retrieval_results("chroma", dense_raw, query)
+        # log_raw_retrieval_results("bm25", sparse_raw, query)
 
         fused_documents = reciprocal_rank_fusion([dense_documents, sparse_documents], k=rrf_k)
         enriched_documents = add_retrieval_source_metadata(fused_documents[:top_k], dense_documents, sparse_documents)
@@ -85,6 +85,7 @@ def empty_hybrid_result() -> dict[str, Any]:
     """Return a fresh empty Chroma-like result shape."""
 
     return {key: [list(values[0])] for key, values in EMPTY_HYBRID_RESULT.items()}
+
 
 def log_raw_retrieval_results(source: str, raw_results: dict[str, Any], query: str) -> None:
     """Log compact raw retrieval candidates before fusion."""
