@@ -7,6 +7,21 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 
+RERANKING_METADATA_FIELDS = (
+    ("Fuente", "source_stem"),
+    ("Tipo normativo", "normative_document_type"),
+    ("Año", "year"),
+    ("Título", "title"),
+    ("Capítulo", "chapter"),
+    ("Artículo", "article"),
+    ("Parágrafo", "paragraph"),
+    ("Numeral", "numeral"),
+    ("Literal", "literal"),
+    ("Tipo de fragmento", "document_type"),
+    ("Tabla", "table_key"),
+    ("Tablas relacionadas", "table_keys"),
+)
+
 
 @lru_cache(maxsize=4)
 def get_reranker(model_name: str, max_length: int) -> Any:
@@ -17,7 +32,7 @@ def get_reranker(model_name: str, max_length: int) -> Any:
 
     return CrossEncoder(model_name, max_length=max_length)
 
-# Por que no limito el numero de candidatos, no es mas eficiente analizar todo los recuperados? 
+
 def rerank_node(
     reranker: Any,
     candidate_pool_size: int,
@@ -74,11 +89,39 @@ def rerank_documents(
     return [document for document, _score in ranked_documents[:final_top_k]]
 
 
-# Podemos hacer una mejora para que el Ranker vea la metadata.
 def document_text_for_reranking(document: RetrievedDocument) -> str:
-    """Return the text sent to the reranker for one candidate."""
+    """Return compact metadata plus text sent to the reranker for one candidate."""
 
-    return document.document
+    metadata_text = compact_normative_metadata_text(document.metadata, RERANKING_METADATA_FIELDS)
+    if not metadata_text:
+        return document.document
+    return f"Metadata normativa:\n{metadata_text}\n\nContenido:\n{document.document}"
+
+
+def compact_normative_metadata_text(
+    metadata: dict[str, Any],
+    fields: tuple[tuple[str, str], ...],
+) -> str:
+    """Return only compact legal locator metadata; never trace/debug metadata."""
+
+    lines: list[str] = []
+    for label, key in fields:
+        value = metadata.get(key)
+        formatted = format_metadata_value(value)
+        if formatted:
+            lines.append(f"{label}: {formatted}")
+    return "\n".join(lines)
+
+
+def format_metadata_value(value: object) -> str:
+    """Format scalar or list metadata values for retrieval scoring text."""
+
+    if value in (None, ""):
+        return ""
+    if isinstance(value, list):
+        items = [str(item).strip() for item in value if str(item).strip()]
+        return ", ".join(items)
+    return str(value).strip()
 
 
 def resolve_reranker(reranker: Any) -> Any:

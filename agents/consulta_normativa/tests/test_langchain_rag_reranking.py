@@ -37,10 +37,82 @@ class LangChainRagRerankingTest(unittest.TestCase):
 
         self.assertIs(ranked[0], second)
 
-    def test_document_text_for_reranking_uses_only_document_text(self) -> None:
-        document = RetrievedDocument("legal content", {"source_stem": "Resolución 0312"})
+    def test_document_text_for_reranking_adds_compact_normative_metadata(self) -> None:
+        document = RetrievedDocument(
+            "El empleador debe identificar peligros y valorar riesgos.",
+            {
+                "source_stem": "decreto_1072_2015",
+                "normative_document_type": "decreto",
+                "year": 2015,
+                "article": "2.2.4.6.15",
+                "document_type": "child_chunk",
+            },
+        )
 
-        self.assertEqual(document_text_for_reranking(document), "legal content")
+        text = document_text_for_reranking(document)
+
+        self.assertIn("Metadata normativa:", text)
+        self.assertIn("Fuente: decreto_1072_2015", text)
+        self.assertIn("Tipo normativo: decreto", text)
+        self.assertIn("Año: 2015", text)
+        self.assertIn("Artículo: 2.2.4.6.15", text)
+        self.assertIn("Tipo de fragmento: child_chunk", text)
+        self.assertIn("Contenido:\nEl empleador debe identificar peligros", text)
+
+    def test_document_text_for_reranking_excludes_trace_metadata(self) -> None:
+        document = RetrievedDocument(
+            "Contenido normativo.",
+            {
+                "source_stem": "resolucion_0312_2019",
+                "_chroma_id": "abc",
+                "_document_id": "doc-1",
+                "_retrieval_sources": ["dense", "sparse"],
+                "document_id": "doc-1",
+                "parent_id": "parent-1",
+                "expanded_from_child_ids": ["child-1"],
+                "start_char": 10,
+                "end_char": 50,
+                "token_count": 20,
+            },
+        )
+
+        text = document_text_for_reranking(document)
+
+        self.assertIn("Fuente: resolucion_0312_2019", text)
+        self.assertNotIn("_chroma_id", text)
+        self.assertNotIn("abc", text)
+        self.assertNotIn("_retrieval_sources", text)
+        self.assertNotIn("dense", text)
+        self.assertNotIn("document_id", text)
+        self.assertNotIn("parent-1", text)
+        self.assertNotIn("expanded_from_child_ids", text)
+        self.assertNotIn("start_char", text)
+        self.assertNotIn("token_count", text)
+
+    def test_document_text_for_reranking_returns_document_when_metadata_empty(self) -> None:
+        document = RetrievedDocument("Solo contenido.", {})
+
+        self.assertEqual(document_text_for_reranking(document), "Solo contenido.")
+
+    def test_rerank_documents_scores_enriched_text_and_returns_raw_documents(self) -> None:
+        reranker = FakeReranker([0.9])
+        document = RetrievedDocument(
+            "Texto normativo original",
+            {"source_stem": "resolucion_0312_2019"},
+        )
+
+        selected_documents = rerank_documents(
+            "¿Qué exige la Resolución 0312?",
+            [document],
+            reranker,
+            final_top_k=1,
+        )
+
+        candidate_pairs = reranker.pairs
+        self.assertEqual(candidate_pairs[0][0], "¿Qué exige la Resolución 0312?")
+        self.assertIn("Fuente: resolucion_0312_2019", candidate_pairs[0][1])
+        self.assertIn("Contenido:\nTexto normativo original", candidate_pairs[0][1])
+        self.assertEqual(selected_documents[0].document, "Texto normativo original")
 
     def test_rerank_node_writes_back_to_documents(self) -> None:
         first = RetrievedDocument("first", {})

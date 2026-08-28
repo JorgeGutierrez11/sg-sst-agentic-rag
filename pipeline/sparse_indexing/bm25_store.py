@@ -6,6 +6,20 @@ from typing import Any
 from pipeline.vectorization.documents import ChromaRecord
 
 Bm25CorpusRecord = dict[str, Any]
+BM25_METADATA_FIELDS = (
+    ("Fuente", "source_stem"),
+    ("Tipo normativo", "normative_document_type"),
+    ("Año", "year"),
+    ("Título", "title"),
+    ("Capítulo", "chapter"),
+    ("Artículo", "article"),
+    ("Parágrafo", "paragraph"),
+    ("Numeral", "numeral"),
+    ("Literal", "literal"),
+    ("Tipo de fragmento", "document_type"),
+    ("Tabla", "table_key"),
+    ("Tablas relacionadas", "table_keys"),
+)
 
 
 def build_bm25_index(records: list[ChromaRecord]) -> tuple[Any, list[Bm25CorpusRecord]]:
@@ -14,7 +28,7 @@ def build_bm25_index(records: list[ChromaRecord]) -> tuple[Any, list[Bm25CorpusR
     # Convierte los documentos de Chroma en un formato compatible con BM25S, manteniendo el orden original y los metadatos.
     corpus = bm25_corpus(records)
     
-    texts = [record["document"] for record in corpus]
+    texts = [bm25_text_for_indexing(record) for record in records]
 
     #  Crea el modelo de BM25S.
     bm25s = bm25s_module()
@@ -42,6 +56,41 @@ def bm25_corpus(records: list[ChromaRecord]) -> list[Bm25CorpusRecord]:
         }
         for record in records
     ]
+
+
+def bm25_text_for_indexing(record: ChromaRecord) -> str:
+    """Return compact metadata plus document text used only for BM25 indexing."""
+
+    metadata_text = compact_normative_metadata_text(record.metadata, BM25_METADATA_FIELDS)
+    if not metadata_text:
+        return record.document
+    return f"Metadata normativa:\n{metadata_text}\n\nContenido:\n{record.document}"
+
+
+def compact_normative_metadata_text(
+    metadata: dict[str, Any],
+    fields: tuple[tuple[str, str], ...],
+) -> str:
+    """Return only compact legal locator metadata; never trace/debug metadata."""
+
+    lines: list[str] = []
+    for label, key in fields:
+        value = metadata.get(key)
+        formatted = format_metadata_value(value)
+        if formatted:
+            lines.append(f"{label}: {formatted}")
+    return "\n".join(lines)
+
+
+def format_metadata_value(value: object) -> str:
+    """Format scalar or list metadata values for retrieval scoring text."""
+
+    if value in (None, ""):
+        return ""
+    if isinstance(value, list):
+        items = [str(item).strip() for item in value if str(item).strip()]
+        return ", ".join(items)
+    return str(value).strip()
 
 
 def save_bm25_index(retriever: Any, persist_path: Path, corpus: list[Bm25CorpusRecord]) -> None:
