@@ -1,6 +1,7 @@
 """Direct executable entrypoint for the experimental LangChain RAG variant."""
 
 from __future__ import annotations
+from uuid import uuid4 # nuevo import para generar un identificador único para cada hilo de conversación
 
 import argparse
 import sys
@@ -24,8 +25,10 @@ class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
     build_groq_llm: Callable[[], Any]
-    build_langgraph_rag: Callable[[Any, Retriever, int], Any]
-    answer_with_langgraph: Callable[[str, Any], Any]
+    #build_langgraph_rag: Callable[[Any, Retriever, int], Any]
+    #answer_with_langgraph: Callable[[str, Any], Any]
+    build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
+    answer_with_langgraph: Callable[..., Any]
     chroma_retriever: Callable[[Any], Retriever]
     open_existing_collection: Callable[[Any, str], Any]
 
@@ -34,8 +37,10 @@ class RuntimeDependencies:
 class RagRuntime:
     """Reusable runtime built once for direct or interactive execution."""
 
-    answer_with_langgraph: Callable[[str, Any], Any]
+    #answer_with_langgraph: Callable[[str, Any], Any]
+    answer_with_langgraph: Callable[..., Any]
     graph: Any
+    thread_id: str
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -68,9 +73,13 @@ def build_runtime() -> RagRuntime:
         raise OperationalError(str(error)) from error
 
     try:
+        from langgraph.checkpoint.memory import InMemorySaver # nuevo import para el checkpointer de memoria
+        
         collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
         retriever = dependencies.chroma_retriever(collection)
-        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K)
+
+        checkpointer = InMemorySaver() # nuevo checkpointer de memoria
+        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K, checkpointer=checkpointer)
 
         # Guardar diagrama en disco
         png_bytes = graph.get_graph().draw_mermaid_png()
@@ -80,10 +89,12 @@ def build_runtime() -> RagRuntime:
         print("Grafo guardado exitosamente como 'base_rag_graph.png'")
     except Exception as error:  # noqa: BLE001 - Chroma path, package, and collection failures are operational.
         raise OperationalError(str(error)) from error
-
+    
+    thread_id = f"cli-session-{uuid4()}" # Generar un identificador único para cada hilo de conversación
     return RagRuntime(
         answer_with_langgraph=dependencies.answer_with_langgraph,
         graph=graph,
+        thread_id=thread_id, # Agregar el identificador único al runtime para su uso en la conversación
     )
 
 
@@ -130,11 +141,36 @@ def run_once(runtime: RagRuntime, question: str) -> int:
     """Answer one question and keep expected failures controlled."""
 
     try:
-        result = runtime.answer_with_langgraph(question, runtime.graph)
+        result = runtime.answer_with_langgraph(question, runtime.graph, thread_id=runtime.thread_id) # Pasar el thread_id al llamar a answer_with_langgraph
     except Exception as error:  # noqa: BLE001 - direct CLI should report RAG failures without traceback.
         return fail("RAG execution", OperationalError(str(error)))
 
     print_answer(result.answer, result.references)
+
+    # DEBUG: mostrar current_context generado por la técnica
+    snapshot = runtime.graph.get_state(
+        {
+            "configurable": {
+                "thread_id": runtime.thread_id,
+            }
+        }
+    )
+
+    business_context = snapshot.values.get(
+        "business_context",
+        {},
+    )
+
+    current_context = business_context.get(
+        "current_context",
+        "",
+    )
+
+    print("\n--- CURRENT BUSINESS CONTEXT ---")
+    print(current_context or "[vacío]")
+    print("--- END CURRENT BUSINESS CONTEXT ---\n")
+
+
     return 0
 
 

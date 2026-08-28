@@ -11,16 +11,19 @@ from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
-from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
 
-# ************ NELSON: SELF-REFINE
-from agents.consulta_normativa.langchain_rag.validation.self_refine import (self_refine_node)
+# importar nodo de perfil de negocio y nodo de historial de conversación
+from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
+from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
+# tecnica 2 summarization_memory
+from agents.consulta_normativa.langchain_rag.business_context.techniques.summarization_memory import (summarization_memory_node)
 
 
-Retriever = Callable[[str, int], dict[str, Any]]
 
+Retriever = Callable[[str, int], dict[str, Any]] 
 
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
+# se agregó checkpointer: Any | None = None, para permitir la integración con un sistema de checkpointing
+def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K, checkpointer: Any | None = None,) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -32,7 +35,8 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow = StateGraph(RagGraphState)
     
 
-
+    workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
+    workflow.add_node("summarization_memory", summarization_memory_node(llm)) # Agregar nodo summarization_memory
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
@@ -43,21 +47,23 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
 
+    
+
 
 
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
 
-    # ************ NELSON: SELF-REFINE
-    workflow.add_node(
-        "self_refine",
-        self_refine_node(llm),
-    )
+    workflow.add_node("save_conversation_turn", save_conversation_turn_node) # Agregar nodo de historial de conversación
+
 
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("retrieve")
+    #workflow.set_entry_point("retrieve")
+    workflow.set_entry_point("business_profile") # se cambia el punto de entrada a "business_profile"
+    workflow.add_edge("business_profile","summarization_memory")
+    workflow.add_edge("summarization_memory","retrieve")
     
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
@@ -68,27 +74,32 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
         evidence_route,
         {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
     
-    workflow.add_edge("fallback_answer", "format_result")
+    #workflow.add_edge("fallback_answer", "format_result")
+    workflow.add_edge("fallback_answer","save_conversation_turn")
+
     workflow.add_edge("format_context", "build_messages")
 
 
 
     workflow.add_edge("build_messages", "generate_answer")
-    #workflow.add_edge("generate_answer", "format_result")
 
-    # ************ NELSON: SELF-REFINE
-    workflow.add_edge("generate_answer", "self_refine")
-    workflow.add_edge("self_refine", "format_result")
-    
+    #workflow.add_edge("generate_answer", "format_result")
+    workflow.add_edge("generate_answer","save_conversation_turn")
+    workflow.add_edge("save_conversation_turn","format_result")
+
 
     workflow.add_edge("format_result", END)
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer,) #se agregó checkpointer=checkpointer, para permitir la integración con un sistema de checkpointing
 
-
-def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
+# se agregó thread_id: str | None = None,
+def answer_with_langgraph(question: str, graph: Any, thread_id: str | None = None,) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
-    state = graph.invoke({"question": question})
+    if thread_id is None:
+        state = graph.invoke({"question": question}) # si no hay un thread_id, se invoca el grafo sin configuración adicional
+    else:
+        state = graph.invoke({"question": question},{"configurable": {"thread_id": thread_id,}},) #se agrea por si hay un thread_id, se pasa como parte de la configuración del grafo
+
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")

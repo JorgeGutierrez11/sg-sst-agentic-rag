@@ -4,6 +4,9 @@ from typing import Any, TypedDict
 
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 
+# Business context
+from agents.consulta_normativa.langchain_rag.business_context.models import (BusinessContext,)
+
 
 class RagGraphState(TypedDict, total=False):
     """State passed through the minimal LangGraph RAG flow."""
@@ -19,7 +22,11 @@ class RagGraphState(TypedDict, total=False):
     answer: str
     result: LangChainRagResult
 
-    # Rewrite Query
+    # Business Context
+    business_context: BusinessContext
+
+
+    """# Rewrite Query
     retrieval_query: str
     query_rewrite_trace: dict[str, Any]
 
@@ -31,4 +38,4 @@ class RagGraphState(TypedDict, total=False):
     sufficient_context_trace: dict[str, Any]
 
     # Self-Refine
-    self_refine_trace: dict[str, Any]
+    self_refine_trace: dict[str, Any]"""
