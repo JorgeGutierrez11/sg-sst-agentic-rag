@@ -122,11 +122,11 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertIn("Contexto recuperado:", human_message.content)
         self.assertIn("¿Qué exige la norma?", human_message.content)
         self.assertIsNotNone(FakeStateGraph.latest)
-        self.assertIn("retrieval_relevance_grading", FakeStateGraph.latest.nodes)
-        self.assertNotIn("self_refine", FakeStateGraph.latest.nodes)
-        self.assertEqual(FakeStateGraph.latest.edges["expand_parent_documents"], "retrieval_relevance_grading")
-        self.assertEqual(FakeStateGraph.latest.edges["retrieval_relevance_grading"], "record_retrieval_trace")
-        self.assertEqual(FakeStateGraph.latest.edges["generate_answer"], "format_result")
+        self.assertNotIn("retrieval_relevance_grading", FakeStateGraph.latest.nodes)
+        self.assertIn("self_refine", FakeStateGraph.latest.nodes)
+        self.assertEqual(FakeStateGraph.latest.edges["expand_parent_documents"], "record_retrieval_trace")
+        self.assertEqual(FakeStateGraph.latest.edges["generate_answer"], "self_refine")
+        self.assertEqual(FakeStateGraph.latest.edges["self_refine"], "format_result")
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -155,8 +155,7 @@ class LangGraphRagTest(unittest.TestCase):
             [document.document for document in state["documents"]],
             ["first document", "second document"],
         )
-        self.assertIn("relevance_grading_trace", state)
-        self.assertEqual(state["relevance_grading_trace"]["relevant_count"], 2)
+        self.assertNotIn("relevance_grading_trace", state)
 
     def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -256,14 +255,9 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(retrieved_queries, ["¿Qué exige la norma?"])
         self.assertNotIn("query_expansion_trace", state)
 
-    def test_build_langgraph_rag_filters_relevance_before_context_and_trace(self) -> None:
+    def test_build_langgraph_rag_does_not_filter_relevance_in_self_refine_iteration(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(
-            relevance_grades=[
-                {"relevant": False, "reason": "No aporta evidencia útil."},
-                {"relevant": True, "reason": "Aporta evidencia normativa directa."},
-            ]
-        )
+        llm = FakeLlm()
 
         def retriever(question: str, top_k: int) -> dict[str, object]:
             return {
@@ -282,11 +276,37 @@ class LangGraphRagTest(unittest.TestCase):
             graph = build_langgraph_rag(llm, retriever, top_k=2)
             state = graph.invoke({"question": "¿Qué exige la norma?"})
 
-        self.assertEqual([document.document for document in state["documents"]], ["Documento relevante"])
-        self.assertNotIn("Documento no relevante", state["context"])
+        self.assertEqual([document.document for document in state["documents"]], ["Documento no relevante", "Documento relevante"])
+        self.assertIn("Documento no relevante", state["context"])
         self.assertIn("Documento relevante", state["context"])
-        self.assertEqual(state["retrieval_traces"], [{"document_count": 1}])
-        self.assertEqual(state["relevance_grading_trace"]["rejected_count"], 1)
+        self.assertEqual(state["retrieval_traces"], [{"document_count": 2}])
+        self.assertNotIn("relevance_grading_trace", state)
+
+    def test_build_langgraph_rag_uses_refined_answer_in_public_result(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        expected_refined_answer = "Respuesta refinada con sustento en el contexto [1]."
+        llm = FakeLlm(
+            responses=["Respuesta inicial con un problema.", expected_refined_answer],
+            self_refine_feedback={
+                "needs_refinement": True,
+                "feedback": "Corrige la respuesta usando solo el fragmento [1].",
+                "issues": ["La respuesta inicial contiene una afirmación no respaldada."],
+            },
+        )
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
+            result = answer_with_langgraph("¿Qué exige la norma?", graph)
+
+        self.assertEqual(result.answer, expected_refined_answer)
+        self.assertEqual(llm.answer_count, 2)
 
     def test_context_references_and_generation_input_match_manual_for_fixture(self) -> None:
         raw_results = self.fake_retriever("¿Qué exige la norma?", 1)
@@ -361,12 +381,18 @@ class FakeLlm:
         responses: list[str] | None = None,
         expansion_terms: list[str] | None = None,
         relevance_grades: list[object] | None = None,
+        self_refine_feedback: object | None = None,
     ) -> None:
         self.messages: list[list[object]] = []
         self.grade_messages: list[list[object]] = []
         self.responses = responses or ["Generated from fake LLM."]
         self.expansion_terms = expansion_terms or []
         self.relevance_grades = iter(relevance_grades or [])
+        self.self_refine_feedback = self_refine_feedback or {
+            "needs_refinement": False,
+            "feedback": "La respuesta está respaldada por el contexto.",
+            "issues": [],
+        }
         self.answer_count = 0
 
     def with_structured_output(self, schema: object, method: str | None = None) -> object:
@@ -380,6 +406,8 @@ class FakeLlm:
                         llm.relevance_grades,
                         {"relevant": True, "reason": "El documento contiene evidencia normativa directa."},
                     )
+                if getattr(schema, "__name__", "") == "SelfRefineFeedback":
+                    return llm.self_refine_feedback
                 return types.SimpleNamespace(expansion_terms=llm.expansion_terms)
 
         return StructuredLlm()

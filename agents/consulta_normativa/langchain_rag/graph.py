@@ -12,9 +12,7 @@ from agents.consulta_normativa.langchain_rag.formatting import build_context, bu
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
 from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import expand_parent_documents
-from agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading import (
-    retrieval_relevance_grading_node,
-)
+from agents.consulta_normativa.langchain_rag.validation.self_refine import self_refine_node
 
 
 Retriever = Callable[[str, int], dict[str, Any]]
@@ -41,7 +39,6 @@ def build_langgraph_rag(
 
     # New Nodes
     workflow.add_node("expand_parent_documents", expand_parent_documents_node(parent_lookup))
-    workflow.add_node("retrieval_relevance_grading", retrieval_relevance_grading_node(llm))
 
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
     workflow.add_node("fallback_answer", fallback_answer_node)
@@ -49,14 +46,14 @@ def build_langgraph_rag(
 
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
+    workflow.add_node("self_refine", self_refine_node(llm))
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
     workflow.set_entry_point("retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "expand_parent_documents")
-    workflow.add_edge("expand_parent_documents", "retrieval_relevance_grading")
-    workflow.add_edge("retrieval_relevance_grading", "record_retrieval_trace")
+    workflow.add_edge("expand_parent_documents", "record_retrieval_trace")
 
     workflow.add_conditional_edges(
         "record_retrieval_trace",
@@ -68,7 +65,8 @@ def build_langgraph_rag(
     workflow.add_edge("format_context", "build_messages")
 
     workflow.add_edge("build_messages", "generate_answer")
-    workflow.add_edge("generate_answer", "format_result")
+    workflow.add_edge("generate_answer", "self_refine")
+    workflow.add_edge("self_refine", "format_result")
 
     workflow.add_edge("format_result", END)
     return workflow.compile()
