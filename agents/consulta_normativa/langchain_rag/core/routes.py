@@ -16,4 +16,7 @@ def sufficient_context_route(state: RagGraphState) -> str:
     if state.get("context_sufficiency") == "insufficient":
         return "insufficient"
 
+    if state.get("context_sufficiency") == "partial":
+        return "partial"
+
     return "answerable"

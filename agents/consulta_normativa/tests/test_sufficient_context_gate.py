@@ -1,3 +1,10 @@
+"""Tests for the sufficient-context gate node."""
+
+import sys
+import types
+import unittest
+from unittest.mock import patch
+
 from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate import (
     ContextSufficiency,
     sufficient_context_gate_node,
@@ -7,10 +14,12 @@ from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate 
 class FakeGrader:
     """Fake structured-output grader for deterministic tests."""
 
-    def __init__(self, result):
+    def __init__(self, result: object) -> None:
         self.result = result
+        self.invoke_count = 0
 
-    def invoke(self, messages):
+    def invoke(self, messages: list[object]) -> object:
+        self.invoke_count += 1
         if isinstance(self.result, Exception):
             raise self.result
 
@@ -20,219 +29,146 @@ class FakeGrader:
 class FakeLLM:
     """Fake LLM that returns a configured structured-output grader."""
 
-    def __init__(self, result):
-        self.result = result
+    def __init__(self, result: object) -> None:
+        self.grader = FakeGrader(result)
+        self.structured_output_count = 0
 
-    def with_structured_output(self, schema):
-        return FakeGrader(self.result)
+    def with_structured_output(self, schema: object) -> FakeGrader:
+        self.structured_output_count += 1
+        return self.grader
 
 
 class BrokenStructuredOutputLLM:
     """Fake LLM that fails while configuring structured output."""
 
-    def with_structured_output(self, schema):
+    def with_structured_output(self, schema: object) -> object:
         raise RuntimeError("structured output unavailable")
 
 
-def test_sufficient_context():
-    llm = FakeLLM(
-        {
-            "level": "sufficient",
-            "reason": (
-                "El contexto contiene la información necesaria "
-                "para responder todos los componentes de la pregunta."
-            ),
-            "missing_information": [],
+class SufficientContextGateNodeTests(unittest.TestCase):
+    """Validate gate outputs and fail-open technical fallback behavior."""
+
+    def test_sufficient_context_writes_trace_without_fallback(self) -> None:
+        result = self.run_gate(
+            {
+                "level": "sufficient",
+                "reason": "El contexto contiene la información necesaria.",
+                "missing_information": [],
+            }
+        )
+
+        self.assertEqual(result["context_sufficiency"], ContextSufficiency.SUFFICIENT.value)
+        trace = result["sufficient_context_trace"]
+        self.assertEqual(trace["level"], "sufficient")
+        self.assertEqual(trace["missing_information"], [])
+        self.assertFalse(trace["fallback"])
+        self.assertIsNone(trace["error"])
+
+    def test_partial_context_writes_trace_and_preserves_missing_information(self) -> None:
+        result = self.run_gate(
+            {
+                "level": "partial",
+                "reason": "Falta el plazo solicitado.",
+                "missing_information": ["Plazo para realizar la investigación del accidente."],
+            }
+        )
+
+        self.assertEqual(result["context_sufficiency"], ContextSufficiency.PARTIAL.value)
+        trace = result["sufficient_context_trace"]
+        self.assertEqual(trace["level"], "partial")
+        self.assertEqual(trace["missing_information"], ["Plazo para realizar la investigación del accidente."])
+        self.assertFalse(trace["fallback"])
+        self.assertIsNone(trace["error"])
+
+    def test_insufficient_context_writes_insufficient(self) -> None:
+        result = self.run_gate(
+            {
+                "level": "insufficient",
+                "reason": "El contexto no permite responder la pregunta.",
+                "missing_information": ["Evidencia normativa relacionada con la pregunta."],
+            }
+        )
+
+        self.assertEqual(result["context_sufficiency"], ContextSufficiency.INSUFFICIENT.value)
+        trace = result["sufficient_context_trace"]
+        self.assertEqual(trace["level"], "insufficient")
+        self.assertTrue(trace["missing_information"])
+        self.assertFalse(trace["fallback"])
+        self.assertIsNone(trace["error"])
+
+    def test_empty_context_is_insufficient_without_invoking_llm(self) -> None:
+        llm = FakeLLM(
+            {
+                "level": "sufficient",
+                "reason": "Este resultado no debería utilizarse.",
+                "missing_information": [],
+            }
+        )
+        node = sufficient_context_gate_node(llm)
+
+        result = node({"question": "Pregunta cualquiera", "context": ""})
+
+        self.assertEqual(result["context_sufficiency"], ContextSufficiency.INSUFFICIENT.value)
+        self.assertEqual(llm.structured_output_count, 0)
+        self.assertEqual(llm.grader.invoke_count, 0)
+        trace = result["sufficient_context_trace"]
+        self.assertEqual(trace["level"], "insufficient")
+        self.assertFalse(trace["fallback"])
+        self.assertIsNone(trace["error"])
+        self.assertTrue(trace["missing_information"])
+
+    def test_structured_output_failure_uses_technical_fallback(self) -> None:
+        node = sufficient_context_gate_node(BrokenStructuredOutputLLM())
+
+        result = node(self.answerable_state())
+
+        self.assert_technical_fallback(result, "RuntimeError")
+
+    def test_grader_invoke_failure_uses_technical_fallback(self) -> None:
+        result = self.run_gate(RuntimeError("grader unavailable"))
+
+        self.assert_technical_fallback(result, "RuntimeError")
+
+    def test_malformed_llm_output_uses_technical_fallback(self) -> None:
+        result = self.run_gate({"level": "unknown", "reason": "bad", "missing_information": []})
+
+        self.assert_technical_fallback(result, "ValidationError")
+
+    def run_gate(self, llm_result: object) -> dict[str, object]:
+        llm = FakeLLM(llm_result)
+        node = sufficient_context_gate_node(llm)
+
+        with patch.dict(sys.modules, {"langchain_core.messages": fake_message_module()}):
+            return node(self.answerable_state())
+
+    def answerable_state(self) -> dict[str, object]:
+        return {
+            "question": "¿Quién debe investigar un accidente de trabajo?",
+            "context": "El empleador debe conformar un equipo investigador para investigar el accidente.",
         }
-    )
 
-    node = sufficient_context_gate_node(llm)
-
-    result = node(
-        {
-            "question": (
-                "¿Quién debe investigar los accidentes de trabajo?"
-            ),
-            "context": (
-                "El empleador debe conformar un equipo investigador "
-                "para investigar los accidentes de trabajo."
-            ),
-        }
-    )
-
-    assert result["context_sufficiency"] == ContextSufficiency.SUFFICIENT.value
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] == "sufficient"
-    assert trace["missing_information"] == []
-    assert trace["fallback"] is False
-    assert trace["error"] is None
+    def assert_technical_fallback(self, result: dict[str, object], error_type: str) -> None:
+        self.assertEqual(result["context_sufficiency"], ContextSufficiency.SUFFICIENT.value)
+        trace = result["sufficient_context_trace"]
+        self.assertIsNone(trace["level"])
+        self.assertEqual(trace["missing_information"], [])
+        self.assertTrue(trace["fallback"])
+        self.assertEqual(trace["error"], error_type)
 
 
-def test_partial_context():
-    llm = FakeLLM(
-        {
-            "level": "partial",
-            "reason": (
-                "El contexto permite identificar quién debe realizar "
-                "la investigación, pero no contiene el plazo solicitado."
-            ),
-            "missing_information": [
-                "Plazo para realizar la investigación del accidente."
-            ],
-        }
-    )
+def fake_message_module() -> object:
+    """Return fake LangChain message classes for lazy-import tests."""
 
-    node = sufficient_context_gate_node(llm)
+    class SystemMessage:
+        def __init__(self, content: str) -> None:
+            self.content = content
 
-    result = node(
-        {
-            "question": (
-                "¿Quién debe investigar un accidente de trabajo "
-                "y cuál es el plazo para hacerlo?"
-            ),
-            "context": (
-                "El empleador debe conformar un equipo investigador "
-                "para investigar el accidente."
-            ),
-        }
-    )
+    class HumanMessage:
+        def __init__(self, content: str) -> None:
+            self.content = content
 
-    assert result["context_sufficiency"] == ContextSufficiency.PARTIAL.value
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] == "partial"
-    assert trace["fallback"] is False
-    assert trace["error"] is None
-    assert trace["missing_information"] == [
-        "Plazo para realizar la investigación del accidente."
-    ]
+    return types.SimpleNamespace(SystemMessage=SystemMessage, HumanMessage=HumanMessage)
 
 
-def test_insufficient_context():
-    llm = FakeLLM(
-        {
-            "level": "insufficient",
-            "reason": (
-                "El contexto recuperado no contiene información "
-                "que permita responder la pregunta."
-            ),
-            "missing_information": [
-                "Evidencia normativa relacionada con la pregunta."
-            ],
-        }
-    )
-
-    node = sufficient_context_gate_node(llm)
-
-    result = node(
-        {
-            "question": (
-                "¿Cuáles son los requisitos para renovar "
-                "un pasaporte colombiano?"
-            ),
-            "context": (
-                "El empleador debe implementar el Sistema de Gestión "
-                "de Seguridad y Salud en el Trabajo."
-            ),
-        }
-    )
-
-    assert (
-        result["context_sufficiency"]
-        == ContextSufficiency.INSUFFICIENT.value
-    )
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] == "insufficient"
-    assert trace["fallback"] is False
-    assert trace["error"] is None
-    assert trace["missing_information"]
-
-
-def test_empty_context_is_insufficient():
-    llm = FakeLLM(
-        {
-            "level": "sufficient",
-            "reason": "Este resultado no debería utilizarse.",
-            "missing_information": [],
-        }
-    )
-
-    node = sufficient_context_gate_node(llm)
-
-    result = node(
-        {
-            "question": "Pregunta cualquiera",
-            "context": "",
-        }
-    )
-
-    assert (
-        result["context_sufficiency"]
-        == ContextSufficiency.INSUFFICIENT.value
-    )
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] == "insufficient"
-    assert trace["fallback"] is False
-    assert trace["error"] is None
-    assert trace["missing_information"]
-
-
-def test_grader_failure_uses_fail_open():
-    llm = FakeLLM(
-        RuntimeError("grader unavailable")
-    )
-
-    node = sufficient_context_gate_node(llm)
-
-    result = node(
-        {
-            "question": "¿Quién debe investigar un accidente?",
-            "context": (
-                "El empleador debe conformar un equipo investigador."
-            ),
-        }
-    )
-
-    assert (
-        result["context_sufficiency"]
-        == ContextSufficiency.SUFFICIENT.value
-    )
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] is None
-    assert trace["fallback"] is True
-    assert trace["error"] == "RuntimeError"
-
-
-def test_structured_output_failure_uses_fail_open():
-    llm = BrokenStructuredOutputLLM()
-
-    node = sufficient_context_gate_node(llm)
-
-    result = node(
-        {
-            "question": "¿Quién debe investigar un accidente?",
-            "context": (
-                "El empleador debe conformar un equipo investigador."
-            ),
-        }
-    )
-
-    assert (
-        result["context_sufficiency"]
-        == ContextSufficiency.SUFFICIENT.value
-    )
-
-    trace = result["sufficient_context_trace"]
-
-    assert trace["level"] is None
-    assert trace["fallback"] is True
-    assert trace["error"] == "RuntimeError"
+if __name__ == "__main__":
+    unittest.main()

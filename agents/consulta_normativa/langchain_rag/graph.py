@@ -6,13 +6,14 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.config import RETRIEVAL_TOP_K
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
 from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
-from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route, sufficient_context_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
 from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import expand_parent_documents
 from agents.consulta_normativa.langchain_rag.validation.self_refine import self_refine_node
+from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate import sufficient_context_gate_node
 
 
 Retriever = Callable[[str, int], dict[str, Any]]
@@ -43,6 +44,8 @@ def build_langgraph_rag(
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
+    workflow.add_node("sufficient_context_gate", sufficient_context_gate_node(llm))
+    workflow.add_node("insufficient_context_answer", insufficient_context_answer_node)
 
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
@@ -62,7 +65,17 @@ def build_langgraph_rag(
     )
 
     workflow.add_edge("fallback_answer", "format_result")
-    workflow.add_edge("format_context", "build_messages")
+    workflow.add_edge("format_context", "sufficient_context_gate")
+    workflow.add_conditional_edges(
+        "sufficient_context_gate",
+        sufficient_context_route,
+        {
+            "answerable": "build_messages",
+            "partial": "build_messages",
+            "insufficient": "insufficient_context_answer",
+        },
+    )
+    workflow.add_edge("insufficient_context_answer", "format_result")
 
     workflow.add_edge("build_messages", "generate_answer")
     workflow.add_edge("generate_answer", "self_refine")
@@ -123,6 +136,32 @@ def fallback_answer_node(state: RagGraphState) -> RagGraphState:
     }
 
 
+def insufficient_context_answer_node(state: RagGraphState) -> RagGraphState:
+    """Return a deterministic answer when retrieved context is not sufficient."""
+
+    trace = state.get("sufficient_context_trace", {})
+    missing_information = trace.get("missing_information", [])
+    missing_text = "\n".join(f"- {item}" for item in missing_information)
+
+    if missing_text:
+        answer = (
+            "La evidencia recuperada no es suficiente para responder completamente "
+            "la pregunta. Información faltante:\n"
+            f"{missing_text}"
+        )
+    else:
+        answer = (
+            "La evidencia recuperada no es suficiente para responder "
+            "la pregunta con respaldo normativo."
+        )
+
+    return {
+        "answer": answer,
+        "references": state.get("references", []),
+        "prompt": state.get("prompt", ""),
+    }
+
+
 def format_context_node(state: RagGraphState) -> RagGraphState:
     """Build context and references from retrieved documents."""
 
@@ -143,6 +182,21 @@ def build_messages_node(state: RagGraphState) -> RagGraphState:
         raise ModuleNotFoundError(f"langchain is not installed: {error}") from error
 
     context = state["context"]
+
+    if state.get("context_sufficiency") == "partial":
+        trace = state.get("sufficient_context_trace", {})
+        missing_information = trace.get("missing_information", [])
+        missing_text = "\n".join(f"- {item}" for item in missing_information)
+
+        context = (
+            f"{context}\n\n"
+            "Nota de suficiencia: el contexto recuperado solo permite una respuesta parcial. "
+            "Responde únicamente lo respaldado e indica explícitamente qué información falta."
+        )
+
+        if missing_text:
+            context = f"{context}\nInformación faltante identificada:\n{missing_text}"
+
     return {
         "messages": [
             SystemMessage(content=BASE_SYSTEM_INSTRUCTIONS),

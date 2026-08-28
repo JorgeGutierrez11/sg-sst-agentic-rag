@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
-from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route, sufficient_context_route
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.graph import (
     answer_with_langgraph,
@@ -14,6 +14,7 @@ from agents.consulta_normativa.langchain_rag.graph import (
     build_messages_node,
     fallback_answer,
     fallback_answer_node,
+    insufficient_context_answer_node,
 )
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 from agents.consulta_normativa.manual_implementation.prompts import build_base_prompt as build_manual_prompt
@@ -57,7 +58,9 @@ class FakeStateGraph:
         class CompiledGraph:
             def invoke(self, state: dict[str, object]) -> dict[str, object]:
                 name = entry_point
+                visited_nodes = state.setdefault("__visited_nodes", [])
                 while name != "__end__":
+                    visited_nodes.append(name)
                     state.update(nodes[name](state))
                     if name in conditional:
                         router, routes = conditional[name]
@@ -123,10 +126,107 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertIn("¿Qué exige la norma?", human_message.content)
         self.assertIsNotNone(FakeStateGraph.latest)
         self.assertNotIn("retrieval_relevance_grading", FakeStateGraph.latest.nodes)
+        self.assertIn("sufficient_context_gate", FakeStateGraph.latest.nodes)
+        self.assertIn("insufficient_context_answer", FakeStateGraph.latest.nodes)
         self.assertIn("self_refine", FakeStateGraph.latest.nodes)
         self.assertEqual(FakeStateGraph.latest.edges["expand_parent_documents"], "record_retrieval_trace")
+        self.assertEqual(FakeStateGraph.latest.edges["format_context"], "sufficient_context_gate")
         self.assertEqual(FakeStateGraph.latest.edges["generate_answer"], "self_refine")
         self.assertEqual(FakeStateGraph.latest.edges["self_refine"], "format_result")
+        self.assertFalse(hasattr(result, "sufficient_context_trace"))
+
+    def test_build_langgraph_rag_routes_sufficient_context_through_self_refine(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm()
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertEqual(state["context_sufficiency"], "sufficient")
+        self.assertIn("sufficient_context_trace", state)
+        self.assertEqual(state["answer"], "Generated from fake LLM.")
+        self.assertEqual(
+            state["__visited_nodes"],
+            [
+                "retrieve",
+                "normalize_documents",
+                "expand_parent_documents",
+                "record_retrieval_trace",
+                "format_context",
+                "sufficient_context_gate",
+                "build_messages",
+                "generate_answer",
+                "self_refine",
+                "format_result",
+            ],
+        )
+        self.assertEqual(llm.answer_count, 1)
+
+    def test_build_langgraph_rag_routes_partial_context_with_prompt_warning(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm(
+            sufficient_context_grade={
+                "level": "partial",
+                "reason": "Falta el plazo solicitado.",
+                "missing_information": ["Plazo para realizar la investigación del accidente."],
+            }
+        )
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertEqual(state["context_sufficiency"], "partial")
+        self.assertEqual(llm.answer_count, 1)
+        self.assertIn("Nota de suficiencia", state["prompt"])
+        self.assertIn("respuesta parcial", state["prompt"])
+        self.assertIn("Plazo para realizar la investigación del accidente.", state["prompt"])
+        self.assertIn("generate_answer", state["__visited_nodes"])
+
+    def test_build_langgraph_rag_routes_insufficient_context_without_generation(self) -> None:
+        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
+        llm = FakeLlm(
+            sufficient_context_grade={
+                "level": "insufficient",
+                "reason": "No hay evidencia suficiente.",
+                "missing_information": ["Requisitos normativos aplicables."],
+            }
+        )
+
+        with patch.dict(
+            sys.modules,
+            {
+                "langgraph": types.SimpleNamespace(),
+                "langgraph.graph": fake_graph_module,
+                "langchain_core.messages": fake_message_module(),
+            },
+        ):
+            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
+            state = graph.invoke({"question": "¿Qué exige la norma?"})
+
+        self.assertEqual(state["context_sufficiency"], "insufficient")
+        self.assertEqual(llm.answer_count, 0)
+        self.assertNotIn("generate_answer", state["__visited_nodes"])
+        self.assertIn("La evidencia recuperada no es suficiente", state["answer"])
+        self.assertIn("- Requisitos normativos aplicables.", state["answer"])
+        self.assertEqual(state["__visited_nodes"][-1], "format_result")
+        self.assertIn("sufficient_context_trace", state)
+        self.assertFalse(hasattr(state["result"], "sufficient_context_trace"))
 
     def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
@@ -328,6 +428,11 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(evidence_route({"documents": []}), "without_evidence")
         self.assertEqual(evidence_route({"documents": [object()]}), "with_evidence")
 
+    def test_sufficient_context_route_distinguishes_partial(self) -> None:
+        self.assertEqual(sufficient_context_route({"context_sufficiency": "insufficient"}), "insufficient")
+        self.assertEqual(sufficient_context_route({"context_sufficiency": "partial"}), "partial")
+        self.assertEqual(sufficient_context_route({"context_sufficiency": "sufficient"}), "answerable")
+
     def test_retrieval_trace_does_not_change_selected_documents(self) -> None:
         documents = [object()]
 
@@ -349,6 +454,19 @@ class LangGraphRagTest(unittest.TestCase):
             fallback_answer_node({"question": "Pregunta", "documents": []})["answer"],
             "La evidencia recuperada es insuficiente para responder la pregunta.",
         )
+
+    def test_insufficient_context_answer_preserves_references_and_prompt(self) -> None:
+        update = insufficient_context_answer_node(
+            {
+                "sufficient_context_trace": {"missing_information": ["Detalle normativo faltante."]},
+                "references": ["Referencia 1"],
+                "prompt": "Prompt previo",
+            }
+        )
+
+        self.assertIn("Detalle normativo faltante.", update["answer"])
+        self.assertEqual(update["references"], ["Referencia 1"])
+        self.assertEqual(update["prompt"], "Prompt previo")
 
     def test_missing_langgraph_reports_missing_optional_dependency(self) -> None:
         with patch.dict(sys.modules, {"langgraph": None, "langgraph.graph": None}):
@@ -382,6 +500,7 @@ class FakeLlm:
         expansion_terms: list[str] | None = None,
         relevance_grades: list[object] | None = None,
         self_refine_feedback: object | None = None,
+        sufficient_context_grade: object | None = None,
     ) -> None:
         self.messages: list[list[object]] = []
         self.grade_messages: list[list[object]] = []
@@ -392,6 +511,11 @@ class FakeLlm:
             "needs_refinement": False,
             "feedback": "La respuesta está respaldada por el contexto.",
             "issues": [],
+        }
+        self.sufficient_context_grade = sufficient_context_grade or {
+            "level": "sufficient",
+            "reason": "El contexto permite responder la pregunta.",
+            "missing_information": [],
         }
         self.answer_count = 0
 
@@ -408,6 +532,8 @@ class FakeLlm:
                     )
                 if getattr(schema, "__name__", "") == "SelfRefineFeedback":
                     return llm.self_refine_feedback
+                if getattr(schema, "__name__", "") == "SufficientContextGrade":
+                    return llm.sufficient_context_grade
                 return types.SimpleNamespace(expansion_terms=llm.expansion_terms)
 
         return StructuredLlm()
