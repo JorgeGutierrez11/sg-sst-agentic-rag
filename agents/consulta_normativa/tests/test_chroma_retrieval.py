@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from agents.shared import chroma_retrieval
+from agents.consulta_normativa.langchain_rag.retrieval import chroma_retrieval
 
 
 class ChromaRetrievalTest(unittest.TestCase):

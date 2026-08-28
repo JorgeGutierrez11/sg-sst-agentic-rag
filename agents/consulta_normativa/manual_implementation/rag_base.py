@@ -6,7 +6,7 @@ from typing import Any
 
 from agents.consulta_normativa.manual_implementation.config import DEFAULT_TOP_K
 from agents.consulta_normativa.manual_implementation.prompts import build_base_prompt
-from agents.shared.chroma_retrieval import query_top_k
+from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import query_top_k
 
 
 Retriever = Callable[[str, int], dict[str, Any]]

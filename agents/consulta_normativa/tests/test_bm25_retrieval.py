@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agents.shared import bm25_retrieval
+from agents.consulta_normativa.langchain_rag.retrieval import bm25_retrieval
 
 
 class Bm25RetrievalTest(unittest.TestCase):

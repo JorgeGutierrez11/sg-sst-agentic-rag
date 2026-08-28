@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-DEFAULT_BM25_PATH = Path(__file__).resolve().parents[2] / "data" / "processed" / "bm25"
+DEFAULT_BM25_PATH = Path(__file__).resolve().parents[4] / "data" / "processed" / "bm25"
 EMPTY_QUERY_RESULT = {"ids": [[]], "documents": [[]], "metadatas": [[]], "scores": [[]]}
 Retriever = Callable[[str, int], dict[str, Any]]
 

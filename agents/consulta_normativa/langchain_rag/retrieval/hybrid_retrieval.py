@@ -7,7 +7,7 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.formatting import recovered_documents
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 from agents.consulta_normativa.langchain_rag.retrieval.fusion import document_identity, reciprocal_rank_fusion
-from agents.shared import bm25_retrieval, chroma_retrieval
+from agents.consulta_normativa.langchain_rag.retrieval import bm25_retrieval, chroma_retrieval
 import logging
 
 logging.basicConfig(level=logging.INFO)

@@ -210,7 +210,7 @@ def load_rag_dependencies() -> RagDependencies:
 
     try:
         from agents.consulta_normativa.manual_implementation.rag_base import answer_question, chroma_retriever
-        from agents.shared.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise DependencyLoadError(f"Required runtime dependency is not installed: {error}") from error
 

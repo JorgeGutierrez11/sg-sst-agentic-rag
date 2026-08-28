@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from agents.shared import hybrid_retrieval
+from agents.consulta_normativa.langchain_rag.retrieval import hybrid_retrieval
 
 
 class HybridRetrievalTest(unittest.TestCase):

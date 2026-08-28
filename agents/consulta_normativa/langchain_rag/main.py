@@ -15,7 +15,7 @@ from agents.consulta_normativa.langchain_rag.config import (
     RETRIEVAL_TOP_K,
 )
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
-from agents.shared.bm25_retrieval import DEFAULT_BM25_PATH
+from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import DEFAULT_BM25_PATH
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -119,9 +119,9 @@ def load_dependencies() -> RuntimeDependencies:
         from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
         from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import load_parent_documents
-        from agents.shared.bm25_retrieval import open_existing_index
-        from agents.shared.chroma_retrieval import open_existing_collection
-        from agents.shared.hybrid_retrieval import hybrid_retriever
+        from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import open_existing_index
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import hybrid_retriever
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
