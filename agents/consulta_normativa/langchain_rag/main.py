@@ -30,7 +30,7 @@ class OperationalError(Exception):
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
-    build_groq_llm: Callable[[], Any]
+    build_deepseek_llm: Callable[[], Any]
     build_langgraph_rag: Callable[..., Any]
     answer_with_langgraph: Callable[[str, Any], Any]
     hybrid_retriever: Callable[..., Retriever]
@@ -67,12 +67,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_runtime() -> RagRuntime:
-    """Build the hybrid retriever and Groq-backed LLM for the session."""
+    """Build the hybrid retriever and DeepSeek-backed LLM for the session."""
 
     dependencies = load_dependencies()
 
     try:
-        llm = dependencies.build_groq_llm()
+        llm = dependencies.build_deepseek_llm()
     except Exception as error:  
         raise OperationalError(str(error)) from error
 
@@ -116,7 +116,7 @@ def load_dependencies() -> RuntimeDependencies:
     """Load optional runtime dependencies lazily so failures stay controlled."""
 
     try:
-        from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
+        from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
         from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import load_parent_documents
         from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import open_existing_index
@@ -126,7 +126,7 @@ def load_dependencies() -> RuntimeDependencies:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
     return RuntimeDependencies(
-        build_groq_llm=build_groq_llm,
+        build_deepseek_llm=build_deepseek_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
 

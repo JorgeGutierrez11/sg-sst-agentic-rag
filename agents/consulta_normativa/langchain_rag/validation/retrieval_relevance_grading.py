@@ -99,7 +99,10 @@ def retrieval_relevance_grading_node(
             }
 
         try:
-            grader = llm.with_structured_output(RelevanceGrade)
+            grader = llm.with_structured_output(
+                RelevanceGrade,
+                method="json_mode",
+            )
         except Exception as error:
             logger.error(
                 "Could not configure structured relevance grader: %s",

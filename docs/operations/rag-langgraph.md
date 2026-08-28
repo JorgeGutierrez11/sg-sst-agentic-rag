@@ -4,7 +4,7 @@ Esta guía cubre la ejecución de la implementación RAG actual en `agents/consu
 
 ## Propósito
 
-Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existente, abre un índice BM25 existente, ejecuta recuperación híbrida en LangGraph y genera respuestas fundamentadas con Groq.
+Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existente, abre un índice BM25 existente, ejecuta recuperación híbrida en LangGraph y genera respuestas fundamentadas con DeepSeek.
 
 ## Prerrequisitos
 
@@ -12,16 +12,16 @@ Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existen
 |---|---|
 | Vector store | Debe existir `data/processed/chroma` con la colección `sg_sst_base_rag`. |
 | Índice BM25 | Debe existir `data/processed/bm25`. |
-| API key | `GROQ_API_KEY` debe estar en el entorno. |
-| Dependencias | Instalar `requirements.txt`, incluyendo Chroma, LangChain, LangGraph y `langchain_groq`. |
-| Modelo | `langchain_rag/config.py` usa `openai/gpt-oss-120b` con temperatura `0`. |
+| API key | `DEEPSEEK_API_KEY` debe estar en el entorno. |
+| Dependencias | Instalar `requirements.txt`, incluyendo Chroma, LangChain, LangGraph y `langchain-openai`. |
+| Modelo | `langchain_rag/config.py` usa `deepseek-chat` vía `https://api.deepseek.com` con temperatura `0`. |
 
 La consulta abre la colección existente con `open_existing_collection(...)` y el índice BM25 existente con `open_existing_index(...)`; no debe crear índices vacíos durante la operación. El top-k final sale de `RETRIEVAL_TOP_K`, mientras `HYBRID_CANDIDATE_TOP_K` controla el pool candidato por motor antes de la fusión.
 
 ## Ruta rápida
 
 ```bash
-export GROQ_API_KEY="tu_api_key"
+export DEEPSEEK_API_KEY="tu_api_key"
 python -m agents.consulta_normativa.langchain_rag.main
 ```
 
@@ -58,7 +58,7 @@ Si la carpeta no existe o no hay permisos de escritura, la inicialización puede
 
 | Síntoma | Causa probable | Acción |
 |---|---|---|
-| `GROQ_API_KEY is not configured` | Falta la variable de entorno. | Exportar `GROQ_API_KEY` antes de iniciar. |
+| `DEEPSEEK_API_KEY is not configured` | Falta la variable de entorno. | Exportar `DEEPSEEK_API_KEY` antes de iniciar. |
 | Error al abrir Chroma | Falta `data/processed/chroma` o la colección `sg_sst_base_rag`. | Ejecutar primero [`vectorization.md`](vectorization.md). |
 | Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar primero [`bm25-sparse-retrieval.md`](bm25-sparse-retrieval.md). |
 | Error al guardar `base_rag_graph.png` | Falta `data/images/` o no hay permisos. | Crear/verificar la carpeta antes de ejecutar. |

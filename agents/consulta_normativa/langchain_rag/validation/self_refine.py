@@ -147,7 +147,10 @@ def self_refine_node(
             }
 
         try:
-            feedback_grader = llm.with_structured_output(SelfRefineFeedback)
+            feedback_grader = llm.with_structured_output(
+                SelfRefineFeedback,
+                method="json_mode",
+            )
         except Exception as error:
             logger.error(
                 "Could not configure Self-Refine structured feedback: %s",

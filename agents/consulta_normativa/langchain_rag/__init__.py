@@ -4,6 +4,7 @@ __all__ = [
     "LangChainRagResult",
     "RetrievedDocument",
     "answer_with_langgraph",
+    "build_deepseek_llm",
     "build_groq_llm",
     "build_langgraph_rag",
 ]
@@ -12,6 +13,10 @@ __all__ = [
 def __getattr__(name: str) -> object:
     """Load public LangChain RAG exports lazily so subpackage imports stay lightweight."""
 
+    if name == "build_deepseek_llm":
+        from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
+
+        return build_deepseek_llm
     if name == "build_groq_llm":
         from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
 

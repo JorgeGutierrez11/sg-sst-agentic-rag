@@ -15,6 +15,8 @@ RETRIEVAL_TOP_K = 5
 DEFAULT_TOP_K = RETRIEVAL_TOP_K
 
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEFAULT_TEMPERATURE = 0
 
 # Multi-Query implementation.

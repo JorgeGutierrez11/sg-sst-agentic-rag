@@ -53,8 +53,8 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 - Tables: prefer `python -m pipeline.tables.main audit-table-references|build-table-markdown|build-table-documents`; `pipeline.chunking.main` exposes table commands only for compatibility.
 - Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `regex_constrained_semantic/chunks.jsonl` and `table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
 - Vector ingestion uses upsert and does not delete stale Chroma records; remove/move `data/processed/chroma` for a clean rebuild.
-- Current consultation CLI: set `GROQ_API_KEY`, ensure `data/processed/chroma` exists, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing collection and must not create an empty one.
+- Current consultation CLI: set `DEEPSEEK_API_KEY`, ensure `data/processed/chroma` exists, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing collection and must not create an empty one.
 - `langchain_rag/main.py` currently wires the Multi-Query + RRF graph (`build_langgraph_rag_multiquery_rrf`), not the older base graph.
 - The LangGraph CLI currently writes `data/images/base_rag_graph.png` during runtime setup; missing `data/images/` can fail initialization.
-- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default Groq model is `openai/gpt-oss-120b` at temperature `0`.
+- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default LangGraph generator is DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
 - Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the implemented output directory is intentionally `data/processed/tables_htlm`.

@@ -117,7 +117,10 @@ def sufficient_context_gate_node(
             }
 
         try:
-            grader = llm.with_structured_output(SufficientContextGrade)
+            grader = llm.with_structured_output(
+                SufficientContextGrade,
+                method="json_mode",
+            )
         except Exception as error:
             logger.error(
                 "Could not configure structured sufficient-context grader: %s",

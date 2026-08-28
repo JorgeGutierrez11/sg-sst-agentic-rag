@@ -7,7 +7,7 @@ La consulta normativa tiene dos implementaciones RAG separadas. Esta página sol
 | Implementación | Estado | Ruta | Cuándo usarla |
 |---|---|---|---|
 | Manual | Línea base congelada de referencia | `agents/consulta_normativa/manual_implementation/` | Comparar comportamiento, revisar el flujo mínimo o conservar una referencia antes de experimentos. |
-| LangChain/LangGraph | Implementación actual de consulta normativa | `agents/consulta_normativa/langchain_rag/` | Ejecutar y documentar el RAG actual basado en grafo, mensajes LangChain y Groq. |
+| LangChain/LangGraph | Implementación actual de consulta normativa | `agents/consulta_normativa/langchain_rag/` | Ejecutar y documentar el RAG actual basado en grafo, mensajes LangChain y DeepSeek. |
 
 ## Documentos específicos
 

@@ -19,7 +19,7 @@ Los pasos de ejecución viven en el runbook [`../operations/rag-langgraph.md`](.
 
 | Archivo | Responsabilidad |
 |---|---|
-| `config.py` | Constantes de Chroma, BM25, Groq, temperatura y `top_k`. |
+| `config.py` | Constantes de Chroma, BM25, DeepSeek, temperatura y `top_k`. |
 | `formatting.py` | Normalización de documentos, construcción de contexto y referencias. |
 | `graph.py` | Construcción y ejecución del `StateGraph`. |
 | `main.py` | Entrypoint CLI actual: inicializa dependencias, abre Chroma y BM25 existentes, crea el recuperador híbrido y ejecuta el grafo. |
@@ -60,7 +60,7 @@ SystemMessage(BASE_SYSTEM_INSTRUCTIONS)
 HumanMessage(build_human_prompt(...))
 ```
 
-Luego invoca el modelo con `llm.invoke(messages)`. El runtime usa Groq con el modelo `openai/gpt-oss-120b` y temperatura `0`.
+Luego invoca el modelo con `llm.invoke(messages)`. El runtime usa DeepSeek con el modelo `deepseek-chat`, base URL `https://api.deepseek.com` y temperatura `0`.
 
 El resultado público es:
 
@@ -96,6 +96,6 @@ Comportamiento visible. Los literales están en inglés porque son las cadenas e
 | Top-k final | `RETRIEVAL_TOP_K`; `DEFAULT_TOP_K` queda solo como alias de compatibilidad. |
 | Pool candidato híbrido | `HYBRID_CANDIDATE_TOP_K` por motor antes de fusionar. |
 | Trazabilidad híbrida | Metadata `_retrieval_sources`, por ejemplo `['chroma']`, `['bm25']` o `['chroma', 'bm25']`. |
-| Variable requerida | `GROQ_API_KEY`. |
+| Variable requerida | `DEEPSEEK_API_KEY`. |
 | Evidencia suficiente | Existe al menos un documento recuperado. |
 | Sin evidencia | Respuesta determinística sin invocar el LLM. |
