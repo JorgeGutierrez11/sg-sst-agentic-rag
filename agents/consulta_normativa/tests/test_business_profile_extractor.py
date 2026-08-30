@@ -23,12 +23,22 @@ class FakeStructuredLLM:
 class FakeLLM:
     """Fake LLM supporting with_structured_output()."""
 
-    def __init__(self, response: Any = None, error: Exception | None = None):
+    def __init__(
+        self,
+        response: Any = None,
+        error: Exception | None = None,
+    ):
         self.response = response
         self.error = error
 
-    def with_structured_output(self, schema: Any) -> FakeStructuredLLM:
+    def with_structured_output(
+        self,
+        schema: Any,
+        *,
+        method: str | None = None,
+    ) -> FakeStructuredLLM:
         assert schema is BusinessProfileExtractionSchema
+        assert method == "json_mode"
 
         return FakeStructuredLLM(
             response=self.response,
@@ -262,3 +272,30 @@ def test_normalizes_risk_class_to_uppercase() -> None:
     result = extract_business_profile(llm, question)
 
     assert result["updates"]["risk_class"] == "II"
+
+
+
+def test_accepts_numeric_worker_count_from_llm() -> None:
+    question = "ahora tengo 5 trabajadores"
+
+    llm = FakeLLM(
+        response={
+            "facts": [
+                {
+                    "field": "worker_count",
+                    "value": 5,
+                    "evidence": "tengo 5 trabajadores",
+                }
+            ]
+        }
+    )
+
+    result = extract_business_profile(
+        llm,
+        question,
+    )
+
+    assert result["updates"]["worker_count"] == 5
+    assert result["evidence"]["worker_count"] == (
+        "tengo 5 trabajadores"
+    )

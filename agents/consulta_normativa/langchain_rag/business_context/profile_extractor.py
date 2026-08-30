@@ -1,7 +1,7 @@
 """Extraction of explicit business-profile facts from user messages."""
 
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class ExtractedProfileFact(BaseModel):
     """One explicit business-profile fact found in the user message."""
 
     field: ProfileField
-    value: str
+    value: str | int
     evidence: str
 
 
@@ -118,6 +118,34 @@ Si no existe información empresarial explícita, devuelve una lista facts vací
 
 Si aparecen varios valores del mismo campo y el usuario indica claramente que
 uno corresponde al estado actual, conserva únicamente el valor actual.
+
+FORMATO DE SALIDA:
+
+Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura:
+
+{
+  "facts": [
+    {
+      "field": "economic_activity",
+      "value": "mantenimiento de motocicletas",
+      "evidence": "empresa de mantenimiento de motocicletas"
+    }
+  ]
+}
+
+Los únicos valores permitidos para "field" son:
+- "economic_activity"
+- "ciiu_code"
+- "worker_count"
+- "risk_class"
+
+Si no existe información empresarial explícita, devuelve exactamente:
+
+{
+  "facts": []
+}
+
+No incluyas explicaciones, Markdown, bloques de código ni texto fuera del JSON.
 """.strip()
 
 
@@ -134,7 +162,8 @@ def extract_business_profile(
 
     try:
         extractor = llm.with_structured_output(
-            BusinessProfileExtractionSchema
+            BusinessProfileExtractionSchema,
+            method="json_mode",
         )
 
         response = extractor.invoke(
@@ -182,7 +211,7 @@ def normalize_business_profile_extraction(
     evidence: dict[ProfileField, str] = {}
 
     for fact in extraction.facts:
-        value = fact.value.strip()
+        value = str(fact.value).strip()
         fact_evidence = fact.evidence.strip()
 
         if not value or not fact_evidence:

@@ -8,6 +8,9 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+from langchain_core.embeddings import Embeddings
+
+
 
 from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, DEFAULT_TOP_K
 
@@ -24,7 +27,7 @@ class OperationalError(Exception):
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
-    build_groq_llm: Callable[[], Any]
+    build_deepseek_llm: Callable[[], Any]
     #build_langgraph_rag: Callable[[Any, Retriever, int], Any]
     #answer_with_langgraph: Callable[[str, Any], Any]
     build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
@@ -41,6 +44,53 @@ class RagRuntime:
     answer_with_langgraph: Callable[..., Any]
     graph: Any
     thread_id: str
+
+# nueva clase para adaptar los embeddings de Qwen a la memoria a largo plazo basada en recuperación
+class QwenMemoryEmbeddings(Embeddings):
+    """Qwen embeddings adapted for retrieval-based conversational memory."""
+
+    def __init__(
+        self,
+        embedding_function: Any,
+    ) -> None:
+        # Reutilizamos el SentenceTransformer que Chroma ya cargó.
+        self._model = embedding_function._model
+
+        self._normalize_embeddings = (
+            embedding_function.normalize_embeddings
+        )
+
+    def embed_documents(
+        self,
+        texts: list[str],
+    ) -> list[list[float]]:
+        """Embed stored conversation memories as documents."""
+
+        vectors = self._model.encode(
+            texts,
+            convert_to_numpy=True,
+            normalize_embeddings=self._normalize_embeddings,
+        )
+
+        return [
+            vector.tolist()
+            for vector in vectors
+        ]
+
+    def embed_query(
+        self,
+        text: str,
+    ) -> list[float]:
+        """Embed a memory-search query using Qwen's query prompt."""
+
+        vector = self._model.encode(
+            text,
+            prompt_name="query",
+            convert_to_numpy=True,
+            normalize_embeddings=self._normalize_embeddings,
+        )
+
+        return vector.tolist()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,32 +113,82 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_runtime() -> RagRuntime:
-    """Build the Chroma retriever and Groq-backed LLM for the session."""
+    """Build the Chroma retriever and DeepSeek-backed LLM for the session."""
 
     dependencies = load_dependencies()
 
     try:
-        llm = dependencies.build_groq_llm()
+        llm = dependencies.build_deepseek_llm()
     except Exception as error:  # noqa: BLE001 - keep missing key/package/provider errors controlled.
         raise OperationalError(str(error)) from error
 
     try:
-        from langgraph.checkpoint.memory import InMemorySaver # nuevo import para el checkpointer de memoria
-        
-        collection = dependencies.open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
-        retriever = dependencies.chroma_retriever(collection)
+        from chromadb.utils.embedding_functions import (
+            SentenceTransformerEmbeddingFunction,
+        )
+        from langgraph.checkpoint.memory import InMemorySaver
+        from langgraph.store.memory import InMemoryStore
 
-        checkpointer = InMemorySaver() # nuevo checkpointer de memoria
-        graph = dependencies.build_langgraph_rag(llm, retriever, DEFAULT_TOP_K, checkpointer=checkpointer)
+        collection = dependencies.open_existing_collection(
+            DEFAULT_CHROMA_PATH,
+            DEFAULT_COLLECTION_NAME,
+        )
+
+        retriever = dependencies.chroma_retriever(
+            collection
+        )
+
+        # Memoria de corto plazo asociada al thread.
+        checkpointer = InMemorySaver()
+
+        # Mismo modelo de embeddings utilizado por el RAG.
+        memory_embedding_function = (
+            SentenceTransformerEmbeddingFunction(
+                model_name="Qwen/Qwen3-Embedding-0.6B",
+                normalize_embeddings=True,
+            )
+        )
+
+        memory_embeddings = QwenMemoryEmbeddings(
+            memory_embedding_function
+        )
+
+        # Store independiente para Retrieval-Based
+        # Long-Term Memory.
+        memory_store = InMemoryStore(
+            index={
+                "dims": 1024,
+                "embed": memory_embeddings,
+                "fields": ["text"],
+            }
+        )
+
+        graph = dependencies.build_langgraph_rag(
+            llm,
+            retriever,
+            DEFAULT_TOP_K,
+            checkpointer=checkpointer,
+            store=memory_store,
+        )
 
         # Guardar diagrama en disco
         png_bytes = graph.get_graph().draw_mermaid_png()
-        with open("data/images/base_rag_graph.png", "wb") as f:
+
+        with open(
+            "data/images/base_rag_graph.png",
+            "wb",
+        ) as f:
             f.write(png_bytes)
 
-        print("Grafo guardado exitosamente como 'base_rag_graph.png'")
-    except Exception as error:  # noqa: BLE001 - Chroma path, package, and collection failures are operational.
-        raise OperationalError(str(error)) from error
+        print(
+            "Grafo guardado exitosamente "
+            "como 'base_rag_graph.png'"
+        )
+
+    except Exception as error:
+        raise OperationalError(
+            str(error)
+        ) from error
     
     thread_id = f"cli-session-{uuid4()}" # Generar un identificador único para cada hilo de conversación
     return RagRuntime(
@@ -102,15 +202,15 @@ def load_dependencies() -> RuntimeDependencies:
     """Load optional runtime dependencies lazily so failures stay controlled."""
 
     try:
-        from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
+        from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
         from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
-        from agents.shared.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
     return RuntimeDependencies(
-        build_groq_llm=build_groq_llm,
+        build_deepseek_llm=build_deepseek_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
         chroma_retriever=chroma_retriever,
@@ -156,6 +256,8 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         }
     )
 
+
+
     business_context = snapshot.values.get(
         "business_context",
         {},
@@ -166,9 +268,31 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         "",
     )
 
-    print("\n--- CURRENT BUSINESS CONTEXT ---")
+    retrieved_memories = business_context.get(
+        "retrieved_memories",
+        [],
+    )
+
+    print("\n-------------------------- CURRENT BUSINESS CONTEXT ---------------------------------------")
     print(current_context or "[vacío]")
-    print("--- END CURRENT BUSINESS CONTEXT ---\n")
+    print("-------------------------- END CURRENT BUSINESS CONTEXT ---------------------------------------\n")
+
+    print(
+        "\n-------------------------- RETRIEVED MEMORIES ---------------------------------------"
+    )
+
+    if not retrieved_memories:
+        print("[ninguna]")
+    else:
+        for memory in retrieved_memories:
+            print(f"\nID: {memory['memory_id']}")
+            print(f"Score: {memory['score']}")
+            print(f"Usuario: {memory['user']}")
+            print(f"Agente: {memory['assistant']}")
+
+    print(
+        "-------------------------- END RETRIEVED MEMORIES -----------------------------------\n"
+    )
 
 
     return 0

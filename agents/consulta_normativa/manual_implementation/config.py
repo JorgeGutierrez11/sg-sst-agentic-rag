@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from agents.shared.chroma_retrieval import DEFAULT_COLLECTION_NAME
+from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import DEFAULT_COLLECTION_NAME
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

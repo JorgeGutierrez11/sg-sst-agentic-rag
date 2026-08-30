@@ -4,7 +4,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agents.shared import chroma_retrieval
 from pipeline.vectorization import chroma_store
 from pipeline.vectorization.chroma_store import record_batches, upsert_records
 from pipeline.vectorization.documents import ChromaRecord
@@ -90,20 +89,6 @@ class VectorizationChromaStoreTest(unittest.TestCase):
         persistent_client.assert_called_once_with(Path("/tmp/chroma"), create_path=True)
         self.assertEqual(client.get_or_create_payload, {"name": "test_collection", "embedding_function": embedding_function})
         self.assertEqual(client.get_payload, {})
-
-    def test_open_existing_collection_uses_get_collection_with_qwen_embedding(self) -> None:
-        client = FakeChromaClient()
-        embedding_function = object()
-
-        with patch.object(Path, "exists", return_value=True), patch.object(
-            chroma_retrieval, "persistent_client", return_value=client
-        ) as persistent_client, patch.object(chroma_retrieval, "qwen_embedding_function", return_value=embedding_function):
-            collection = chroma_store.open_existing_collection(Path("/tmp/chroma"), "test_collection")
-
-        self.assertEqual(collection, "existing-collection")
-        persistent_client.assert_called_once_with(Path("/tmp/chroma"))
-        self.assertEqual(client.get_payload, {"name": "test_collection", "embedding_function": embedding_function})
-        self.assertEqual(client.get_or_create_payload, {})
 
 
 class FakeCollection:

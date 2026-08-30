@@ -12,7 +12,7 @@ from agents.consulta_normativa.langchain_rag import main as cli
 
 
 class LangChainRagMainTest(unittest.TestCase):
-    """Verify direct execution without real Chroma or Groq calls."""
+    """Verify direct execution without real Chroma or DeepSeek calls."""
 
     def test_no_args_builds_runtime_and_runs_interactive_loop(self) -> None:
         runtime = self.build_runtime()
@@ -73,16 +73,18 @@ class LangChainRagMainTest(unittest.TestCase):
         self.assertNotIn("Traceback", stderr.getvalue())
         self.assertIn("Answer:\nGenerated answer.", stdout.getvalue())
 
-    def test_missing_groq_api_key_returns_controlled_error_without_traceback(self) -> None:
+    def test_missing_deepseek_api_key_returns_controlled_error_without_traceback(self) -> None:
         stderr = io.StringIO()
-        dependencies = self.build_dependencies(build_groq_llm=lambda: (_ for _ in ()).throw(ValueError("GROQ_API_KEY")))
+        dependencies = self.build_dependencies(
+            build_deepseek_llm=lambda: (_ for _ in ()).throw(ValueError("DEEPSEEK_API_KEY"))
+        )
 
         with patch.object(cli, "load_dependencies", return_value=dependencies), redirect_stderr(stderr):
             exit_code = cli.main([])
 
         self.assertEqual(exit_code, 2)
         self.assertIn("Error during initialization", stderr.getvalue())
-        self.assertIn("GROQ_API_KEY", stderr.getvalue())
+        self.assertIn("DEEPSEEK_API_KEY", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
     def test_missing_chroma_path_or_collection_returns_controlled_error_without_traceback(self) -> None:
@@ -107,32 +109,59 @@ class LangChainRagMainTest(unittest.TestCase):
         with patch.object(
             cli,
             "load_dependencies",
-            side_effect=cli.OperationalError("Required runtime dependency is not installed: langchain_groq"),
+            side_effect=cli.OperationalError("Required runtime dependency is not installed: langchain_openai"),
         ), redirect_stderr(stderr):
             exit_code = cli.main([])
 
         self.assertEqual(exit_code, 2)
         self.assertIn("Error during initialization", stderr.getvalue())
-        self.assertIn("langchain_groq", stderr.getvalue())
+        self.assertIn("langchain_openai", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
 
-    def test_build_runtime_uses_existing_config_and_retriever_boundary(self) -> None:
+    def test_build_runtime_uses_deepseek_llm_builder(self) -> None:
+        calls: list[str] = []
+        dependencies = self.build_dependencies(
+            build_deepseek_llm=lambda: calls.append("deepseek") or "llm",
+            build_langgraph_rag=lambda llm, retriever, **kwargs: FakeDrawableGraph(),
+        )
+
+        with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
+            cli.build_runtime()
+
+        self.assertEqual(calls, ["deepseek"])
+
+    def test_build_runtime_opens_dense_and_sparse_indexes_and_uses_hybrid_retriever_boundary(self) -> None:
         calls: list[str] = []
 
         def fake_open_existing_collection(path: object, collection_name: str) -> str:
             calls.append(f"collection:{path}:{collection_name}")
             return "collection"
 
-        def fake_chroma_retriever(collection: object) -> object:
-            calls.append(f"retriever:{collection}")
-            return "retriever"
+        def fake_open_existing_index(path: object) -> str:
+            calls.append(f"index:{path}")
+            return "index"
+
+        def fake_hybrid_retriever(
+            collection: object,
+            sparse_index: object,
+            *,
+            candidate_top_k: int,
+            rrf_k: int,
+        ) -> object:
+            calls.append(f"retriever:{collection}:{sparse_index}:{candidate_top_k}:{rrf_k}")
+            return "hybrid-retriever"
 
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
-            build_groq_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, top_k: calls.append(f"graph:{llm}:{retriever}:{top_k}") or graph,
+            build_deepseek_llm=lambda: "llm",
+            build_langgraph_rag=lambda llm, retriever, *, top_k, parent_lookup: calls.append(
+                f"graph:{llm}:{retriever}:{top_k}:{parent_lookup}"
+            )
+            or graph,
+            load_parent_documents=lambda path: calls.append(f"parents:{path}") or {"parent-1": "parent"},
             open_existing_collection=fake_open_existing_collection,
-            chroma_retriever=fake_chroma_retriever,
+            open_existing_index=fake_open_existing_index,
+            hybrid_retriever=fake_hybrid_retriever,
         )
 
         with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
@@ -140,7 +169,13 @@ class LangChainRagMainTest(unittest.TestCase):
 
         self.assertEqual(
             calls,
-            [f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag", "retriever:collection", "graph:llm:retriever:5"],
+            [
+                f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
+                f"index:{cli.DEFAULT_BM25_PATH}",
+                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
+                f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
+                f"graph:llm:hybrid-retriever:{cli.RETRIEVAL_TOP_K}:{{'parent-1': 'parent'}}",
+            ],
         )
         self.assertIs(runtime.graph, graph)
 
@@ -151,7 +186,11 @@ class LangChainRagMainTest(unittest.TestCase):
             calls.append(f"{question}:{graph}")
             if fail_first and question == "fail":
                 raise RuntimeError("fake RAG failure")
-            return types.SimpleNamespace(answer="Generated answer.", references=["Decreto 1072"])
+            return types.SimpleNamespace(
+                answer="Generated answer.",
+                references=["Decreto 1072"],
+                prompt="Prompt sent to model.",
+            )
 
         runtime = cli.RagRuntime(
             answer_with_langgraph=fake_answer_with_langgraph,
@@ -161,18 +200,22 @@ class LangChainRagMainTest(unittest.TestCase):
 
     def build_dependencies(
         self,
-        build_groq_llm: object | None = None,
+        build_deepseek_llm: object | None = None,
         build_langgraph_rag: object | None = None,
         answer_with_langgraph: object | None = None,
-        chroma_retriever: object | None = None,
+        hybrid_retriever: object | None = None,
+        load_parent_documents: object | None = None,
         open_existing_collection: object | None = None,
+        open_existing_index: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
-            build_groq_llm=build_groq_llm or (lambda: object()),
-            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, top_k: object()),
+            build_deepseek_llm=build_deepseek_llm or (lambda: object()),
+            build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, **kwargs: object()),
             answer_with_langgraph=answer_with_langgraph or (lambda question, graph: object()),
-            chroma_retriever=chroma_retriever or (lambda collection: lambda question, top_k: {}),
+            hybrid_retriever=hybrid_retriever or (lambda collection, sparse_index, **kwargs: lambda question, top_k: {}),
+            load_parent_documents=load_parent_documents or (lambda path: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
+            open_existing_index=open_existing_index or (lambda path: object()),
         )
 
 class FakeDrawableGraph:

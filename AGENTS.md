@@ -4,59 +4,57 @@ This repo is a thesis RAG system for SG-SST normative assistance and compliance 
 
 ## Source of truth
 
-- When methodology conflicts, trust `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` over stale prose.
-- Keep scope anchored to the official SG-SST sources named in the plan: Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
-- Current technical docs live under `docs/architecture/`, operational runbooks under `docs/operations/`, and experiment notes under `docs/experiments/`; prefer those over deleted legacy guides.
+- If methodology docs conflict, trust `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` over stale prose.
+- Keep legal scope anchored to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
+- Current technical docs: `docs/architecture/`; operational runbooks: `docs/operations/`; experiment notes: `docs/experiments/`.
 
 ## Tooling and verification
 
-- Root dependency manifest is only `requirements.txt`; there is no pyproject, lockfile, Makefile/task runner, CI workflow, formatter, lint, typecheck, pre-commit, or repo-local OpenCode config discovered.
-- Use `python -m unittest discover -s pipeline/tests` for the current Python test suite when dependencies are installed.
-- Focused table pipeline tests: `python -m unittest pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents`.
-- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_table_documents pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store agents.consulta_normativa.tests.test_cli agents.consulta_normativa.tests.test_rag_base`.
-- Compile check for vector/RAG work: `python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa`.
-- If `.codegraph/` exists locally, use CodeGraph first for structural/codebase questions, then fall back to direct file reads only when needed.
+- Root manifest is only `requirements.txt`; no pyproject, lockfile, Makefile/task runner, CI workflow, formatter, lint, typecheck, pre-commit, or repo-local OpenCode config is present.
+- `chromadb` is imported lazily by vector/RAG code but is not listed in `requirements.txt`; install/verify it separately before real Chroma runs.
+- Broad pipeline suite: `python -m unittest discover -s pipeline/tests`.
+- Focused table tests: `python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents`.
+- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store agents.consulta_normativa.tests.test_cli agents.consulta_normativa.tests.test_rag_base agents.consulta_normativa.tests.test_langchain_rag_main agents.consulta_normativa.tests.test_langchain_rag_graph agents.consulta_normativa.tests.test_langchain_rag_query_rewrite agents.consulta_normativa.tests.test_langchain_rag_multi_query agents.consulta_normativa.tests.test_langchain_rag_fusion`.
+- Compile check for vector/RAG work: `python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa agents/shared`.
+- If `.codegraph/` exists, use CodeGraph before broad filesystem searches for structural questions.
 
-## Directory boundaries
+## Boundaries agents tend to cross
 
-- `pipeline/`: offline corpus transformation only; keep runtime agent logic out of it.
-- `agents/`: online LLM agent logic. `agents/consulta_normativa/` is Phase 4 Block A; represent the five consultation-agent stages with git tags, not duplicated `etapa_*` folders.
-- `agents/shared/`: shared LLM clients, retrievers, prompts, adapters, and utilities reused by both agents.
-- `agents/diagnostico_cumplimiento/`: Phase 4 Block B diagnostic agent; output requirement-by-requirement compliance plus executive summary of critical gaps and priority actions.
-- `app/backend/` and `app/frontend/`: user-facing API/UI; currently only placeholder `.gitkeep` files exist.
-- `evaluation/instruments/`: rubrics, surveys, protocols, consent, and sampling definitions; results do not belong here.
-- `evaluation/results/`: processed/anonymized evaluation outputs, including ARES runs, expert validation, user-study summaries, and integrated reports.
-- `evaluation/resultados_usuarios/`: confidential raw company interactions; anonymize identifiers and confirm consent before storing anything. Its contents are ignored except README.
-- `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable data areas; do not assume source DOCX or generated corpus files are versioned.
-- `docs/decisiones/` contains planning and decision records. Do not create new decision files there unless explicitly requested.
+- `pipeline/` is offline corpus transformation only; keep runtime agent logic out of it.
+- `agents/` is online LLM/RAG logic. `agents/shared/chroma_retrieval.py` owns query-only Chroma helpers; collection creation/upsert belongs in `pipeline/vectorization/`.
+- `agents/consulta_normativa/` is Phase 4 Block A; represent the five consultation-agent stages with git tags, not duplicated `etapa_*` folders.
+- `agents/diagnostico_cumplimiento/` is Phase 4 Block B; expected output is requirement-by-requirement compliance plus executive critical gaps and priority actions.
+- `app/backend/` and `app/frontend/` are still placeholder `.gitkeep` scaffolds.
+- `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable; do not assume source DOCX or generated corpus files are versioned.
+- `evaluation/resultados_usuarios/` is confidential raw company data; anonymize identifiers and confirm consent before storing anything. Contents are ignored except README.
+- `docs/decisiones/` contains planning/decision records; do not add files there unless explicitly requested.
 
-## Methodology constraints
+## Methodology constraints to preserve
 
-- Phase 2 builds the normative corpus: structured article/section segmentation, cleaning/normalization, metadata enrichment, then vector-ready artifacts.
-- Phase 3 evaluation comes before agent development: Conjunto A is the expert gold standard for ARES calibration; Conjunto B is for development optimization.
-- Consultation-agent stages are: base RAG, query understanding, retrieval improvement, business context, response validation/control.
-- Each consultation-agent stage should compare three candidate techniques and choose using ARES metrics on Conjunto B.
-- Evaluate RAG on context relevance, answer faithfulness, and answer relevance; include confidence intervals with ARES.
+- Phase 2 corpus flow: DOCX ingestion → Markdown cleaning → parent chunks → child chunks → table documents → vector-ready artifacts.
+- Phase 3 evaluation precedes agent development: Conjunto A calibrates ARES as expert gold standard; Conjunto B is for development optimization.
+- Consultation-agent stages are base RAG, query understanding, retrieval improvement, business context, and response validation/control.
+- Each consultation-agent stage should compare three candidate techniques using ARES context relevance, answer faithfulness, and answer relevance metrics with confidence intervals.
 - Final system evaluation combines sessions from at least five risk-I companies, expert SST validation, and calibrated ARES evaluation.
 
 ## Design rules to preserve
 
-- Apply YAGNI and KISS: do not add abstractions, wrappers, DTOs, helpers, interfaces, or placeholders for hypothetical future phases.
-- Prefer local cohesion and readable pragmatic coupling over dogmatic layering.
-- Group by workflow/domain first; split by technical concern only when it clearly improves traceability.
-- Metadata extraction is deterministic: optional manifest + regex over cleaned Markdown + pipeline-calculated offsets/token counts. Do not use an LLM as the primary metadata extractor.
+- Apply YAGNI/KISS; do not add wrappers, DTOs, interfaces, or placeholders for hypothetical future phases.
+- Prefer local cohesion and workflow/domain grouping over dogmatic layering.
+- Preserve existing code comments, including informal Spanish notes, unless directly changing that code or explicitly asked to remove them.
+- Metadata extraction is deterministic: optional manifest + regex over cleaned Markdown + pipeline-calculated offsets/token counts. Do not use an LLM as primary metadata extractor.
+- Table references use logical metadata (`source_stem`, `table_index`, `table_key`); do not persist physical HTML/Markdown paths in chunks or Chroma metadata.
 
 ## Real entrypoints and gotchas
 
-- DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes Markdown and extracted HTML tables under `data/interim/`, and requires Pandoc plus `pypandoc`.
+- DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes `data/interim/*.md` plus extracted HTML tables, and requires system Pandoc plus `pypandoc`.
 - Markdown cleaning: `python pipeline/cleaning/markdown_cleaner.py` reads `data/interim/*.md` and writes `data/processed/*.md`.
-- Chunking CLI: `python -m pipeline.chunking.main --help`.
-- Corpus rebuild runbook: `docs/operations/corpus-build.md`; table processing runbook: `docs/operations/table-processing.md`; vectorization runbook: `docs/operations/vectorization.md`; RAG runbooks: `docs/operations/rag-langgraph.md` and `docs/operations/rag-manual.md`.
-- Recommended chunking path: `build-parents`, `build-sliding-window`, `build-regex-constrained-semantic`; use `python -m pipeline.tables.main ...` for table auditing and table document generation.
-- `build-regex-constrained-semantic` is the current recommended child-chunk strategy for SG-SST because it preserves exact offsets and legal traceability; keep `build-sliding-window` as a baseline and avoid pure `semantic_chunking` as final output.
-- Table references use logical metadata such as `source_stem` + `table_index`; do not persist physical HTML paths in chunks or Chroma metadata.
-- Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` and `data/processed/table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
+- Chunking: `python -m pipeline.chunking.main build-parents`, then `build-sliding-window` baseline, then recommended `build-regex-constrained-semantic`; avoid pure `semantic_chunking` as final SG-SST output.
+- Tables: prefer `python -m pipeline.tables.main audit-table-references|build-table-markdown|build-table-documents`; `pipeline.chunking.main` exposes table commands only for compatibility.
+- Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `regex_constrained_semantic/chunks.jsonl` and `table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
 - Vector ingestion uses upsert and does not delete stale Chroma records; remove/move `data/processed/chroma` for a clean rebuild.
-- Current consultation CLI: set `GROQ_API_KEY` in the environment, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing Chroma collection and must not create an empty one during consultation.
-- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default Groq generation model is `openai/gpt-oss-120b` at temperature `0`.
-- Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the current output directory name is intentionally misspelled as `data/processed/tables_htlm`.
+- Current consultation CLI: set `DEEPSEEK_API_KEY`, ensure `data/processed/chroma` exists, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing collection and must not create an empty one.
+- `langchain_rag/main.py` currently wires the Multi-Query + RRF graph (`build_langgraph_rag_multiquery_rrf`), not the older base graph.
+- The LangGraph CLI currently writes `data/images/base_rag_graph.png` during runtime setup; missing `data/images/` can fail initialization.
+- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default LangGraph generator is DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
+- Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the implemented output directory is intentionally `data/processed/tables_htlm`.

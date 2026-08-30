@@ -97,6 +97,7 @@ def child_chunk_to_chroma(record: JsonDict) -> ChromaRecord:
         document=document,
         metadata=flat_metadata(
             {
+                "document_id": record_id,
                 "document_type": "child_chunk",
                 "source_document_id": record.get("source_document_id", ""),
                 "source_stem": inherited.get("source_stem", ""),
@@ -134,6 +135,7 @@ def table_document_to_chroma(record: JsonDict) -> ChromaRecord:
         document=document,
         metadata=flat_metadata(
             {
+                "document_id": record_id,
                 "document_type": "table",
                 "source_stem": source_stem,
                 "table_index": table_index,

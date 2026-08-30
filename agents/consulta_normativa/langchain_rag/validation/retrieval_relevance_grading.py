@@ -4,6 +4,7 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, Field
 
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
@@ -70,6 +71,21 @@ REGLAS IMPORTANTES
   considéralo relevante.
 - Cuando exista una relación plausible y directa pero el fragmento sea parcial,
   prioriza conservar la evidencia y considéralo relevante.
+
+FORMATO DE SALIDA
+
+Devuelve exclusivamente un objeto JSON válido con esta estructura:
+
+{
+    "relevant": true,
+    "reason": "Explicación breve de la decisión."
+}
+
+El campo "relevant" debe ser booleano:
+- true si el documento es relevante;
+- false si el documento no es relevante.
+
+No agregues texto, Markdown ni explicaciones fuera del JSON.
 """.strip()
 
 
@@ -81,6 +97,9 @@ def retrieval_relevance_grading_node(
     def run(state: RagGraphState) -> RagGraphState:
         question = state["question"]
         documents = state.get("documents", [])
+
+        # temporal logging
+        log_documents_before_relevance_grading(documents, max_chars=1200)
 
         if not documents:
             return {
@@ -95,7 +114,10 @@ def retrieval_relevance_grading_node(
             }
 
         try:
-            grader = llm.with_structured_output(RelevanceGrade)
+            grader = llm.with_structured_output(
+                RelevanceGrade,
+                method="json_mode",
+            )
         except Exception as error:
             logger.error(
                 "Could not configure structured relevance grader: %s",
@@ -106,6 +128,7 @@ def retrieval_relevance_grading_node(
         relevant_documents: list[RetrievedDocument] = []
         document_traces: list[dict[str, Any]] = []
         fallback_count = 0
+        grader_relevant_count = 0
 
         for index, document in enumerate(documents):
             try:
@@ -126,6 +149,7 @@ def retrieval_relevance_grading_node(
 
                 if grade.relevant:
                     relevant_documents.append(document)
+                    grader_relevant_count += 1
 
                 document_traces.append(
                     build_document_trace(
@@ -161,12 +185,13 @@ def retrieval_relevance_grading_node(
                     )
                 )
 
+
         return {
             "documents": relevant_documents,
             "relevance_grading_trace": {
                 "input_count": len(documents),
-                "relevant_count": len(relevant_documents),
-                "rejected_count": len(documents) - len(relevant_documents),
+                "relevant_count": grader_relevant_count,
+                "rejected_count": len(documents) - grader_relevant_count,
                 "fallback_count": fallback_count,
                 "documents": document_traces,
             },
@@ -233,7 +258,7 @@ def format_relevance_metadata(metadata: dict[str, Any]) -> str:
         ("Título", "title"),
         ("Capítulo", "chapter"),
         ("Artículo", "article"),
-        ("Parágrafo", "paragraph"),
+        ("Parágrafo", "paragraph"), 
         ("Numeral", "numeral"),
         ("Literal", "literal"),
     )
@@ -263,7 +288,7 @@ def build_document_trace(
         "source": document.metadata.get("source_stem"),
         "article": document.metadata.get("article"),
         "relevant": relevant,
-         "reason": reason,
+        "reason": reason,
         "fallback": fallback,
         "error": error,
     }
@@ -275,6 +300,18 @@ def relevance_grading_fallback(
 ) -> RagGraphState:
     """Preserve all documents when the relevance grader cannot be initialized."""
 
+    document_traces = [
+        build_document_trace(
+            index=index,
+            document=document,
+            relevant=True,
+            reason="Documento conservado por política fail-open porque el grader no pudo configurarse.",
+            fallback=True,
+            error=type(error).__name__,
+        )
+        for index, document in enumerate(documents)
+    ]
+
     return {
         "documents": documents,
         "relevance_grading_trace": {
@@ -284,6 +321,34 @@ def relevance_grading_fallback(
             "fallback_count": len(documents),
             "fallback": True,
             "error": type(error).__name__,
-            "documents": [],
+            "documents": document_traces,
         },
     }
+
+
+# Is a temporal Logger
+def log_documents_before_relevance_grading(
+    documents: list[RetrievedDocument],
+    max_chars: int = 1200,
+) -> None:
+    """Log documents before relevance grading with bounded text previews."""
+
+    logger.info("Documents before relevance grading: %s", len(documents))
+
+    for index, document in enumerate(documents, start=1):
+        metadata = document.metadata
+        preview = document.document[:max_chars].replace("\n", " ")
+
+        logger.info(
+            "Before relevance grading | doc=%s | type=%s | source=%s | article=%s | "
+            "parent_expanded=%s | retrieval_sources=%s | child_ids=%s | chars=%s | preview=%s",
+            index,
+            metadata.get("document_type"),
+            metadata.get("source_stem"),
+            metadata.get("article"),
+            metadata.get("parent_expansion_applied"),
+            metadata.get("_retrieval_sources") or metadata.get("expanded_from_child_retrieval_sources"),
+            metadata.get("expanded_from_child_ids"),
+            len(document.document),
+            preview,
+        )

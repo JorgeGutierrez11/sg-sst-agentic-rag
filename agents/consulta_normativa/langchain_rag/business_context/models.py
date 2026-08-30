@@ -32,6 +32,14 @@ class ConversationTurn(TypedDict):
     user: str
     assistant: str
 
+class RetrievedBusinessMemory(TypedDict):
+    """Conversation memory recovered through semantic search."""
+
+    memory_id: str
+    user: str
+    assistant: str
+    score: float | None
+
 
 class BusinessContext(TypedDict, total=False):
     """Business information available to downstream graph stages."""
@@ -42,6 +50,10 @@ class BusinessContext(TypedDict, total=False):
     # Summarization-Based Memory
     history_summary: str
     summarized_turns: int
+
+    # Retrieval-Based Long-Term Memory
+    retrieved_memories: list[RetrievedBusinessMemory]
+
 
     current_context: str
 

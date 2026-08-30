@@ -2,7 +2,12 @@
 
 import unittest
 
-from agents.consulta_normativa.rag_base import answer_question, chroma_retriever, metadata_context, reference_from_metadata
+from agents.consulta_normativa.manual_implementation.rag_base import (
+    answer_question,
+    chroma_retriever,
+    metadata_context,
+    reference_from_metadata,
+)
 
 
 class ConsultaNormativaRagBaseTest(unittest.TestCase):

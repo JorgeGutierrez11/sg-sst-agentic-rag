@@ -1,8 +1,22 @@
+import unittest
+import sys
+import types
 from types import SimpleNamespace
+from unittest.mock import patch
 
-from agents.consulta_normativa.langchain_rag.validation.self_refine import (
-    self_refine_node,
-)
+from agents.consulta_normativa.langchain_rag.validation.self_refine import self_refine_node
+
+
+EXPECTED_TRACE_KEYS = {
+    "initial_answer",
+    "needs_refinement",
+    "refined",
+    "feedback",
+    "issues",
+    "fallback",
+    "error_stage",
+    "error",
+}
 
 
 class FakeGrader:
@@ -37,7 +51,11 @@ class FakeLLM:
 
         self.grader = FakeGrader(feedback_result)
 
-    def with_structured_output(self, schema):
+    def with_structured_output(
+        self,
+        schema,
+        **kwargs,
+    ):
         self.structured_output_call_count += 1
         return self.grader
 
@@ -51,9 +69,11 @@ class FakeLLM:
 
 
 class BrokenStructuredOutputLLM:
-    """Fake LLM that fails while configuring structured feedback."""
-
-    def with_structured_output(self, schema):
+    def with_structured_output(
+        self,
+        schema,
+        **kwargs,
+    ):
         raise RuntimeError("structured output unavailable")
 
 
@@ -70,238 +90,225 @@ def build_base_state() -> dict:
     }
 
 
-def test_answer_without_issues_is_preserved():
-    llm = FakeLLM(
-        feedback_result={
-            "needs_refinement": False,
-            "feedback": (
-                "La respuesta está respaldada por el contexto y responde "
-                "adecuadamente la pregunta."
-            ),
-            "issues": [],
-        }
-    )
+class SelfRefineNodeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.messages_patch = patch.dict(sys.modules, {"langchain_core.messages": fake_message_module()})
+        self.messages_patch.start()
 
-    node = self_refine_node(llm)
+    def tearDown(self) -> None:
+        self.messages_patch.stop()
 
-    state = build_base_state()
-    initial_answer = state["answer"]
+    def assertCompleteTrace(self, trace: dict) -> None:
+        self.assertEqual(set(trace), EXPECTED_TRACE_KEYS)
 
-    result = node(state)
+    def test_answer_without_issues_is_preserved(self):
+        llm = FakeLLM(
+            feedback_result={
+                "needs_refinement": False,
+                "feedback": "La respuesta está respaldada por el contexto y responde adecuadamente la pregunta.",
+                "issues": [],
+            }
+        )
 
-    assert result["answer"] == initial_answer
+        node = self_refine_node(llm)
 
-    trace = result["self_refine_trace"]
+        state = build_base_state()
+        initial_answer = state["answer"]
 
-    assert trace["initial_answer"] == initial_answer
-    assert trace["needs_refinement"] is False
-    assert trace["refined"] is False
-    assert trace["issues"] == []
-    assert trace["fallback"] is False
-    assert trace["error_stage"] is None
-    assert trace["error"] is None
+        result = node(state)
 
-    # Feedback is evaluated once.
-    assert llm.grader.call_count == 1
+        self.assertEqual(result["answer"], initial_answer)
 
-    # Refinement must NOT be invoked when the answer is already acceptable.
-    assert llm.refinement_call_count == 0
+        trace = result["self_refine_trace"]
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], False)
+        self.assertIs(trace["refined"], False)
+        self.assertEqual(trace["issues"], [])
+        self.assertIs(trace["fallback"], False)
+        self.assertIsNone(trace["error_stage"])
+        self.assertIsNone(trace["error"])
 
+        self.assertEqual(llm.grader.call_count, 1)
+        self.assertEqual(llm.refinement_call_count, 0)
 
-def test_answer_with_issues_is_refined():
-    llm = FakeLLM(
-        feedback_result={
-            "needs_refinement": True,
-            "feedback": (
-                "La respuesta indica un plazo incorrecto. "
-                "Debe corregirse utilizando el fragmento [1]."
-            ),
-            "issues": [
-                "El plazo indicado no coincide con la evidencia recuperada."
-            ],
-        },
-        refinement_result=(
+    def test_answer_with_issues_is_refined(self):
+        expected_refined_answer = (
             "La investigación debe realizarse dentro de los "
             "quince (15) días siguientes a la ocurrencia del evento [1]."
-        ),
-    )
+        )
+        llm = FakeLLM(
+            feedback_result={
+                "needs_refinement": True,
+                "feedback": "La respuesta indica un plazo incorrecto. Debe corregirse utilizando el fragmento [1].",
+                "issues": ["El plazo indicado no coincide con la evidencia recuperada."],
+            },
+            refinement_result=expected_refined_answer,
+        )
 
-    node = self_refine_node(llm)
+        node = self_refine_node(llm)
 
-    state = build_base_state()
-    state["answer"] = (
-        "La investigación debe realizarse dentro de treinta (30) días [1]."
-    )
+        state = build_base_state()
+        state["answer"] = "La investigación debe realizarse dentro de treinta (30) días [1]."
+        initial_answer = state["answer"]
 
-    initial_answer = state["answer"]
+        result = node(state)
 
-    result = node(state)
+        trace = result["self_refine_trace"]
 
-    expected_refined_answer = (
-        "La investigación debe realizarse dentro de los "
-        "quince (15) días siguientes a la ocurrencia del evento [1]."
-    )
+        self.assertEqual(result["answer"], expected_refined_answer)
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], True)
+        self.assertIs(trace["refined"], True)
+        self.assertTrue(trace["feedback"])
+        self.assertEqual(trace["issues"], ["El plazo indicado no coincide con la evidencia recuperada."])
+        self.assertIs(trace["fallback"], False)
+        self.assertIsNone(trace["error_stage"])
+        self.assertIsNone(trace["error"])
+        self.assertEqual(llm.grader.call_count, 1)
+        self.assertEqual(llm.refinement_call_count, 1)
 
-    assert result["answer"] == expected_refined_answer
+    def test_feedback_failure_preserves_initial_answer(self):
+        llm = FakeLLM(feedback_result=RuntimeError("feedback unavailable"))
 
-    trace = result["self_refine_trace"]
+        node = self_refine_node(llm)
 
-    assert trace["initial_answer"] == initial_answer
-    assert trace["needs_refinement"] is True
-    assert trace["refined"] is True
-    assert trace["feedback"]
-    assert trace["issues"] == [
-        "El plazo indicado no coincide con la evidencia recuperada."
-    ]
-    assert trace["fallback"] is False
-    assert trace["error_stage"] is None
-    assert trace["error"] is None
+        state = build_base_state()
+        initial_answer = state["answer"]
 
-    assert llm.grader.call_count == 1
-    assert llm.refinement_call_count == 1
+        result = node(state)
+        trace = result["self_refine_trace"]
 
+        self.assertEqual(result["answer"], initial_answer)
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], False)
+        self.assertIs(trace["refined"], False)
+        self.assertIs(trace["fallback"], True)
+        self.assertEqual(trace["error_stage"], "feedback")
+        self.assertEqual(trace["error"], "RuntimeError")
+        self.assertEqual(llm.refinement_call_count, 0)
 
-def test_feedback_failure_preserves_initial_answer():
-    llm = FakeLLM(
-        feedback_result=RuntimeError("feedback unavailable")
-    )
+    def test_structured_output_failure_preserves_initial_answer(self):
+        llm = BrokenStructuredOutputLLM()
 
-    node = self_refine_node(llm)
+        node = self_refine_node(llm)
 
-    state = build_base_state()
-    initial_answer = state["answer"]
+        state = build_base_state()
+        initial_answer = state["answer"]
 
-    result = node(state)
+        result = node(state)
+        trace = result["self_refine_trace"]
 
-    assert result["answer"] == initial_answer
+        self.assertEqual(result["answer"], initial_answer)
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], False)
+        self.assertIs(trace["refined"], False)
+        self.assertIs(trace["fallback"], True)
+        self.assertEqual(trace["error_stage"], "feedback_configuration")
+        self.assertEqual(trace["error"], "RuntimeError")
 
-    trace = result["self_refine_trace"]
+    def test_refinement_failure_preserves_initial_answer(self):
+        llm = FakeLLM(
+            feedback_result={
+                "needs_refinement": True,
+                "feedback": "La respuesta debe corregirse.",
+                "issues": ["La respuesta contiene información incorrecta."],
+            },
+            refinement_result=RuntimeError("refinement unavailable"),
+        )
 
-    assert trace["initial_answer"] == initial_answer
-    assert trace["refined"] is False
-    assert trace["fallback"] is True
-    assert trace["error_stage"] == "feedback"
-    assert trace["error"] == "RuntimeError"
+        node = self_refine_node(llm)
+        state = build_base_state()
+        initial_answer = state["answer"]
 
-    assert llm.refinement_call_count == 0
+        result = node(state)
+        trace = result["self_refine_trace"]
 
+        self.assertEqual(result["answer"], initial_answer)
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], True)
+        self.assertIs(trace["refined"], False)
+        self.assertIs(trace["fallback"], True)
+        self.assertEqual(trace["error_stage"], "refinement")
+        self.assertEqual(trace["error"], "RuntimeError")
+        self.assertEqual(trace["issues"], ["La respuesta contiene información incorrecta."])
+        self.assertEqual(llm.refinement_call_count, 1)
 
-def test_structured_output_failure_preserves_initial_answer():
-    llm = BrokenStructuredOutputLLM()
+    def test_empty_initial_answer_does_not_call_llm(self):
+        llm = FakeLLM(
+            feedback_result={
+                "needs_refinement": False,
+                "feedback": "No debería ejecutarse.",
+                "issues": [],
+            }
+        )
 
-    node = self_refine_node(llm)
+        node = self_refine_node(llm)
+        state = build_base_state()
+        state["answer"] = ""
 
-    state = build_base_state()
-    initial_answer = state["answer"]
+        result = node(state)
+        trace = result["self_refine_trace"]
 
-    result = node(state)
+        self.assertEqual(result["answer"], "")
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], "")
+        self.assertIs(trace["needs_refinement"], False)
+        self.assertIs(trace["refined"], False)
+        self.assertEqual(trace["feedback"], "")
+        self.assertEqual(trace["issues"], [])
+        self.assertIs(trace["fallback"], True)
+        self.assertEqual(trace["error_stage"], "input")
+        self.assertEqual(trace["error"], "EmptyInitialAnswer")
+        self.assertEqual(llm.structured_output_call_count, 0)
+        self.assertEqual(llm.grader.call_count, 0)
+        self.assertEqual(llm.refinement_call_count, 0)
 
-    assert result["answer"] == initial_answer
+    def test_empty_refined_answer_preserves_initial_answer(self):
+        llm = FakeLLM(
+            feedback_result={
+                "needs_refinement": True,
+                "feedback": "La respuesta debe corregirse.",
+                "issues": ["Existe una afirmación no respaldada."],
+            },
+            refinement_result="   ",
+        )
 
-    trace = result["self_refine_trace"]
+        node = self_refine_node(llm)
+        state = build_base_state()
+        initial_answer = state["answer"]
 
-    assert trace["initial_answer"] == initial_answer
-    assert trace["refined"] is False
-    assert trace["fallback"] is True
-    assert trace["error_stage"] == "feedback_configuration"
-    assert trace["error"] == "RuntimeError"
+        result = node(state)
+        trace = result["self_refine_trace"]
 
-
-def test_refinement_failure_preserves_initial_answer():
-    llm = FakeLLM(
-        feedback_result={
-            "needs_refinement": True,
-            "feedback": "La respuesta debe corregirse.",
-            "issues": [
-                "La respuesta contiene información incorrecta."
-            ],
-        },
-        refinement_result=RuntimeError("refinement unavailable"),
-    )
-
-    node = self_refine_node(llm)
-
-    state = build_base_state()
-    initial_answer = state["answer"]
-
-    result = node(state)
-
-    assert result["answer"] == initial_answer
-
-    trace = result["self_refine_trace"]
-
-    assert trace["initial_answer"] == initial_answer
-    assert trace["needs_refinement"] is True
-    assert trace["refined"] is False
-    assert trace["fallback"] is True
-    assert trace["error_stage"] == "refinement"
-    assert trace["error"] == "RuntimeError"
-
-    assert trace["issues"] == [
-        "La respuesta contiene información incorrecta."
-    ]
-
-    assert llm.refinement_call_count == 1
-
-
-def test_empty_initial_answer_does_not_call_llm():
-    llm = FakeLLM(
-        feedback_result={
-            "needs_refinement": False,
-            "feedback": "No debería ejecutarse.",
-            "issues": [],
-        }
-    )
-
-    node = self_refine_node(llm)
-
-    state = build_base_state()
-    state["answer"] = ""
-
-    result = node(state)
-
-    trace = result["self_refine_trace"]
-
-    assert "answer" not in result
-    assert trace["needs_refinement"] is False
-    assert trace["refined"] is False
-    assert trace["fallback"] is True
-    assert trace["error_stage"] == "input"
-    assert trace["error"] == "EmptyInitialAnswer"
-
-    assert llm.structured_output_call_count == 0
-    assert llm.grader.call_count == 0
-    assert llm.refinement_call_count == 0
+        self.assertEqual(result["answer"], initial_answer)
+        self.assertCompleteTrace(trace)
+        self.assertEqual(trace["initial_answer"], initial_answer)
+        self.assertIs(trace["needs_refinement"], True)
+        self.assertIs(trace["refined"], False)
+        self.assertIs(trace["fallback"], True)
+        self.assertEqual(trace["error_stage"], "refinement")
+        self.assertEqual(trace["error"], "ValueError")
+        self.assertEqual(llm.refinement_call_count, 1)
 
 
-def test_empty_refined_answer_preserves_initial_answer():
-    llm = FakeLLM(
-        feedback_result={
-            "needs_refinement": True,
-            "feedback": "La respuesta debe corregirse.",
-            "issues": [
-                "Existe una afirmación no respaldada."
-            ],
-        },
-        refinement_result="   ",
-    )
+def fake_message_module() -> object:
+    """Return fake LangChain message classes for lazy-import tests."""
 
-    node = self_refine_node(llm)
+    class SystemMessage:
+        def __init__(self, content: str) -> None:
+            self.content = content
 
-    state = build_base_state()
-    initial_answer = state["answer"]
+    class HumanMessage:
+        def __init__(self, content: str) -> None:
+            self.content = content
 
-    result = node(state)
+    return types.SimpleNamespace(SystemMessage=SystemMessage, HumanMessage=HumanMessage)
 
-    assert result["answer"] == initial_answer
 
-    trace = result["self_refine_trace"]
-
-    assert trace["initial_answer"] == initial_answer
-    assert trace["needs_refinement"] is True
-    assert trace["refined"] is False
-    assert trace["fallback"] is True
-    assert trace["error_stage"] == "refinement"
-    assert trace["error"] == "ValueError"
-
-    assert llm.refinement_call_count == 1
+if __name__ == "__main__":
+    unittest.main()

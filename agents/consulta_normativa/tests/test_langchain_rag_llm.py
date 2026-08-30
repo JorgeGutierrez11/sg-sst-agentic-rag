@@ -1,12 +1,19 @@
 """Tests for LangChain RAG LLM helpers."""
 
+import os
+import sys
 import types
 import unittest
 from unittest.mock import patch
 
 import agents.consulta_normativa.langchain_rag as langchain_rag
+from agents.consulta_normativa.langchain_rag.config import (
+    DEEPSEEK_BASE_URL,
+    DEFAULT_DEEPSEEK_MODEL,
+    DEFAULT_TEMPERATURE,
+)
 from agents.consulta_normativa.langchain_rag.core import llm as llm_module
-from agents.consulta_normativa.langchain_rag.core.llm import extract_response_content, invoke_llm_text
+from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm, extract_response_content, invoke_llm_text
 
 
 class LangChainRagLlmTest(unittest.TestCase):
@@ -36,6 +43,50 @@ class LangChainRagLlmTest(unittest.TestCase):
 
     def test_package_exports_build_groq_llm_from_core_path(self) -> None:
         self.assertIs(langchain_rag.build_groq_llm, llm_module.build_groq_llm)
+
+    def test_package_exports_build_deepseek_llm_from_core_path(self) -> None:
+        self.assertIs(langchain_rag.build_deepseek_llm, llm_module.build_deepseek_llm)
+
+    def test_build_deepseek_llm_requires_api_key(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(ValueError) as context:
+                build_deepseek_llm()
+
+        self.assertIn("DEEPSEEK_API_KEY is not configured", str(context.exception))
+
+    def test_build_deepseek_llm_reports_missing_langchain_openai(self) -> None:
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}):
+            with patch.dict(sys.modules, {"langchain_openai": None}):
+                with self.assertRaises(ModuleNotFoundError) as context:
+                    build_deepseek_llm()
+
+        self.assertIn("langchain_openai is not installed", str(context.exception))
+
+    def test_build_deepseek_llm_uses_deepseek_openai_compatible_endpoint(self) -> None:
+        calls = []
+
+        class FakeChatOpenAI:
+            def __init__(self, **kwargs: object) -> None:
+                calls.append(kwargs)
+
+        fake_module = types.SimpleNamespace(ChatOpenAI=FakeChatOpenAI)
+
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}):
+            with patch.dict(sys.modules, {"langchain_openai": fake_module}):
+                llm = build_deepseek_llm()
+
+        self.assertIsInstance(llm, FakeChatOpenAI)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "model": DEFAULT_DEEPSEEK_MODEL,
+                    "api_key": "test-key",
+                    "base_url": DEEPSEEK_BASE_URL,
+                    "temperature": DEFAULT_TEMPERATURE,
+                }
+            ],
+        )
 
     def test_build_groq_llm_checks_api_key_before_optional_import(self) -> None:
         with patch.dict("os.environ", {}, clear=True):

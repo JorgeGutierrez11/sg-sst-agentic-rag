@@ -1,207 +1,77 @@
-# Retrieval Relevance Grading para validación de evidencia normativa
+# Retrieval Relevance Grading para evidencia normativa
 
-Retrieval Relevance Grading es una técnica experimental de validación posterior a la recuperación. Evalúa individualmente los documentos recuperados por el RAG y elimina aquellos que no aportan evidencia útil para responder la pregunta original del usuario antes de construir el contexto enviado al LLM.
+Retrieval Relevance Grading valida si cada documento recuperado aporta evidencia útil para responder la pregunta original del usuario. La técnica filtra documentos irrelevantes antes de construir el contexto que recibirá el LLM.
 
-La implementación toma como referencia el concepto de *retrieval evaluator* utilizado en Corrective Retrieval-Augmented Generation (CRAG), pero no implementa la arquitectura CRAG completa.
+La implementación está inspirada en el *retrieval evaluator* de Corrective Retrieval-Augmented Generation (CRAG), pero no implementa CRAG completo.
 
 ## Propósito
 
-El baseline del RAG considera que existe evidencia siempre que el retriever devuelva al menos un documento. Este criterio permite que documentos semánticamente cercanos pero irrelevantes lleguen al generador.
+El baseline del RAG considera que hay evidencia cuando Chroma devuelve al menos un documento. Ese criterio puede dejar pasar fragmentos semánticamente cercanos, pero inútiles para la pregunta.
 
-Retrieval Relevance Grading introduce una evaluación explícita entre recuperación y generación:
+Esta técnica agrega una validación explícita:
 
 ```text
-documento recuperado + pregunta original
-                    ↓
-             relevance grader
-                    ↓
-            relevante / irrelevante
+pregunta original + documento recuperado -> relevance grader -> conservar o filtrar
 ```
 
-El objetivo es reducir ruido en el contexto y evitar que la mera existencia de resultados de Chroma sea interpretada como evidencia válida.
-
-La técnica evalúa **relevancia**, no suficiencia. Un documento puede considerarse relevante aunque solo permita responder una parte de la pregunta o necesite complementarse con otros fragmentos.
+Evalúa **relevancia**, no suficiencia. Un documento puede ser relevante aunque solo responda una parte de la pregunta o necesite complementarse con otros fragmentos.
 
 ## Ubicación en el pipeline LangGraph
 
-Para evaluar la técnica de forma aislada, el flujo experimental se construye sobre el retrieval base:
+En el flujo base con esta técnica, el grader se ejecuta después de normalizar documentos y antes de registrar/enrutar la evidencia:
 
 ```text
-question
-   ↓
-retrieve
-   ↓
-normalize_documents
-   ↓
-record_retrieval_trace
-   ↓
-grade_retrieval_relevance
-   ↓
-evidence_route
-   ├── with_evidence ──→ format_context
-   │                     ↓
-   │                build_messages
-   │                     ↓
-   │                generate_answer
-   │
-   └── without_evidence → fallback_answer
-                              ↓
-                         format_result
+retrieve -> normalize_documents -> retrieval_relevance_grading -> record_retrieval_trace
+         -> evidence_route -> format_context/build_messages/generate_answer o fallback_answer
+         -> format_result
 ```
 
-`record_retrieval_trace` se ejecuta antes del grader para conservar información sobre los documentos originalmente recuperados. Posteriormente, `grade_retrieval_relevance` modifica `state["documents"]` y deja únicamente los documentos aceptados.
-
-`evidence_route` no necesita modificarse: después del filtrado, una lista vacía implica que ninguno de los documentos fue considerado utilizable.
+`retrieval_relevance_grading` modifica `state["documents"]`: conserva los documentos aceptados y elimina los rechazados. Luego `evidence_route` puede reutilizar el contrato existente: si queda al menos un documento, continúa con generación; si no queda evidencia utilizable, usa fallback.
 
 Archivos principales:
 
-* `agents/consulta_normativa/langchain_rag/validation/retrieval_relevance_grading.py`
-* `agents/consulta_normativa/langchain_rag/graph.py`
-* `agents/consulta_normativa/langchain_rag/core/state.py`
-* `agents/consulta_normativa/tests/test_retrieval_relevance_grading.py`
+- `agents/consulta_normativa/langchain_rag/validation/retrieval_relevance_grading.py`
+- `agents/consulta_normativa/langchain_rag/graph.py`
+- `agents/consulta_normativa/langchain_rag/core/state.py`
+- `agents/consulta_normativa/tests/test_retrieval_relevance_grading.py`
 
 ## Resumen de implementación
 
-La técnica se divide en las siguientes piezas:
+| Pieza | Responsabilidad |
+|---|---|
+| `RelevanceGrade` | Modelo Pydantic con `relevant: bool` y `reason: str`. |
+| `retrieval_relevance_grading_node(llm)` | Nodo LangGraph que evalúa documentos, filtra irrelevantes y escribe trazas. |
+| `grade_document_relevance(...)` | Invoca el grader estructurado para un documento. |
+| `build_relevance_grading_messages(...)` | Construye los mensajes con pregunta original, metadata y contenido. |
+| `format_relevance_metadata(...)` | Selecciona metadata normativa útil para el juicio. |
+| `relevance_grading_fallback(...)` | Conserva documentos cuando falla la configuración del grader. |
 
-| Pieza                                   | Responsabilidad                                                                                                   |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `RelevanceGrade`                        | Define mediante Pydantic la salida estructurada del grader: decisión booleana y justificación.                    |
-| `RETRIEVAL_RELEVANCE_SYSTEM_PROMPT`     | Define qué significa relevancia dentro del dominio normativo SG-SST y separa relevancia de suficiencia.           |
-| `retrieval_relevance_grading_node(llm)` | Construye el nodo LangGraph, evalúa cada documento, filtra los irrelevantes y genera la traza.                    |
-| `grade_document_relevance(...)`         | Invoca el grader para un único par pregunta-documento y valida la salida estructurada.                            |
-| `build_relevance_grading_messages(...)` | Construye los mensajes enviados al LLM usando la pregunta original, metadata normativa y contenido del documento. |
-| `format_relevance_metadata(...)`        | Selecciona metadata normativa útil para apoyar la decisión del grader.                                            |
-| `build_document_trace(...)`             | Registra la decisión, motivo, fuente, artículo, fallback y error de cada documento.                               |
-| `relevance_grading_fallback(...)`       | Conserva los documentos cuando no puede inicializarse el grader estructurado.                                     |
+El grader usa `state["question"]`, no `state["retrieval_query"]`, porque la relevancia se evalúa contra la necesidad original del usuario.
 
-## Salida estructurada
+## Criterios de relevancia
 
-El grader utiliza Pydantic para impedir que la lógica del grafo dependa de texto libre:
+Un documento es **relevante** cuando contiene información normativa que contribuye directamente a responder al menos una parte de la pregunta.
 
-```python
-class RelevanceGrade(BaseModel):
-    relevant: bool
-    reason: str
-```
+Un documento es **no relevante** cuando:
 
-Los campos tienen las siguientes funciones:
+- solo comparte vocabulario general de SG-SST;
+- menciona términos de la pregunta sin aportar evidencia útil;
+- trata una obligación, sujeto, procedimiento o situación diferente;
+- pertenece a la misma norma, pero el fragmento concreto no ayuda a responder;
+- requiere inferencias no respaldadas por su contenido.
 
-| Campo      | Uso                                                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------------------- |
-| `relevant` | Indica si el documento aporta evidencia directamente relacionada con al menos una parte de la pregunta. |
-| `reason`   | Explicación breve de la decisión basada exclusivamente en la pregunta y el documento recuperado.        |
-
-No se utiliza un score numérico de relevancia. La decisión es binaria para evitar introducir umbrales sobre puntuaciones de LLM no calibradas.
-
-## Criterio de relevancia
-
-El grader considera un documento **relevante** cuando contiene información normativa que contribuye directamente a responder al menos una parte de la pregunta.
-
-Puede seguir siendo relevante aunque:
-
-* no permita responder completamente la consulta;
-* responda únicamente uno de varios elementos solicitados;
-* necesite complementarse con otros documentos;
-* corresponda a un fragmento parcial de una disposición normativa.
-
-Un documento se considera **no relevante** cuando:
-
-* únicamente comparte vocabulario general relacionado con SG-SST;
-* contiene palabras presentes en la pregunta pero no aporta evidencia útil;
-* trata una obligación, sujeto, procedimiento o situación distinta;
-* pertenece a la misma norma consultada, pero el fragmento concreto no contribuye a responder;
-* su relación con la pregunta depende de información que no aparece en el fragmento.
-
-Esta separación es importante porque Retrieval Relevance Grading no determina si el contexto completo es suficiente para responder. Esa responsabilidad corresponde a una técnica posterior de `Answerability / Sufficient-Context Gate`.
-
-## Pregunta usada para la evaluación
-
-El grader utiliza:
-
-```python
-state["question"]
-```
-
-y no:
-
-```python
-state["retrieval_query"]
-```
-
-La decisión se toma contra la necesidad original expresada por el usuario.
-
-Esto evita que un error introducido por una técnica previa de transformación de consulta se propague también al mecanismo de validación.
-
-## Evaluación individual de documentos
-
-Los documentos se califican individualmente:
-
-```text
-documents = [D1, D2, D3, D4, D5]
-
-D1 → relevante
-D2 → irrelevante
-D3 → relevante
-D4 → irrelevante
-D5 → relevante
-
-documents final = [D1, D3, D5]
-```
-
-Evaluar cada documento por separado permite eliminar evidencia ruidosa sin descartar un conjunto completo porque algunos de sus elementos sean irrelevantes.
-
-Los nodos posteriores continúan usando el contrato existente:
-
-```python
-state["documents"]
-```
-
-No se crea un campo separado como `relevant_documents`.
-
-## Metadata entregada al grader
-
-Además del texto del documento, el grader puede recibir metadata normativa seleccionada:
-
-* fuente;
-* tipo normativo;
-* año;
-* título;
-* capítulo;
-* artículo;
-* parágrafo;
-* numeral;
-* literal.
-
-La metadata se utiliza como información auxiliar para interpretar correctamente el fragmento. No reemplaza el contenido documental ni hace que un fragmento sea relevante por pertenecer a una norma determinada.
-
-## Decisiones y guardrails importantes
-
-| Aspecto                     | Implementación actual                                                                                                      |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Unidad evaluada             | Cada `RetrievedDocument` se evalúa individualmente.                                                                        |
-| Pregunta utilizada          | Se utiliza `state["question"]`, es decir, la pregunta original del usuario.                                                |
-| Salida del LLM              | `RelevanceGrade` mediante `with_structured_output(...)`.                                                                   |
-| Relevancia vs. suficiencia  | El prompt prohíbe decidir si el documento responde completamente la pregunta.                                              |
-| Uso de conocimiento externo | El grader debe decidir únicamente a partir de la pregunta y el documento recibido.                                         |
-| Coincidencia léxica         | Compartir términos de SG-SST no es suficiente para considerar relevante un fragmento.                                      |
-| Documento relevante         | Se conserva en `state["documents"]`.                                                                                       |
-| Documento irrelevante       | Se elimina antes de construir el contexto.                                                                                 |
-| Error del grader            | Política `fail-open`: el documento se conserva para evitar descartar evidencia potencialmente válida por un fallo técnico. |
-| Reintentos                  | La implementación actual no realiza retries.                                                                               |
-| Observabilidad              | Cada decisión conserva `relevant`, `reason`, `fallback`, `error`, fuente y artículo.                                       |
-| CRAG                        | Se implementa únicamente relevance grading inspirado en el retrieval evaluator de CRAG; no CRAG completo.                  |
+La pertenencia al dominio SG-SST o la coincidencia léxica no bastan para conservar un documento.
 
 ## Campos de estado
 
-| Campo                     | Uso                                                                     |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `question`                | Pregunta original contra la cual se evalúa cada documento.              |
-| `documents`               | Documentos recuperados de entrada y documentos aceptados de salida.     |
-| `retrieval_traces`        | Información registrada antes del grader sobre la recuperación original. |
-| `relevance_grading_trace` | Traza de decisiones realizadas por el grader.                           |
+| Campo | Uso |
+|---|---|
+| `question` | Pregunta original usada por el grader. |
+| `documents` | Entrada: documentos recuperados. Salida: documentos conservados. |
+| `relevance_grading_trace` | Conteos y decisiones por documento. |
+| `retrieval_traces` | Trazas posteriores de recuperación/evidencia usadas por el grafo. |
 
-`relevance_grading_trace` contiene información agregada y decisiones por documento:
+Ejemplo de `relevance_grading_trace`:
 
 ```python
 {
@@ -213,10 +83,10 @@ La metadata se utiliza como información auxiliar para interpretar correctamente
         {
             "index": 0,
             "chroma_id": "...",
-            "source": "Resolución 1401 de 2007",
-            "article": "6°",
+            "source": "resolucion_1401_2007",
+            "article": "6",
             "relevant": True,
-            "reason": "...",
+            "reason": "El fragmento indica responsabilidades sobre investigación de accidentes.",
             "fallback": False,
             "error": None,
         }
@@ -224,227 +94,23 @@ La metadata se utiliza como información auxiliar para interpretar correctamente
 }
 ```
 
-En la implementación actual, los documentos conservados mediante `fail-open` también forman parte de `documents` y del conteo de documentos aceptados. Por ello, `fallback_count` debe utilizarse para distinguir decisiones positivas del grader de documentos preservados debido a errores técnicos.
+## Fallbacks y guardrails
 
-## Fallos y comportamiento fallback
+La técnica usa una política conservadora: un fallo técnico del grader no debe descartar evidencia normativa potencialmente válida.
 
-La técnica utiliza una política conservadora de tipo `fail-open`.
+| Caso | Comportamiento |
+|---|---|
+| No hay documentos | Devuelve `documents=[]` y traza con conteos en cero. |
+| Falla `with_structured_output(...)` | Conserva todos los documentos y marca fallback global. |
+| Falla un documento individual | Conserva ese documento y marca fallback individual. |
+| Todos son rechazados | Conserva el primer documento original como fallback conservador. |
 
-### Fallo al inicializar structured output
+El último guardrail evita que un juicio LLM convierta una recuperación no vacía en ausencia total de evidencia.
 
-Si:
-
-```python
-llm.with_structured_output(RelevanceGrade)
-```
-
-produce una excepción, la técnica conserva todos los documentos recuperados.
-
-Conceptualmente:
-
-```text
-grader no disponible
-        ↓
-conservar documentos originales
-        ↓
-continuar pipeline
-```
-
-La traza registra:
-
-```python
-{
-    "fallback": True,
-    "error": type(error).__name__,
-    ...
-}
-```
-
-### Fallo al evaluar un documento
-
-Si falla únicamente la evaluación de un documento:
-
-```text
-D1 → relevante
-D2 → ERROR
-D3 → irrelevante
-```
-
-el resultado es:
-
-```text
-D1 → conservar
-D2 → conservar por fail-open
-D3 → eliminar
-```
-
-La decisión sobre `D2` queda registrada como:
-
-```python
-{
-    "relevant": True,
-    "fallback": True,
-    "reason": "Documento conservado por política fail-open debido a un error del grader.",
-    "error": "...",
-}
-```
-
-Un error técnico del evaluador no se interpreta como evidencia de irrelevancia.
-
-## Routing posterior
-
-La técnica reutiliza `evidence_route`.
-
-Después del filtrado:
-
-```python
-state["documents"] = relevant_documents
-```
-
-Si la lista contiene al menos un documento:
-
-```text
-with_evidence → format_context
-```
-
-Si todos los documentos fueron rechazados:
-
-```text
-without_evidence → fallback_answer
-```
-
-Esto reemplaza operativamente el criterio anterior de:
-
-```text
-"Chroma devolvió documentos"
-```
-
-por:
-
-```text
-"quedó al menos un documento después de validar relevancia"
-```
-
-sin modificar la implementación de `evidence_route`.
-
-## Observabilidad
-
-Durante ejecución real se registra una línea por documento:
-
-```text
-Relevance grading | doc=1 | source=Resolución 1401 de 2007 | article=6° | relevant=True | reason=...
-```
-
-y un resumen:
-
-```text
-Relevance grading summary | retrieved=5 | accepted=3 | rejected=2 | fallback=0
-```
-
-Esto permite inspeccionar:
-
-* qué documentos recuperó originalmente Chroma;
-* cuáles fueron aceptados;
-* cuáles fueron rechazados;
-* por qué se tomó cada decisión;
-* cuáles fueron conservados exclusivamente por fallback.
-
-La instrumentación es especialmente útil para detectar graders demasiado permisivos o demasiado restrictivos.
-
-## Pruebas implementadas
-
-La técnica cuenta con pruebas unitarias aisladas del RAG real.
-
-Casos cubiertos:
-
-1. conserva documentos marcados como relevantes;
-2. elimina documentos marcados como irrelevantes;
-3. conserva documentos cuando falla el grader;
-4. maneja correctamente una entrada sin documentos.
-
-Las pruebas usan dobles de prueba (`FakeLLM` y `FakeGrader`), por lo que no requieren:
-
-* Chroma;
-* Groq;
-* modelo de embeddings;
-* conexión a Internet;
-* ejecución completa de LangGraph.
-
-Comando:
-
-```bash
-python -m pytest agents/consulta_normativa/tests/test_retrieval_relevance_grading.py -v
-```
-
-Resultado observado durante implementación:
-
-```text
-3 passed
-```
-
-## Validación manual del flujo
-
-La técnica también fue ejecutada dentro del RAG real mediante:
-
-```bash
-python -m agents.consulta_normativa.langchain_rag.main
-```
-
-Se utilizaron dos tipos de consultas.
-
-### Consulta dentro del dominio
-
-```text
-¿Quién debe investigar los accidentes de trabajo?
-```
-
-El pipeline conservó evidencia normativa relacionada con la investigación de accidentes y permitió continuar hacia generación de respuesta.
-
-### Consulta fuera del dominio
-
-```text
-¿Cuáles son los requisitos para renovar un pasaporte colombiano?
-```
-
-Aunque el retriever produjo candidatos, el grader rechazó la evidencia recuperada y el grafo terminó en el fallback:
-
-```text
-La evidencia recuperada es insuficiente para responder la pregunta.
-```
-
-Este caso permite comprobar la diferencia entre recuperar documentos por similitud y disponer realmente de evidencia relevante.
-
-## Notas operativas
-
-* Con `top_k = 5`, la implementación puede realizar hasta cinco llamadas adicionales al LLM por consulta, una por documento recuperado.
-* El coste y latencia crecen aproximadamente con el número de documentos evaluados.
-* La técnica no debe confundirse con reranking: no reordena documentos mediante scores, sino que decide cuáles continúan.
-* Tampoco debe confundirse con Answerability: conservar documentos relevantes no implica que el conjunto sea suficiente para responder completamente la pregunta.
-* El grader es un componente probabilístico y puede producir falsos positivos o falsos negativos.
-* La política `fail-open` prioriza no perder evidencia normativa ante fallos técnicos del evaluador.
 
 ## Ejemplo de integración en LangGraph
-state.py
-```python
-class RagGraphState(TypedDict, total=False):
-    """State passed through the minimal LangGraph RAG flow."""
 
-    question: str
-    raw_results: dict[str, Any]
-    documents: list[RetrievedDocument]
-    retrieval_traces: list[dict[str, Any]]
-    context: str
-    references: list[str]
-    messages: list[Any]
-    prompt: str
-    answer: str
-    result: LangChainRagResult
-
-    # Retrieval Relevance Grading
-    relevance_grading_trace: dict[str, Any]
-
-```
-grap.py
+Este ejemplo muestra el flujo base más el nuevo nodo. No incluye variantes adicionales como expansión de parent documents.
 
 ```python
 """LangGraph RAG flow for normative consultation."""
@@ -460,15 +126,19 @@ from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
-from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
 
-#VALIDACION DE RELEVANCIA DE DOCUMENTOS RECUPERADOS
-from agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading import (retrieval_relevance_grading_node)
+# importar nodo de perfil de negocio y nodo de historial de conversación
+from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
+from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
+# tecnica retrieval_relevance_grading_node
+from agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading import retrieval_relevance_grading_node            
 
-Retriever = Callable[[str, int], dict[str, Any]]
 
 
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
+Retriever = Callable[[str, int], dict[str, Any]] 
+
+# se agregó checkpointer: Any | None = None, para permitir la integración con un sistema de checkpointing
+def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K, checkpointer: Any | None = None,) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -480,50 +150,73 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow = StateGraph(RagGraphState)
     
 
+    workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
+  
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
 
-    #VALIDACION DE RELEVANCIA DE DOCUMENTOS RECUPERADOS
-    workflow.add_node("grade_retrieval_relevance",retrieval_relevance_grading_node(llm))
+    
+    # Retrieval Relevance Grading
+    workflow.add_node("retrieval_relevance_grading",retrieval_relevance_grading_node(llm),)
 
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
+
+    
+
+
+
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
+
+    workflow.add_node("save_conversation_turn", save_conversation_turn_node) # Agregar nodo de historial de conversación
+
+
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("retrieve")
+    #workflow.set_entry_point("retrieve")
+    workflow.set_entry_point("business_profile")
+    workflow.add_edge("business_profile", "retrieve")
+    
     
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
+
+    # Retrieval Relevance Grading
+    workflow.add_edge("record_retrieval_trace","retrieval_relevance_grading")
     
-    #VALIDACION DE RELEVANCIA DE DOCUMENTOS RECUPERADOS
-    workflow.add_edge("record_retrieval_trace","grade_retrieval_relevance")
     workflow.add_conditional_edges(
-        "grade_retrieval_relevance",
+        "retrieval_relevance_grading", # Nodo de calificación de relevancia
         evidence_route,
-        {
-            "with_evidence": "format_context",
-            "without_evidence": "fallback_answer",
-        },
-    )
+        {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
+    
+    
+    workflow.add_edge("fallback_answer","save_conversation_turn")
 
-
-
-    workflow.add_edge("fallback_answer", "format_result")
     workflow.add_edge("format_context", "build_messages")
+
+
+
     workflow.add_edge("build_messages", "generate_answer")
-    workflow.add_edge("generate_answer", "format_result")
+
+    workflow.add_edge("generate_answer","save_conversation_turn")
+    workflow.add_edge("save_conversation_turn","format_result")
+
+
     workflow.add_edge("format_result", END)
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer,) #se agregó checkpointer=checkpointer, para permitir la integración con un sistema de checkpointing
 
-
-def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
+# se agregó thread_id: str | None = None,
+def answer_with_langgraph(question: str, graph: Any, thread_id: str | None = None,) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
-    state = graph.invoke({"question": question})
+    if thread_id is None:
+        state = graph.invoke({"question": question}) # si no hay un thread_id, se invoca el grafo sin configuración adicional
+    else:
+        state = graph.invoke({"question": question},{"configurable": {"thread_id": thread_id,}},) #se agrea por si hay un thread_id, se pasa como parte de la configuración del grafo
+
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")
@@ -618,4 +311,9 @@ def format_result_node(state: RagGraphState) -> RagGraphState:
 
 ```
 
-Durante la evaluación aislada de esta técnica, otras técnicas experimentales de comprensión de consulta, recuperación o validación deben permanecer desactivadas para evitar atribuir sus efectos a Retrieval Relevance Grading.
+## Notas operativas
+
+- La técnica puede realizar una llamada LLM adicional por documento recuperado.
+- No es reranking: no reordena documentos ni calcula scores calibrados.
+- No reemplaza un `Sufficient Context Gate`: conservar documentos relevantes no prueba que el conjunto baste para responder toda la pregunta.
+- Debe evaluarse de forma aislada frente al baseline para medir precisión, recall, latencia y efecto en fidelidad de respuesta.

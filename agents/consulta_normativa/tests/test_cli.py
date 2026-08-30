@@ -9,7 +9,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch
 
-from agents.consulta_normativa import main as cli
+from agents.consulta_normativa.manual_implementation import main as cli
 
 
 class ConsultaNormativaCliTest(unittest.TestCase):
@@ -134,7 +134,7 @@ class ConsultaNormativaCliTest(unittest.TestCase):
         )
         self.assertIn("RAG normativo listo", stdout.getvalue())
         self.assertIn("Respuesta:\nGenerated answer.\n", stdout.getvalue())
-        self.assertNotIn("Referencias:", stdout.getvalue())
+        self.assertIn("Referencias:\n- Decreto 1072 (decreto)", stdout.getvalue())
 
     def test_blank_input_is_ignored(self) -> None:
         runtime = self.build_runtime(answer_question=lambda question, retriever, **kwargs: self.fail("Blank input ran RAG"))

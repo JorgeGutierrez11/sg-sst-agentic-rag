@@ -5,6 +5,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, Field
 
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
@@ -21,31 +22,30 @@ class ContextSufficiency(str, Enum):
 
 
 class SufficientContextGrade(BaseModel):
-    """Structured assessment of whether the context can answer the question."""
+    """Evaluación estructurada sobre si el contexto puede responder la pregunta."""
 
     level: ContextSufficiency = Field(
         description=(
-            "Whether the retrieved context is sufficient, partially sufficient, "
-            "or insufficient to answer the user's original question."
+            "Indica si el contexto recuperado es suficiente, parcialmente suficiente "
+            "o insuficiente para responder la pregunta original del usuario."
         )
     )
 
     reason: str = Field(
         description=(
-            "Brief explanation of the sufficiency decision based only on "
-            "the user's question and the retrieved context."
+            "Explicación breve de la decisión de suficiencia basada únicamente en "
+            "la pregunta del usuario y el contexto recuperado."
         )
     )
 
     missing_information: list[str] = Field(
         default_factory=list,
         description=(
-            "Specific information requested by the user that is not supported "
-            "by the retrieved context. Empty when the context is sufficient."
+            "Información específica solicitada por el usuario que no está respaldada "
+            "por el contexto recuperado. Debe estar vacía cuando el contexto sea suficiente."
         ),
     )
-
-
+    
 SUFFICIENT_CONTEXT_SYSTEM_PROMPT = """
 Eres un evaluador de suficiencia de contexto para un sistema RAG de consulta
 normativa sobre el Sistema de Gestión de Seguridad y Salud en el Trabajo
@@ -89,6 +89,24 @@ REGLAS IMPORTANTES
   vocabulario distinto.
 - En PARTIAL e INSUFFICIENT, identifica de forma concreta qué información falta.
 - En SUFFICIENT, missing_information debe quedar vacío.
+- Devuelve reason y missing_information siempre en español.
+
+FORMATO DE SALIDA
+
+Devuelve exclusivamente un objeto JSON válido con esta estructura:
+
+{
+    "level": "sufficient",
+    "reason": "Explicación breve de la decisión.",
+    "missing_information": []
+}
+
+El campo "level" solo puede contener:
+- "sufficient"
+- "partial"
+- "insufficient"
+
+No agregues texto, Markdown ni explicaciones fuera del JSON.
 """.strip()
 
 
@@ -116,7 +134,10 @@ def sufficient_context_gate_node(
             }
 
         try:
-            grader = llm.with_structured_output(SufficientContextGrade)
+            grader = llm.with_structured_output(
+                SufficientContextGrade,
+                method="json_mode",
+            )
         except Exception as error:
             logger.error(
                 "Could not configure structured sufficient-context grader: %s",

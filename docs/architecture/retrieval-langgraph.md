@@ -4,7 +4,14 @@ Esta es la implementación actual de consulta normativa. Vive en `agents/consult
 
 ## Operación
 
-Antes de consultar debe existir la colección ChromaDB `sg_sst_base_rag`; su construcción se documenta en [la guía operativa de vectorización](../operations/vectorization.md).
+Antes de consultar deben existir dos índices locales:
+
+| Índice | Ruta | Construcción |
+|---|---|---|
+| ChromaDB `sg_sst_base_rag` | `data/processed/chroma` | [Guía operativa de vectorización](../operations/vectorization.md) |
+| BM25S | `data/processed/bm25` | [Guía operativa de BM25](../operations/bm25-sparse-retrieval.md) |
+
+El runtime abre ambos índices existentes, construye un recuperador híbrido con `agents/shared/hybrid_retrieval.py` y lo pasa a `build_langgraph_rag(..., top_k=RETRIEVAL_TOP_K)`.
 
 Los pasos de ejecución viven en el runbook [`../operations/rag-langgraph.md`](../operations/rag-langgraph.md).
 
@@ -12,12 +19,13 @@ Los pasos de ejecución viven en el runbook [`../operations/rag-langgraph.md`](.
 
 | Archivo | Responsabilidad |
 |---|---|
-| `config.py` | Constantes de Chroma, Groq, temperatura y `top_k`. |
+| `config.py` | Constantes de Chroma, BM25, DeepSeek, temperatura y `top_k`. |
 | `formatting.py` | Normalización de documentos, construcción de contexto y referencias. |
 | `graph.py` | Construcción y ejecución del `StateGraph`. |
-| `main.py` | Entrypoint CLI actual: inicializa dependencias, abre Chroma existente y ejecuta el grafo. |
+| `main.py` | Entrypoint CLI actual: inicializa dependencias, abre Chroma y BM25 existentes, crea el recuperador híbrido y ejecuta el grafo. |
 | `models.py` | Modelos `RetrievedDocument` y `LangChainRagResult`. |
 | `prompts.py` | Instrucciones del sistema y prompt humano. |
+| `agents/shared/hybrid_retrieval.py` | Fusiona resultados Chroma y BM25 con RRF y conserva trazabilidad de fuentes. |
 
 ## Grafo de ejecución
 
@@ -52,7 +60,7 @@ SystemMessage(BASE_SYSTEM_INSTRUCTIONS)
 HumanMessage(build_human_prompt(...))
 ```
 
-Luego invoca el modelo con `llm.invoke(messages)`. El runtime usa Groq con el modelo `openai/gpt-oss-120b` y temperatura `0`.
+Luego invoca el modelo con `llm.invoke(messages)`. El runtime usa DeepSeek con el modelo `deepseek-chat`, base URL `https://api.deepseek.com` y temperatura `0`.
 
 El resultado público es:
 
@@ -80,9 +88,14 @@ Comportamiento visible. Los literales están en inglés porque son las cadenas e
 
 | Aspecto | Contrato |
 |---|---|
+| Recuperación runtime | Híbrida: Chroma + BM25 con fusión RRF. |
 | Colección Chroma | Abre una colección existente; no debe crear una colección vacía durante consulta. |
 | Colección esperada | `sg_sst_base_rag`. |
-| Persistencia esperada | `data/processed/chroma`. |
-| Variable requerida | `GROQ_API_KEY`. |
+| Índice BM25 | Abre un índice existente; no debe crear un índice vacío durante consulta. |
+| Persistencia esperada | `data/processed/chroma` y `data/processed/bm25`. |
+| Top-k final | `RETRIEVAL_TOP_K`; `DEFAULT_TOP_K` queda solo como alias de compatibilidad. |
+| Pool candidato híbrido | `HYBRID_CANDIDATE_TOP_K` por motor antes de fusionar. |
+| Trazabilidad híbrida | Metadata `_retrieval_sources`, por ejemplo `['chroma']`, `['bm25']` o `['chroma', 'bm25']`. |
+| Variable requerida | `DEEPSEEK_API_KEY`. |
 | Evidencia suficiente | Existe al menos un documento recuperado. |
 | Sin evidencia | Respuesta determinística sin invocar el LLM. |

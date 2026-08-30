@@ -177,7 +177,7 @@ class OperationalError(Exception):
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
-    build_groq_llm: Callable[[], Any]
+    build_deepseek_llm: Callable[[], Any]
     #build_langgraph_rag: Callable[[Any, Retriever, int], Any]
     #answer_with_langgraph: Callable[[str, Any], Any]
     build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
@@ -216,12 +216,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_runtime() -> RagRuntime:
-    """Build the Chroma retriever and Groq-backed LLM for the session."""
+    """Build the Chroma retriever and DeepSeek-backed LLM for the session."""
 
     dependencies = load_dependencies()
 
     try:
-        llm = dependencies.build_groq_llm()
+        llm = dependencies.build_deepseek_llm()
     except Exception as error:  # noqa: BLE001 - keep missing key/package/provider errors controlled.
         raise OperationalError(str(error)) from error
 
@@ -255,15 +255,15 @@ def load_dependencies() -> RuntimeDependencies:
     """Load optional runtime dependencies lazily so failures stay controlled."""
 
     try:
-        from agents.consulta_normativa.langchain_rag.core.llm import build_groq_llm
+        from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
         from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
-        from agents.shared.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
     return RuntimeDependencies(
-        build_groq_llm=build_groq_llm,
+        build_deepseek_llm=build_deepseek_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
         chroma_retriever=chroma_retriever,
@@ -349,6 +349,7 @@ def fail(stage: str, error: Exception) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 ```
 
 # graph.py

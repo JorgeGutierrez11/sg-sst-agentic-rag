@@ -50,6 +50,7 @@ class VectorizationDocumentsTest(unittest.TestCase):
         chroma_record = child_chunk_to_chroma(record)
 
         self.assertEqual(chroma_record.id, "child-1")
+        self.assertEqual(chroma_record.metadata["document_id"], "child-1")
         self.assertEqual(chroma_record.metadata["document_type"], "child_chunk")
         self.assertEqual(chroma_record.metadata["source_stem"], "Resolución 0312 de 2019")
         self.assertEqual(chroma_record.metadata["article"], "1")
@@ -76,6 +77,7 @@ class VectorizationDocumentsTest(unittest.TestCase):
         chroma_record = table_document_to_chroma(record)
 
         self.assertEqual(chroma_record.id, "table-resolucion-0312-de-2019-0-part-0001")
+        self.assertEqual(chroma_record.metadata["document_id"], "table-resolucion-0312-de-2019-0-part-0001")
         self.assertEqual(chroma_record.metadata["document_type"], "table")
         self.assertEqual(chroma_record.metadata["table_key"], "Resolución 0312 de 2019:0")
         self.assertEqual(chroma_record.metadata["table_part_index"], 1)

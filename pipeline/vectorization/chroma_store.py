@@ -4,15 +4,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from agents.shared.chroma_retrieval import (
-    DEFAULT_COLLECTION_NAME,
-    open_existing_collection,
-    persistent_client as runtime_persistent_client,
-    query_top_k,
-    qwen_embedding_function,
-)
+from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL
 from pipeline.vectorization.documents import ChromaRecord
 
+DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
 DEFAULT_UPSERT_BATCH_SIZE = 8
 
 ProgressCallback = Callable[[int, int, int], None]
@@ -37,7 +32,19 @@ def persistent_client(persist_path: Path, create_path: bool = False) -> Any:
     if create_path:
         persist_path.mkdir(parents=True, exist_ok=True)
 
-    return runtime_persistent_client(persist_path)
+    # pyrefly: ignore [missing-import]
+    import chromadb
+
+    return chromadb.PersistentClient(path=str(persist_path))
+
+
+def qwen_embedding_function() -> Any:
+    """Return the explicit Qwen embedding function used for SG-SST vectorization."""
+
+    # pyrefly: ignore [missing-import]
+    from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+
+    return SentenceTransformerEmbeddingFunction(model_name=DEFAULT_EMBEDDING_MODEL)
 
 
 def upsert_records(

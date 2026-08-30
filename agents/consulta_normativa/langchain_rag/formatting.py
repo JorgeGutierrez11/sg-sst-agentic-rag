@@ -5,17 +5,22 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 
 def recovered_documents(results: dict[str, Any]) -> list[RetrievedDocument]:
-    """Normalize ChromaDB query output into one list of retrieved documents."""
+    """Normalize query output into one list of retrieved documents."""
 
+    ids = first_result_list(results, "ids")
     documents = first_result_list(results, "documents")
     metadatas = first_result_list(results, "metadatas")
 
     recovered: list[RetrievedDocument] = []
     for index, document in enumerate(documents):
+        metadata = dict(metadata_at(metadatas, index))
+        if index < len(ids) and has_metadata_value(ids[index]):
+            metadata.setdefault("_document_id", str(ids[index]))
+
         recovered.append(
             RetrievedDocument(
                 document=str(document),
-                metadata=metadata_at(metadatas, index),
+                metadata=metadata,
             )
         )
     return recovered
@@ -92,7 +97,13 @@ def metadata_context(metadata: dict[str, Any]) -> str:
                 ("Literal", "literal"),
             ],
         ),
-        ("Tablas", [("Contiene tablas", "has_tables"), ("Claves de tabla", "table_keys")]),
+        (
+            "Tablas",
+            [
+                ("Contiene tablas", "has_tables"),
+                ("Claves de tabla", "table_keys")
+            ]
+        ),
         (
             "Tabla",
             [
@@ -102,7 +113,23 @@ def metadata_context(metadata: dict[str, Any]) -> str:
                 ("Fila sobredimensionada", "oversized_row"),
             ],
         ),
-        ("Trazabilidad técnica", [("ID padre", "parent_id"), ("Inicio", "start_char"), ("Fin", "end_char")]),
+        (
+            "Trazabilidad técnica",
+            [
+                ("ID documento", "_document_id"),
+                ("Técnicas de recuperación", "_retrieval_sources"),
+                ("Expansión parent aplicada", "parent_expansion_applied"),
+                ("ID parent expandido", "expanded_parent_id"),
+                ("ID child original", "expanded_from_child_id"),
+                ("IDs child originales", "expanded_from_child_ids"),
+                ("Tipo original recuperado", "expanded_from_document_type"),
+                ("Fallback expansión parent", "parent_expansion_fallback"),
+                ("Estrategia parent", "parent_strategy"),
+                ("ID padre", "parent_id"),
+                ("Inicio", "start_char"),
+                ("Fin", "end_char"),
+            ],
+        ),
     ]
 
     rendered_sections: list[str] = []
@@ -175,4 +202,6 @@ def render_metadata_value(value: Any) -> str:
 
     if isinstance(value, bool):
         return "sí" if value else "no"
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value)
     return str(value)

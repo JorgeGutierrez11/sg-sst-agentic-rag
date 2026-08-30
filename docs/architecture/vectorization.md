@@ -58,6 +58,7 @@ Campos principales:
 
 | Campo | Uso |
 |---|---|
+| `document_id` | Identidad pública canónica usada por recuperación y deduplicación. |
 | `source_document_id`, `source_stem` | Identificar la norma fuente. |
 | `normative_document_type`, `year` | Filtrar o auditar por tipo de norma y año cuando exista metadata heredada. |
 | `parent_id` | Relacionar el child chunk con su parent chunk. |
@@ -77,6 +78,7 @@ Campos principales:
 
 | Campo | Uso |
 |---|---|
+| `document_id` | Identidad pública canónica usada por recuperación y deduplicación. |
 | `source_stem` | Norma de origen. |
 | `table_index` | Índice lógico de la tabla en la norma. |
 | `table_key` | Relación estable `source_stem:table_index`. |

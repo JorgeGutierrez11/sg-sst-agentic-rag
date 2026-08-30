@@ -1,211 +1,116 @@
-# Sufficient-Context Gate para validación de suficiencia de evidencia normativa
+# Sufficient-Context Gate para validación de suficiencia normativa
 
-Sufficient-Context Gate es una técnica experimental de validación que determina si el contexto recuperado por el sistema RAG contiene evidencia suficiente para responder la pregunta original del usuario antes de invocar al modelo generador.
+Sufficient-Context Gate valida si el contexto recuperado por el RAG contiene evidencia suficiente para responder la pregunta original antes de invocar al modelo generador. La técnica se ejecuta después de `format_context` y antes de `build_messages`, porque evalúa el contexto consolidado completo que recibiría el LLM.
 
-A diferencia de Retrieval Relevance Grading, esta técnica no evalúa cada documento individualmente. Analiza el **conjunto completo del contexto recuperado** y determina si permite responder la consulta de forma completa, parcial o si la evidencia es insuficiente.
-
-La implementación adopta el concepto de *Sufficient Context* como mecanismo de control previo a la generación, pero no pretende reproducir una arquitectura externa completa.
+A diferencia de Retrieval Relevance Grading, no evalúa documentos por separado. Evalúa el conjunto completo del contexto y clasifica la evidencia como `sufficient`, `partial` o `insufficient`.
 
 ## Propósito
 
-El baseline del RAG únicamente verifica si existen documentos recuperados:
+El baseline del RAG solo distingue si hay documentos recuperados:
 
 ```text
-documents
-    ↓
-bool(documents)
-    ↓
-hay evidencia / no hay evidencia
+documents -> hay evidencia / no hay evidencia
 ```
 
-Este criterio no permite distinguir entre:
+Ese criterio no responde una pregunta más importante:
 
 ```text
-Hay documentos recuperados
+¿El contexto recuperado permite responder con respaldo normativo?
 ```
 
-y:
+Sufficient-Context Gate agrega esa validación antes de generación:
 
 ```text
-Los documentos recuperados contienen información suficiente
-para responder la pregunta.
+pregunta original + contexto recuperado -> sufficient_context_gate
+                                      -> sufficient / partial / insufficient
 ```
 
-Sufficient-Context Gate introduce una segunda validación:
-
-```text
-pregunta original
-        +
-contexto recuperado completo
-        ↓
-Sufficient-Context Gate
-        ↓
-sufficient / partial / insufficient
-```
-
-Su objetivo es impedir que el modelo generador responda cuando el contexto disponible no contiene evidencia suficiente y, al mismo tiempo, permitir respuestas parciales cuando una parte de la consulta sí está respaldada.
-
-## Diferencia respecto a Retrieval Relevance Grading
-
-Las dos técnicas pertenecen a la dimensión de validación y control, pero evalúan aspectos diferentes.
-
-| Técnica                     | Unidad evaluada              | Pregunta que responde                                         |
-| --------------------------- | ---------------------------- | ------------------------------------------------------------- |
-| Retrieval Relevance Grading | Cada documento individual    | ¿Este documento aporta evidencia relacionada con la consulta? |
-| Sufficient-Context Gate     | Contexto recuperado completo | ¿El conjunto de evidencia permite responder la pregunta?      |
-
-Ejemplo:
-
-```text
-Pregunta:
-¿Quién debe investigar un accidente y cuál es el plazo?
-
-Documento 1:
-El empleador debe conformar un equipo investigador.
-
-Documento 2:
-Se especifican los integrantes del equipo.
-```
-
-Los dos documentos pueden ser **relevantes**, pero el contexto puede seguir siendo **parcial** si no contiene el plazo solicitado.
-
-Por tanto:
-
-```text
-relevancia ≠ suficiencia
-```
+El objetivo es evitar respuestas normales cuando la evidencia recuperada no alcanza y permitir respuestas parciales cuando existe soporte para una parte de la consulta.
 
 ## Ubicación en el pipeline LangGraph
 
-La técnica se ejecuta después de construir el contexto y antes de crear los mensajes que serán enviados al modelo generador.
-
-Flujo experimental:
+El flujo activo con esta técnica queda así:
 
 ```text
-question
-   ↓
 retrieve
-   ↓
-normalize_documents
-   ↓
-record_retrieval_trace
-   ↓
-evidence_route
-   ├── without_evidence ─────────────→ fallback_answer
-   │
+-> normalize_documents
+-> expand_parent_documents
+-> record_retrieval_trace
+-> evidence_route
+   ├── without_evidence -> fallback_answer -> format_result
    └── with_evidence
-            ↓
-       format_context
-            ↓
-   assess_sufficient_context
-            ↓
-      ┌─────┼──────────────┐
-      │     │              │
-sufficient partial    insufficient
-      │     │              │
-      └──┬──┘              ↓
-         │            fallback_answer
-         ↓
-   build_messages
-         ↓
-   generate_answer
-         ↓
-    format_result
+       -> format_context
+       -> sufficient_context_gate
+       -> sufficient_context_route
+          ├── answerable -> build_messages -> generate_answer -> self_refine -> format_result
+          ├── partial    -> build_messages -> generate_answer -> self_refine -> format_result
+          └── insufficient -> insufficient_context_answer -> format_result
 ```
 
-La ubicación después de `format_context` es deliberada: el gate evalúa el mismo contexto consolidado que posteriormente recibiría el modelo generador.
+Cambios importantes del nuevo grafo:
 
-## Archivos principales
+- `sufficient_context_gate` se ejecuta después de `format_context`, no antes de armar el contexto.
+- `partial` tiene ruta explícita y continúa hacia generación con una advertencia de respuesta parcial.
+- `insufficient` ya no reutiliza `fallback_answer`; usa `insufficient_context_answer`, una respuesta específica para contexto recuperado pero insuficiente.
+- `insufficient` no invoca `generate_answer` ni `self_refine`.
+- `Self-Refine` permanece activo después de `generate_answer` para las rutas `answerable` y `partial`.
+- Retrieval Relevance Grading no está activo en este flujo para evitar mezclar técnicas experimentales.
 
-```text
-agents/consulta_normativa/langchain_rag/
-├── validation/
-│   └── sufficient_context_gate.py
-├── core/
-│   ├── state.py
-│   └── routes.py
-└── graph.py
+Archivos principales:
 
-agents/consulta_normativa/tests/
-└── test_sufficient_context_gate.py
-```
+- `agents/consulta_normativa/langchain_rag/validation/sufficient_context_gate.py`
+- `agents/consulta_normativa/langchain_rag/core/routes.py`
+- `agents/consulta_normativa/langchain_rag/graph.py`
+- `agents/consulta_normativa/langchain_rag/core/state.py`
+- `agents/consulta_normativa/tests/test_sufficient_context_gate.py`
+- `agents/consulta_normativa/tests/test_langchain_rag_graph.py`
 
 ## Resumen de implementación
 
-| Pieza                                    | Responsabilidad                                                       |
-| ---------------------------------------- | --------------------------------------------------------------------- |
-| `ContextSufficiency`                     | Define los tres estados posibles de suficiencia.                      |
-| `SufficientContextGrade`                 | Define mediante Pydantic la salida estructurada del evaluador.        |
-| `SUFFICIENT_CONTEXT_SYSTEM_PROMPT`       | Define los criterios utilizados para decidir suficiencia.             |
-| `sufficient_context_gate_node(llm)`      | Construye el nodo LangGraph encargado de evaluar el contexto.         |
-| `grade_context_sufficiency(...)`         | Ejecuta la evaluación estructurada mediante el LLM.                   |
-| `build_sufficient_context_messages(...)` | Construye los mensajes con pregunta original y contexto recuperado.   |
-| `sufficient_context_fallback(...)`       | Aplica la política `fail-open` cuando el evaluador falla.             |
-| `sufficient_context_route(...)`          | Convierte el resultado del gate en una decisión de routing del grafo. |
+| Pieza | Responsabilidad |
+|---|---|
+| `ContextSufficiency` | Enum con los estados `sufficient`, `partial` e `insufficient`. |
+| `SufficientContextGrade` | Modelo Pydantic de salida estructurada del grader. |
+| `sufficient_context_gate_node(llm)` | Nodo LangGraph que evalúa `state["question"]` y `state["context"]`. |
+| `grade_context_sufficiency(...)` | Invoca el grader estructurado. |
+| `build_sufficient_context_messages(...)` | Construye mensajes con la pregunta original y el contexto recuperado. |
+| `sufficient_context_fallback(...)` | Aplica política fail-open ante errores técnicos. |
+| `sufficient_context_route(state)` | Enruta `answerable`, `partial` o `insufficient`. |
+| `insufficient_context_answer_node(state)` | Produce respuesta determinística cuando el contexto existe pero no basta. |
+| `build_messages_node(state)` | Agrega advertencia cuando `context_sufficiency == "partial"`. |
+
+El gate no modifica `state["documents"]`. Su salida agrega metadata de decisión al estado para controlar la generación.
 
 ## Estados de suficiencia
 
-La técnica utiliza tres categorías cerradas:
+| Estado | Significado | Ruta del grafo |
+|---|---|---|
+| `sufficient` | El contexto permite responder los componentes sustantivos de la pregunta. | `answerable -> build_messages` |
+| `partial` | El contexto permite responder una parte, pero falta evidencia para otros componentes. | `partial -> build_messages` con advertencia |
+| `insufficient` | El contexto no permite responder útilmente con respaldo normativo. | `insufficient -> insufficient_context_answer` |
 
-```python
-class ContextSufficiency(str, Enum):
-    SUFFICIENT = "sufficient"
-    PARTIAL = "partial"
-    INSUFFICIENT = "insufficient"
-```
+### `partial` como respuesta con advertencia
 
-### `sufficient`
-
-El contexto contiene evidencia para responder todos los componentes sustantivos solicitados por el usuario.
+`partial` no bloquea la generación. En SG-SST una respuesta parcial puede ser útil si declara sus límites. Por eso el grafo agrega una nota al contexto antes de construir el prompt:
 
 ```text
-Pregunta:
-¿Quién debe investigar los accidentes de trabajo?
-
-Contexto:
-Contiene las disposiciones que determinan quién debe realizar
-la investigación y la composición del equipo investigador.
-
-Resultado:
-sufficient
+Nota de suficiencia: el contexto recuperado solo permite una respuesta parcial.
+Responde únicamente lo respaldado e indica explícitamente qué información falta.
 ```
 
-### `partial`
+Si el grader reporta `missing_information`, esa lista también se agrega al contexto usado para generación.
 
-El contexto permite responder al menos una parte sustantiva de la consulta, pero falta evidencia para uno o más componentes.
+### `insufficient` como bloqueo de generación
+
+`insufficient` sí bloquea la generación normal. El sistema no llama al LLM generador y devuelve una respuesta determinística:
 
 ```text
-Pregunta:
-¿Quién debe investigar el accidente y cuál es el plazo?
-
-Contexto:
-Permite identificar quién investiga,
-pero no contiene información sobre el plazo.
-
-Resultado:
-partial
+La evidencia recuperada no es suficiente para responder completamente la pregunta.
+Información faltante:
+- ...
 ```
 
-El estado `partial` **no produce abstención automática**.
-
-Continúa hacia generación porque el prompt base del agente ya establece que, cuando el contexto responda solo parcialmente, el modelo debe indicar qué parte puede responder y qué parte no puede respaldar.
-
-### `insufficient`
-
-El contexto no permite responder de manera útil ningún componente sustantivo de la pregunta.
-
-```text
-Pregunta:
-¿Cuáles son los requisitos para renovar un pasaporte colombiano?
-
-Contexto:
-Fragmentos relacionados con SG-SST.
-
-Resultado:
-insufficient
-```
-
-En este caso el flujo termina en `fallback_answer`.
+Si no hay información faltante detallada, usa una variante breve indicando que falta respaldo normativo suficiente.
 
 ## Salida estructurada
 
@@ -218,102 +123,58 @@ class SufficientContextGrade(BaseModel):
     missing_information: list[str]
 ```
 
-Los campos representan:
+| Campo | Uso |
+|---|---|
+| `level` | Clasificación `sufficient`, `partial` o `insufficient`. |
+| `reason` | Justificación breve basada solo en pregunta y contexto. |
+| `missing_information` | Información solicitada que no está respaldada por el contexto. |
 
-| Campo                 | Función                                                                          |
-| --------------------- | -------------------------------------------------------------------------------- |
-| `level`               | Clasificación `sufficient`, `partial` o `insufficient`.                          |
-| `reason`              | Justificación breve de la decisión basada en pregunta y contexto.                |
-| `missing_information` | Componentes solicitados por el usuario que no están respaldados por el contexto. |
-
-Ejemplo:
+Ejemplo de salida parcial:
 
 ```python
 {
     "level": "partial",
-    "reason": (
-        "El contexto permite determinar quién debe realizar "
-        "la investigación, pero no contiene el plazo solicitado."
-    ),
-    "missing_information": [
-        "Plazo para realizar la investigación del accidente."
-    ],
+    "reason": "El contexto permite identificar el responsable, pero no el plazo solicitado.",
+    "missing_information": ["Plazo para realizar la investigación."],
 }
 ```
 
-Cuando el contexto es suficiente:
+## Campos de estado
+
+| Campo | Uso |
+|---|---|
+| `question` | Pregunta original usada para evaluar suficiencia. |
+| `context` | Contexto consolidado construido desde documentos recuperados. |
+| `context_sufficiency` | Valor usado por `sufficient_context_route`. |
+| `sufficient_context_trace` | Traza interna con nivel, razón, faltantes, fallback y error. |
+| `messages` | Mensajes de generación; en `partial` incluyen la advertencia de suficiencia. |
+| `answer` | Respuesta generada, refinada o respuesta determinística de insuficiencia. |
+
+Ejemplo de traza interna:
 
 ```python
 {
-    "level": "sufficient",
-    "reason": "...",
-    "missing_information": [],
+    "level": "partial",
+    "reason": "El contexto responde solo una parte de la consulta.",
+    "missing_information": ["Nivel de riesgo concreto de la actividad económica."],
+    "fallback": False,
+    "error": None,
 }
 ```
 
-## Unidad de evaluación
-
-La técnica evalúa:
-
-```python
-state["question"]
-state["context"]
-```
-
-No ejecuta una evaluación independiente por cada `RetrievedDocument`.
-
-Esto permite reconocer información complementaria distribuida entre distintos fragmentos.
-
-Por ejemplo:
-
-```text
-D1 → quién investiga
-D2 → plazo
-D3 → condiciones adicionales
-
-D1 + D2 + D3
-        ↓
-contexto completo
-        ↓
-sufficient
-```
-
-Evaluar cada documento por separado no permitiría determinar correctamente la suficiencia conjunta.
-
-## Uso de la pregunta original
-
-La evaluación utiliza:
-
-```python
-state["question"]
-```
-
-La suficiencia se determina respecto a la necesidad original del usuario y no respecto a una consulta modificada para recuperación.
-
-Esto desacopla el control de suficiencia de posibles transformaciones previas de la consulta.
-
-## Criterios utilizados por el grader
-
-El prompt establece las siguientes reglas principales:
-
-* evaluar el contexto completo como un conjunto;
-* no responder directamente la pregunta;
-* no utilizar conocimiento externo;
-* no asumir información que no esté respaldada por el contexto;
-* no considerar suficiente un contexto únicamente por pertenecer al dominio SG-SST;
-* revisar todos los componentes de preguntas compuestas;
-* clasificar como `partial` cuando solo algunos componentes puedan responderse;
-* considerar que la evidencia puede estar distribuida entre varios fragmentos;
-* registrar qué información solicitada falta cuando el resultado sea `partial` o `insufficient`.
+`sufficient_context_trace` permanece como estado interno. No se expone en `LangChainRagResult` para no ampliar el contrato público mientras la técnica sigue en evaluación.
 
 ## Routing
 
-La técnica introduce una ruta específica:
+La ruta actual distingue explícitamente los tres casos operativos:
 
 ```python
 def sufficient_context_route(state: RagGraphState) -> str:
     if state.get("context_sufficiency") == "insufficient":
         return "insufficient"
+
+    if state.get("context_sufficiency") == "partial":
+        return "partial"
 
     return "answerable"
 ```
@@ -321,550 +182,101 @@ def sufficient_context_route(state: RagGraphState) -> str:
 La conversión es:
 
 ```text
-sufficient   → answerable
-partial      → answerable
-insufficient → insufficient
+sufficient   -> answerable
+partial      -> partial
+insufficient -> insufficient
 ```
 
-Esto permite separar la clasificación detallada del gate de las rutas operativas del grafo.
+Esto evita ocultar `partial` dentro de `answerable` y permite probar que el prompt recibe una advertencia específica.
 
-### Ruta `answerable`
+## Relación con otras técnicas
 
-Continúan:
+| Técnica | Estado en este flujo | Motivo |
+|---|---|---|
+| Parent-Document Retrieval | Activa antes del gate | El gate evalúa el contexto después de expandir child chunks a parents. |
+| Retrieval Relevance Grading | Inactiva | Evita mezclar validación por documento con validación de contexto completo en el mismo experimento. |
+| Self-Refine | Activa después de generación | Revisa la respuesta generada cuando el gate permite responder. |
 
-```text
-sufficient
-partial
-```
+La secuencia activa evalúa suficiencia del contexto antes de generar y luego permite que Self-Refine revise la respuesta inicial si hubo generación.
 
-hacia:
+## Fallbacks y guardrails
 
-```text
-build_messages
-      ↓
-generate_answer
-```
+Sufficient-Context Gate usa política fail-open ante errores técnicos: un fallo del grader no prueba que el contexto sea insuficiente.
 
-### Ruta `insufficient`
+| Caso | Comportamiento |
+|---|---|
+| Contexto vacío | Devuelve `context_sufficiency="insufficient"` sin invocar el LLM. |
+| Falla `with_structured_output(...)` | Permite continuar como `sufficient` por fallback técnico. |
+| Falla `grader.invoke(...)` | Permite continuar como `sufficient` por fallback técnico. |
+| Salida malformada | Permite continuar como `sufficient` por fallback técnico. |
+| `insufficient` válido | Bloquea generación y usa `insufficient_context_answer`. |
+| `partial` válido | Genera respuesta con advertencia explícita de límites. |
 
-Continúa hacia:
+En fallback técnico, la traza marca `fallback=True` y registra el tipo de error. Esto distingue “el grader dijo sufficient” de “el grader falló y se permitió continuar”.
 
-```text
-fallback_answer
-```
+## Pruebas
 
-sin invocar el modelo generador.
-
-## Relación con `evidence_route`
-
-`evidence_route` y `sufficient_context_route` cumplen funciones diferentes.
-
-### `evidence_route`
-
-Comprueba:
-
-```text
-¿hay documentos?
-```
-
-### `sufficient_context_route`
-
-Comprueba:
-
-```text
-¿qué determinó el Sufficient-Context Gate
-sobre esos documentos?
-```
-
-Por eso se conservan ambas rutas:
-
-```text
-retrieve
-   ↓
-¿hay documentos?
-   ↓
-sí
-   ↓
-¿son suficientes?
-```
-
-Esto evita ejecutar innecesariamente el gate cuando el retriever no produjo ningún documento.
-
-## Campos de estado
-
-La técnica agrega:
-
-```python
-context_sufficiency: str
-sufficient_context_trace: dict[str, Any]
-```
-
-al contrato `RagGraphState`.
-
-### `context_sufficiency`
-
-Contiene el valor utilizado para routing:
-
-```text
-sufficient
-partial
-insufficient
-```
-
-### `sufficient_context_trace`
-
-Conserva información de observabilidad:
-
-```python
-{
-    "level": "partial",
-    "reason": "...",
-    "missing_information": [
-        "..."
-    ],
-    "fallback": False,
-    "error": None,
-}
-```
-
-## Fallos y comportamiento fallback
-
-La técnica utiliza una política `fail-open`.
-
-Un fallo técnico del gate no demuestra que el contexto sea insuficiente.
-
-Por tanto:
-
-```text
-gate funciona
-    ↓
-usar clasificación
-
-gate falla
-    ↓
-permitir generación
-```
-
-Operativamente se devuelve:
-
-```python
-"context_sufficiency": "sufficient"
-```
-
-para permitir que el grafo continúe.
-
-Sin embargo, la traza no afirma que el contexto haya sido realmente clasificado como suficiente:
-
-```python
-{
-    "level": None,
-    "reason": (
-        "La suficiencia del contexto no pudo evaluarse. "
-        "Se permite continuar por política fail-open."
-    ),
-    "missing_information": [],
-    "fallback": True,
-    "error": "RuntimeError",
-}
-```
-
-Esto permite distinguir:
-
-```text
-El grader determinó sufficient
-```
-
-de:
-
-```text
-El grader falló y se permitió continuar.
-```
-
-## Contexto vacío
-
-Si el nodo recibe:
-
-```python
-context = ""
-```
-
-no invoca el grader.
-
-Devuelve directamente:
-
-```python
-{
-    "context_sufficiency": "insufficient",
-    ...
-}
-```
-
-Esto evita realizar llamadas innecesarias al LLM cuando no existe evidencia para analizar.
-
-En el flujo normal, `evidence_route` debería impedir que este caso llegue al gate, pero el nodo conserva este comportamiento defensivo para poder funcionar correctamente de forma aislada.
-
-## Observabilidad
-
-Durante una ejecución real se registra:
-
-```text
-Sufficient-context gate |
-level=sufficient |
-reason=... |
-missing=[]
-```
-
-o:
-
-```text
-Sufficient-context gate |
-level=insufficient |
-reason=... |
-missing=[...]
-```
-
-Esto permite inspeccionar:
-
-* la clasificación asignada;
-* la justificación del grader;
-* qué información considera ausente;
-* si se utilizó la política `fail-open`;
-* si ocurrió un error técnico.
-
-## Pruebas unitarias
-
-Archivo:
-
-```text
-agents/consulta_normativa/tests/test_sufficient_context_gate.py
-```
-
-Las pruebas utilizan `FakeLLM` y `FakeGrader`, por lo que no requieren:
-
-* Chroma;
-* Groq;
-* modelo de embeddings;
-* conexión a Internet;
-* ejecución completa del grafo.
-
-Se validaron seis comportamientos.
-
-### 1. Contexto suficiente
-
-Comprueba:
-
-```text
-sufficient
-→ continuar
-```
-
-### 2. Contexto parcialmente suficiente
-
-Comprueba:
-
-```text
-partial
-→ conservar información faltante
-→ continuar
-```
-
-### 3. Contexto insuficiente
-
-Comprueba:
-
-```text
-insufficient
-→ clasificación correcta
-```
-
-### 4. Contexto vacío
-
-Comprueba:
-
-```text
-context = ""
-→ insufficient
-```
-
-sin depender de la respuesta del LLM.
-
-### 5. Fallo durante evaluación
-
-Comprueba:
-
-```text
-grader.invoke() falla
-→ fail-open
-```
-
-### 6. Fallo al configurar structured output
-
-Comprueba:
-
-```text
-with_structured_output() falla
-→ fail-open
-```
-
-Comando:
+Pruebas unitarias del gate:
 
 ```bash
-python -m pytest agents/consulta_normativa/tests/test_sufficient_context_gate.py -v
+python -m unittest agents.consulta_normativa.tests.test_sufficient_context_gate
 ```
 
-Resultado observado:
+Casos cubiertos:
 
-```text
-6 passed
-```
+- `sufficient` escribe `context_sufficiency="sufficient"` sin fallback;
+- `partial` conserva `missing_information`;
+- `insufficient` escribe `context_sufficiency="insufficient"`;
+- contexto vacío produce `insufficient` sin invocar el LLM;
+- fallo configurando structured output usa fallback técnico;
+- fallo en `grader.invoke(...)` usa fallback técnico;
+- salida malformada activa fallback técnico.
 
-## Validación manual del flujo real
-
-La técnica fue integrada temporalmente al RAG y ejecutada mediante:
+Pruebas de integración del grafo:
 
 ```bash
-python -m agents.consulta_normativa.langchain_rag.main
+python -m unittest agents.consulta_normativa.tests.test_langchain_rag_graph
 ```
 
-### Caso 1: contexto suficiente
+Casos relevantes:
 
-Consulta:
+- el nodo `sufficient_context_gate` queda registrado;
+- `sufficient` continúa hacia generación y Self-Refine;
+- `partial` continúa hacia generación con advertencia de respuesta parcial;
+- `insufficient` no ejecuta `generate_answer` y termina con respuesta específica;
+- `sufficient_context_trace` existe en estado interno, pero no en `LangChainRagResult`.
 
-```text
-¿Quién debe investigar los accidentes de trabajo?
+Verificación complementaria:
+
+```bash
+python -m compileall agents/consulta_normativa/langchain_rag agents/consulta_normativa/tests
+python -m unittest agents.consulta_normativa.tests.test_rag_base agents.consulta_normativa.tests.test_langchain_rag_main agents.consulta_normativa.tests.test_langchain_rag_graph
 ```
-
-El gate produjo:
-
-```text
-level=sufficient
-missing=[]
-```
-
-El contexto contenía disposiciones de la Resolución 1401 de 2007 y del Decreto 1072 de 2015 que permitían responder la consulta.
-
-El grafo continuó hacia generación.
-
-### Caso 2: pregunta compuesta con evidencia completa
-
-Consulta:
-
-```text
-¿Quién debe investigar los accidentes de trabajo
-y cuál es el plazo exacto para hacerlo?
-```
-
-Inicialmente esta consulta se planteó con la intención de producir un caso `partial`.
-
-Sin embargo, el retrieval recuperó también evidencia sobre el plazo de quince días, por lo que el gate clasificó correctamente:
-
-```text
-level=sufficient
-missing=[]
-```
-
-Esto confirma que el gate evalúa el contenido realmente recuperado y no una clasificación esperada previamente.
-
-### Caso 3: contexto insuficiente
-
-Consulta:
-
-```text
-¿Cuáles son los requisitos para renovar un pasaporte colombiano?
-```
-
-El retrieval produjo documentos pertenecientes al dominio SG-SST, pero estos no contenían evidencia relacionada con la pregunta.
-
-El gate produjo:
-
-```text
-level=insufficient
-```
-
-y el grafo terminó en:
-
-```text
-fallback_answer
-```
-
-sin realizar una llamada posterior al modelo generador.
-
-La respuesta fue:
-
-```text
-La evidencia recuperada es insuficiente para responder la pregunta.
-```
-
-## Estado de validación del caso `partial`
-
-El comportamiento `partial` está cubierto mediante pruebas unitarias.
-
-Todavía no se ha observado un caso `partial` durante una ejecución real contra Chroma.
-
-Por tanto, la implementación permite y enruta correctamente este estado según los tests disponibles, pero su comportamiento con evidencia recuperada real deberá comprobarse posteriormente con una consulta cuyo contexto contenga realmente solo una parte de la información solicitada.
 
 ## Coste operacional
 
-A diferencia de Retrieval Relevance Grading, que realiza potencialmente una llamada LLM por documento, Sufficient-Context Gate realiza una sola evaluación sobre el contexto completo.
-
-Con un flujo básico:
+El gate realiza una sola llamada LLM por consulta con evidencia recuperada.
 
 ```text
-retrieval
-    ↓
-Sufficient-Context Gate
-    ↓
-generation
+consulta con evidencia suficiente/parcial:
+1 llamada al gate + 1 llamada al generador + Self-Refine según corresponda
+
+consulta con contexto insuficiente:
+1 llamada al gate + 0 llamadas al generador + 0 llamadas a Self-Refine
 ```
 
-una consulta respondible agrega aproximadamente:
-
-```text
-1 llamada al gate
-+
-1 llamada al generador
-```
-
-Una consulta clasificada como `insufficient` realiza:
-
-```text
-1 llamada al gate
-+
-0 llamadas al generador
-```
-
-porque termina mediante fallback determinístico.
+Su coste no escala en número de llamadas con `top_k`, porque evalúa el contexto completo en una sola invocación.
 
 ## Riesgos
 
-### Abstención excesiva
+- Puede clasificar como `insufficient` un contexto que sí contiene evidencia útil parcial.
+- Puede clasificar como `sufficient` un contexto que omite excepciones o condiciones normativas importantes.
+- El fallback técnico es fail-open; debe monitorearse porque permite generación cuando el gate falla.
+- Combinado con Self-Refine, mejora el control pero aumenta latencia y dificulta atribuir mejoras a una sola técnica.
+- No reemplaza evaluación ARES ni validación experta SST.
 
-El grader puede clasificar como `insufficient` contextos que contienen evidencia útil pero incompleta.
-
-La categoría `partial` reduce este riesgo permitiendo continuar hacia generación cuando existe evidencia para responder solo una parte.
-
-### Falsos positivos de suficiencia
-
-El grader puede considerar suficiente un contexto que realmente omite condiciones, excepciones o elementos normativos importantes.
-
-La técnica no debe interpretarse como una garantía formal de completitud jurídica.
-
-### Uso indebido de conocimiento externo
-
-El grader debe evaluar únicamente pregunta y contexto.
-
-La información registrada en `reason` y `missing_information` tampoco debe utilizar conocimiento externo para completar lo que cree que debería contener una respuesta.
-
-### Coste y latencia
-
-La técnica introduce una llamada adicional al LLM para cada consulta con documentos recuperados.
-
-Sin embargo, su coste no escala directamente con `top_k` en número de llamadas, ya que evalúa el contexto completo en una sola invocación.
-
-## Cómo activar la técnica
-
-### 1. Importar el nodo
-
-En `graph.py`:
-
-```python
-from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate import (
-    sufficient_context_gate_node,
-)
-```
-
-### 2. Importar la ruta
-
-En `graph.py`:
-
-```python
-from agents.consulta_normativa.langchain_rag.core.routes import (
-    evidence_route,
-    sufficient_context_route,
-)
-```
-
-### 3. Registrar el nodo
-
-Después de `format_context`:
-
-```python
-workflow.add_node(
-    "assess_sufficient_context",
-    sufficient_context_gate_node(llm),
-)
-```
-
-### 4. Sustituir la conexión directa a generación
-
-El baseline contiene:
-
-```python
-workflow.add_edge(
-    "format_context",
-    "build_messages",
-)
-```
-
-Durante el experimento esta conexión debe desactivarse.
-
-Agregar:
-
-```python
-workflow.add_edge(
-    "format_context",
-    "assess_sufficient_context",
-)
-
-workflow.add_conditional_edges(
-    "assess_sufficient_context",
-    sufficient_context_route,
-    {
-        "answerable": "build_messages",
-        "insufficient": "fallback_answer",
-    },
-)
-```
-
-El resultado es:
-
-```text
-format_context
-      ↓
-assess_sufficient_context
-      ↓
- ┌────┴────────┐
- │             │
-answerable insufficient
- │             │
- ↓             ↓
-build_messages fallback
-```
-
-## Cambio requerido en `RagGraphState`
-
-Agregar:
-
-```python
-# Sufficient-Context Gate
-context_sufficiency: str
-sufficient_context_trace: dict[str, Any]
-```
-
-## Cambio requerido en `routes.py`
-
-Agregar:
-
-```python
-def sufficient_context_route(state: RagGraphState) -> str:
-    """Route according to the sufficient-context assessment."""
-
-    if state.get("context_sufficiency") == "insufficient":
-        return "insufficient"
-
-    return "answerable"
-```
 ## Ejemplo de integración en LangGraph
+
 ```python
 """LangGraph RAG flow for normative consultation."""
 
@@ -874,23 +286,23 @@ from typing import Any
 from agents.consulta_normativa.langchain_rag.config import DEFAULT_TOP_K
 from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
 from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
-from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route, sufficient_context_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
 from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
-from agents.consulta_normativa.langchain_rag.query_understanding.rewrite_query import rewrite_query_node
 
-# ************  SUFFICIENT-CONTEXT GATE
-from agents.consulta_normativa.langchain_rag.core.routes import (sufficient_context_route)
+# importar nodo de perfil de negocio y nodo de historial de conversación
+from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
+from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
+# tecnica sufficient-context gate           
 from agents.consulta_normativa.langchain_rag.validation.sufficient_context_gate import (sufficient_context_gate_node)
 
 
+Retriever = Callable[[str, int], dict[str, Any]] 
 
-Retriever = Callable[[str, int], dict[str, Any]]
-
-
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K) -> Any:
+# se agregó checkpointer: Any | None = None, para permitir la integración con un sistema de checkpointing
+def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K, checkpointer: Any | None = None,) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -902,26 +314,41 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow = StateGraph(RagGraphState)
     
 
-
+    workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
+  
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
-    workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
-
-    
+    workflow.add_node("record_retrieval_trace",record_retrieval_trace_node)
     
 
     workflow.add_node("fallback_answer", fallback_answer_node)
     workflow.add_node("format_context", format_context_node)
 
-    # ************ SUFFICIENT-CONTEXT GATE
-    workflow.add_node("assess_sufficient_context",sufficient_context_gate_node(llm))
+    # Agregar nodo de sufficient_context_gate
+    workflow.add_node(
+        "sufficient_context_gate",
+        sufficient_context_gate_node(llm),
+    )
+    # insufficient_context_answer_node
+    workflow.add_node(
+        "insufficient_context_answer",
+        insufficient_context_answer_node,
+    )
+
 
     workflow.add_node("build_messages", build_messages_node)
     workflow.add_node("generate_answer", generate_answer_node(llm))
+
+    workflow.add_node("save_conversation_turn", save_conversation_turn_node) # Agregar nodo de historial de conversación
+
+
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("retrieve")
+    #workflow.set_entry_point("retrieve")
+    workflow.set_entry_point("business_profile")
+    workflow.add_edge("business_profile", "retrieve")
+    
     
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
@@ -932,35 +359,46 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
         evidence_route,
         {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
     
-    workflow.add_edge("fallback_answer", "format_result")
-    #workflow.add_edge("format_context", "build_messages")
-
-    # ************ SUFFICIENT-CONTEXT GATE
-    workflow.add_edge(
-        "format_context",
-        "assess_sufficient_context",
-    )
-
+    # Agregar condicional para el nodo de sufficient_context_gate
     workflow.add_conditional_edges(
-        "assess_sufficient_context",
+        "sufficient_context_gate",
         sufficient_context_route,
         {
             "answerable": "build_messages",
-            "insufficient": "fallback_answer",
+            "partial": "build_messages",
+            "insufficient": "insufficient_context_answer",
         },
     )
+    # Agregar condicional para el nodo de insufficient_context_answer
+    workflow.add_edge(
+        "insufficient_context_answer",
+        "save_conversation_turn",
+    )
+    
+    workflow.add_edge("fallback_answer","save_conversation_turn")
+
+    workflow.add_edge("format_context", "sufficient_context_gate") # Agregar nodo de sufficient_context_gate
+
 
 
     workflow.add_edge("build_messages", "generate_answer")
-    workflow.add_edge("generate_answer", "format_result")
+
+    workflow.add_edge("generate_answer","save_conversation_turn")
+    workflow.add_edge("save_conversation_turn","format_result")
+
+
     workflow.add_edge("format_result", END)
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer,) #se agregó checkpointer=checkpointer, para permitir la integración con un sistema de checkpointing
 
-
-def answer_with_langgraph(question: str, graph: Any) -> LangChainRagResult:
+# se agregó thread_id: str | None = None,
+def answer_with_langgraph(question: str, graph: Any, thread_id: str | None = None,) -> LangChainRagResult:
     """Run a compiled LangGraph-like object and return its RAG result."""
 
-    state = graph.invoke({"question": question})
+    if thread_id is None:
+        state = graph.invoke({"question": question}) # si no hay un thread_id, se invoca el grafo sin configuración adicional
+    else:
+        state = graph.invoke({"question": question},{"configurable": {"thread_id": thread_id,}},) #se agrea por si hay un thread_id, se pasa como parte de la configuración del grafo
+
     result = state.get("result") if isinstance(state, dict) else None
     if not isinstance(result, LangChainRagResult):
         raise ValueError("LangGraph execution did not produce a LangChainRagResult.")
@@ -992,6 +430,27 @@ def fallback_answer_node(state: RagGraphState) -> RagGraphState:
         "references": [],
         "prompt": build_base_prompt(state["question"], context),
         "answer": fallback_answer(context, []),
+    }
+
+
+# Integración de la técnica sufficient-context gate NUEVO SOLO PARA ESTA TECNICA
+def insufficient_context_answer_node(
+    state: RagGraphState,
+) -> RagGraphState:
+    """Return a deterministic answer when retrieved context is insufficient."""
+
+    context = state.get("context", "")
+
+    return {
+        "references": [],
+        "prompt": build_base_prompt(
+            state["question"],
+            context,
+        ),
+        "answer": (
+            "La evidencia recuperada es insuficiente "
+            "para responder la pregunta."
+        ),
     }
 
 
@@ -1053,4 +512,21 @@ def format_result_node(state: RagGraphState) -> RagGraphState:
         )
     }
 
+```
+
+
+
+# VER LOS RESULTADOS DE LA TECNICA
+
+Primero, imprime temporalmente la traza en run_once() en main. Después de obtener snapshot, agrega:
+
+```python
+sufficient_trace = snapshot.values.get(
+    "sufficient_context_trace",
+    {},
+)
+
+print("\n--- SUFFICIENT CONTEXT TRACE ----------------------------------------------")
+print(sufficient_trace)
+print("--- END SUFFICIENT CONTEXT TRACE ------------------------------------------\n")
 ```
