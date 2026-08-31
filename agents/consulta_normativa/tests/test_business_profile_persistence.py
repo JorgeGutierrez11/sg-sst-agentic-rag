@@ -35,7 +35,7 @@ class FakeStructuredLLM:
 class FakeLLM:
     """Minimal LLM compatible with business-profile extraction."""
 
-    def with_structured_output(self, schema: Any) -> FakeStructuredLLM:
+    def with_structured_output(self, schema: Any, **kwargs,) -> FakeStructuredLLM:
         return FakeStructuredLLM()
 
 

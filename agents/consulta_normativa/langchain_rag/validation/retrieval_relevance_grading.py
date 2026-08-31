@@ -185,6 +185,24 @@ def retrieval_relevance_grading_node(
                     )
                 )
 
+        if not relevant_documents and documents:
+            relevant_documents.append(
+                documents[0]
+            )
+
+            fallback_count += 1
+
+            document_traces[0] = build_document_trace(
+                index=0,
+                document=documents[0],
+                relevant=False,
+                reason=(
+                    "Documento conservado como fallback conservador porque "
+                    "el grader rechazó todos los documentos recuperados."
+                ),
+                fallback=True,
+                error=None,
+            )
 
         return {
             "documents": relevant_documents,

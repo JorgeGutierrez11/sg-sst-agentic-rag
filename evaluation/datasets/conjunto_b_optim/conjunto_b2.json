@@ -1,0 +1,322 @@
+[
+  {
+    "ID": "B2-T01-Q01",
+    "Query": "Tengo una empresa de mantenimiento y reparación de motocicletas, somos 8 trabajadores y estamos clasificados en riesgo I. ¿Qué estándares mínimos debemos cumplir?"
+  },
+  {
+    "ID": "B2-T01-Q02",
+    "Query": "¿Quién puede diseñar nuestro SG-SST?"
+  },
+  {
+    "ID": "B2-T01-Q03",
+    "Query": "¿Qué apoyo podemos pedirle a la ARL para implementarlo?"
+  },
+  {
+    "ID": "B2-T01-Q04",
+    "Query": "¿Qué responsabilidades tienen mis trabajadores frente al SG-SST?"
+  },
+  {
+    "ID": "B2-T01-Q05",
+    "Query": "¿Qué debo comunicarles sobre el sistema?"
+  },
+  {
+    "ID": "B2-T01-Q06",
+    "Query": "¿Cómo debo conservar los documentos y registros del SG-SST?"
+  },
+  {
+    "ID": "B2-T01-Q07",
+    "Query": "¿Debo realizar una evaluación inicial aunque sea una empresa pequeña?"
+  },
+  {
+    "ID": "B2-T01-Q08",
+    "Query": "Después de esa evaluación, ¿cómo debo planificar el SG-SST?"
+  },
+  {
+    "ID": "B2-T01-Q09",
+    "Query": "¿Qué indicadores debería usar para medir su avance?"
+  },
+  {
+    "ID": "B2-T01-Q10",
+    "Query": "Si más adelante crecemos a 15 trabajadores, ¿cambiarían los estándares mínimos que debemos cumplir?"
+  },
+  {
+    "ID": "B2-T02-Q01",
+    "Query": "Mi empresa fabrica calzado, tiene 30 trabajadores y está clasificada en riesgo II. Estamos implementando el SG-SST. ¿Qué estándares mínimos debemos cumplir?"
+  },
+  {
+    "ID": "B2-T02-Q02",
+    "Query": "¿Quién puede diseñar el SG-SST en nuestro caso?"
+  },
+  {
+    "ID": "B2-T02-Q03",
+    "Query": "¿Qué apoyo externo podemos recibir para implementarlo?"
+  },
+  {
+    "ID": "B2-T02-Q04",
+    "Query": "¿Qué debe liderar el empleador frente al cumplimiento de esos estándares?"
+  },
+  {
+    "ID": "B2-T02-Q05",
+    "Query": "¿Debemos conformar un Comité Paritario?"
+  },
+  {
+    "ID": "B2-T02-Q06",
+    "Query": "¿Cómo se eligen sus representantes?"
+  },
+  {
+    "ID": "B2-T02-Q07",
+    "Query": "¿Quién designa al presidente del Comité?"
+  },
+  {
+    "ID": "B2-T02-Q08",
+    "Query": "¿Con cuántos miembros puede sesionar válidamente?"
+  },
+  {
+    "ID": "B2-T02-Q09",
+    "Query": "¿Qué obligaciones tengo como empleador frente al Comité?"
+  },
+  {
+    "ID": "B2-T02-Q10",
+    "Query": "Si un trabajador lleva un asunto disciplinario o contractual, ¿el Comité puede resolverlo?"
+  },
+  {
+    "ID": "B2-T03-Q01",
+    "Query": "Tengo una empresa con dos sedes: en una fabricamos calzado y en la otra solo realizamos actividades administrativas. ¿Las dos sedes necesariamente deben tener la misma clase de riesgo?"
+  },
+  {
+    "ID": "B2-T03-Q02",
+    "Query": "¿Cómo se determina la clase de riesgo de cada sede?"
+  },
+  {
+    "ID": "B2-T03-Q03",
+    "Query": "Si una de las actividades no aparece exactamente en la tabla de clasificación, ¿qué debemos hacer?"
+  },
+  {
+    "ID": "B2-T03-Q04",
+    "Query": "¿El Decreto 768 de 2022 aplica a una empresa como la nuestra?"
+  },
+  {
+    "ID": "B2-T03-Q05",
+    "Query": "Si actualizan la tabla y cambia la clase de riesgo de una sede, ¿debemos empezar a cotizar con la nueva clase inmediatamente?"
+  },
+  {
+    "ID": "B2-T03-Q06",
+    "Query": "¿Pueden realizarnos visitas de verificación por el cumplimiento en riesgos laborales?"
+  },
+  {
+    "ID": "B2-T03-Q07",
+    "Query": "¿La supervisión cambia si una de las sedes queda clasificada como de alto riesgo?"
+  },
+  {
+    "ID": "B2-T03-Q08",
+    "Query": "¿Qué sanciones pueden imponernos si incumplimos obligaciones del Sistema General de Riesgos Laborales?"
+  },
+  {
+    "ID": "B2-T03-Q09",
+    "Query": "¿Qué servicios mínimos de promoción y prevención debe prestarnos la ARL?"
+  },
+  {
+    "ID": "B2-T03-Q10",
+    "Query": "¿Qué debe reportar la ARL al Ministerio del Trabajo sobre esas actividades?"
+  },
+  {
+    "ID": "B2-T04-Q01",
+    "Query": "En mi empresa usuaria trabaja una persona enviada por una empresa de servicios temporales y sufrió un accidente mientras realizaba su labor aquí. ¿Quién debe investigar ese accidente?"
+  },
+  {
+    "ID": "B2-T04-Q02",
+    "Query": "¿Qué equipo debe participar en la investigación?"
+  },
+  {
+    "ID": "B2-T04-Q03",
+    "Query": "¿Debemos utilizar un formato específico para investigar el accidente?"
+  },
+  {
+    "ID": "B2-T04-Q04",
+    "Query": "¿Podemos usar una metodología propia de investigación?"
+  },
+  {
+    "ID": "B2-T04-Q05",
+    "Query": "Si no tenemos una metodología, ¿la ARL debe proporcionarnos una?"
+  },
+  {
+    "ID": "B2-T04-Q06",
+    "Query": "¿Qué información debe contener el informe final?"
+  },
+  {
+    "ID": "B2-T04-Q07",
+    "Query": "¿Qué tipos de causas debemos identificar en ese informe?"
+  },
+  {
+    "ID": "B2-T04-Q08",
+    "Query": "¿Qué datos sobre lugar, fecha e investigadores deben quedar registrados?"
+  },
+  {
+    "ID": "B2-T04-Q09",
+    "Query": "Si la ARL recomienda medidas correctivas después de revisar el caso, ¿estamos obligados a implementarlas?"
+  },
+  {
+    "ID": "B2-T04-Q10",
+    "Query": "¿Qué consecuencias puede haber si el accidente fue grave y no se investiga?"
+  },
+  {
+    "ID": "B2-T05-Q01",
+    "Query": "En mi empresa un trabajador recibe comentarios ofensivos reiterados por parte de un compañero. ¿Esta situación puede estar protegida por la Ley 1010 de 2006?"
+  },
+  {
+    "ID": "B2-T05-Q02",
+    "Query": "¿Puede existir acoso laboral aunque quien realiza la conducta no sea jefe de la víctima?"
+  },
+  {
+    "ID": "B2-T05-Q03",
+    "Query": "Si un jefe asigna cargas de trabajo excesivas buscando que un trabajador renuncie, ¿a qué modalidad de acoso podría corresponder?"
+  },
+  {
+    "ID": "B2-T05-Q04",
+    "Query": "Si un compañero oculta documentos necesarios para que otro pueda trabajar, ¿eso puede constituir acoso laboral?"
+  },
+  {
+    "ID": "B2-T05-Q05",
+    "Query": "Si el acosador ocupa un cargo directivo alto, ¿eso puede agravar la sanción?"
+  },
+  {
+    "ID": "B2-T05-Q06",
+    "Query": "Si después corrige su conducta y se disculpa, ¿puede considerarse un atenuante?"
+  },
+  {
+    "ID": "B2-T05-Q07",
+    "Query": "Si el trabajador denuncia, ¿qué garantías tiene frente a posibles represalias?"
+  },
+  {
+    "ID": "B2-T05-Q08",
+    "Query": "¿Qué procedimiento debe seguirse una vez que el acoso está acreditado?"
+  },
+  {
+    "ID": "B2-T05-Q09",
+    "Query": "¿Qué pasa si finalmente la queja resulta infundada?"
+  },
+  {
+    "ID": "B2-T05-Q10",
+    "Query": "Si los hechos ocurrieron hace dos años, ¿todavía se pueden denunciar?"
+  },
+  {
+    "ID": "B2-T06-Q01",
+    "Query": "Mi empresa tiene trabajadores vinculados directamente y también personas contratadas por prestación de servicios. ¿Quiénes deben estar afiliados al Sistema General de Riesgos Laborales?"
+  },
+  {
+    "ID": "B2-T06-Q02",
+    "Query": "¿También debemos cotizar riesgos laborales por los contratistas independientes?"
+  },
+  {
+    "ID": "B2-T06-Q03",
+    "Query": "Si además recibimos trabajadores en misión, ¿debemos contarlos en nuestros indicadores de SST?"
+  },
+  {
+    "ID": "B2-T06-Q04",
+    "Query": "¿Es válida la afiliación a riesgos laborales por medio de una agremiación?"
+  },
+  {
+    "ID": "B2-T06-Q05",
+    "Query": "Nos atrasamos en el pago de algunos aportes a la ARL. ¿Los trabajadores pierden automáticamente la afiliación?"
+  },
+  {
+    "ID": "B2-T06-Q06",
+    "Query": "Mientras exista ese atraso, ¿quién responde por las prestaciones derivadas de un accidente de trabajo?"
+  },
+  {
+    "ID": "B2-T06-Q07",
+    "Query": "Si un trabajador es diagnosticado con una enfermedad laboral, ¿cómo se calcula el ingreso base para sus prestaciones?"
+  },
+  {
+    "ID": "B2-T06-Q08",
+    "Query": "Si está incapacitado mientras se define si el origen es laboral o común, ¿quién debe pagarle la incapacidad?"
+  },
+  {
+    "ID": "B2-T06-Q09",
+    "Query": "¿Qué servicios mínimos de prevención debe prestarnos la ARL?"
+  },
+  {
+    "ID": "B2-T06-Q10",
+    "Query": "¿Qué sanciones puede tener la empresa si incumple las obligaciones del Sistema General de Riesgos Laborales?"
+  },
+  {
+    "ID": "B2-T07-Q01",
+    "Query": "Uno de nuestros trabajadores está expuesto a ruido y sustancias químicas durante su labor. ¿Qué evaluaciones médicas ocupacionales debemos realizarle?"
+  },
+  {
+    "ID": "B2-T07-Q02",
+    "Query": "Aunque permanezca varios años en el mismo cargo, ¿debemos hacerle evaluaciones periódicas?"
+  },
+  {
+    "ID": "B2-T07-Q03",
+    "Query": "¿Quién está autorizado para realizar esas evaluaciones?"
+  },
+  {
+    "ID": "B2-T07-Q04",
+    "Query": "¿Qué otros tipos de evaluaciones médicas ocupacionales debemos contemplar además de las periódicas?"
+  },
+  {
+    "ID": "B2-T07-Q05",
+    "Query": "¿Los resultados de esos exámenes forman parte de una historia clínica ocupacional?"
+  },
+  {
+    "ID": "B2-T07-Q06",
+    "Query": "¿Qué es exactamente la historia clínica ocupacional?"
+  },
+  {
+    "ID": "B2-T07-Q07",
+    "Query": "Como empleador, ¿puedo acceder directamente a esa historia clínica?"
+  },
+  {
+    "ID": "B2-T07-Q08",
+    "Query": "Si no puedo verla completa, ¿qué información sí puede recibir la empresa después de una evaluación ocupacional?"
+  },
+  {
+    "ID": "B2-T07-Q09",
+    "Query": "¿Quién debe custodiar esa información clínica?"
+  },
+  {
+    "ID": "B2-T07-Q10",
+    "Query": "Si cambian los riesgos a los que está expuesto el trabajador, ¿deben cambiar también los exámenes que se le realizan?"
+  },
+  {
+    "ID": "B2-T08-Q01",
+    "Query": "Nuestra empresa tiene 80 trabajadores y estamos revisando el SG-SST. ¿Qué estándares mínimos debemos cumplir?"
+  },
+  {
+    "ID": "B2-T08-Q02",
+    "Query": "¿Quién puede diseñar el SG-SST en una empresa de nuestro tamaño?"
+  },
+  {
+    "ID": "B2-T08-Q03",
+    "Query": "¿Qué debe liderar el empleador frente al cumplimiento de esos estándares?"
+  },
+  {
+    "ID": "B2-T08-Q04",
+    "Query": "¿Qué indicadores mínimos de SST debemos registrar cada año?"
+  },
+  {
+    "ID": "B2-T08-Q05",
+    "Query": "¿Cómo se califican los estándares mínimos en la autoevaluación?"
+  },
+  {
+    "ID": "B2-T08-Q06",
+    "Query": "Si el resultado de la autoevaluación no es satisfactorio, ¿qué debemos hacer?"
+  },
+  {
+    "ID": "B2-T08-Q07",
+    "Query": "¿Debemos realizar una auditoría anual del SG-SST?"
+  },
+  {
+    "ID": "B2-T08-Q08",
+    "Query": "¿Quién debe revisar el sistema y con qué frecuencia?"
+  },
+  {
+    "ID": "B2-T08-Q09",
+    "Query": "¿Qué debemos hacer con los resultados de auditorías y revisiones para mejorar continuamente?"
+  },
+  {
+    "ID": "B2-T08-Q10",
+    "Query": "¿Puede una empresa con buen desempeño obtener algún reconocimiento oficial en SST?"
+  }
+]
