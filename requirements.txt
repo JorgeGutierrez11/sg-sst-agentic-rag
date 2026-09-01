@@ -6,6 +6,9 @@ langgraph==1.0.4
 langchain-groq==1.0.0
 langchain-openai
 pydantic>=2,<3
+fastapi
+uvicorn
+httpx
 bm25s
 pypandoc==1.17
 sentence-transformers==5.6.0

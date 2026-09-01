@@ -130,6 +130,18 @@ class LangChainRagMainTest(unittest.TestCase):
 
         self.assertEqual(calls, ["deepseek"])
 
+    def test_build_runtime_can_skip_graph_image_output(self) -> None:
+        graph = FakeDrawableGraph()
+        dependencies = self.build_dependencies(
+            build_langgraph_rag=lambda llm, retriever, **kwargs: graph,
+        )
+
+        with patch.object(cli, "load_dependencies", return_value=dependencies):
+            runtime = cli.build_runtime(write_graph_image=False)
+
+        self.assertIs(runtime.graph, graph)
+        self.assertFalse(graph.draw_mermaid_png_called)
+
     def test_build_runtime_opens_dense_and_sparse_indexes_and_uses_hybrid_retriever_boundary(self) -> None:
         calls: list[str] = []
 
@@ -221,10 +233,14 @@ class LangChainRagMainTest(unittest.TestCase):
 class FakeDrawableGraph:
     """Small compiled-graph fake with drawing support for runtime construction tests."""
 
+    def __init__(self) -> None:
+        self.draw_mermaid_png_called = False
+
     def get_graph(self) -> object:
         return self
 
     def draw_mermaid_png(self) -> bytes:
+        self.draw_mermaid_png_called = True
         return b"graph"
 
 

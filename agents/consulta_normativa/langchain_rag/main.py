@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     return run_interactive_loop(runtime)
 
 
-def build_runtime() -> RagRuntime:
+def build_runtime(write_graph_image: bool = True) -> RagRuntime:
     """Build the hybrid retriever and DeepSeek-backed LLM for the session."""
 
     dependencies = load_dependencies()
@@ -97,11 +97,12 @@ def build_runtime() -> RagRuntime:
             parent_lookup=parent_lookup,
         )
 
-        # Guardar diagrama en disco
-        png_bytes = graph.get_graph().draw_mermaid_png()
-        with open("data/images/base_rag_graph.png", "wb") as f:
-            f.write(png_bytes)
-        print("Grafo guardado exitosamente como 'base_rag_graph.png'")
+        if write_graph_image:
+            # Guardar diagrama en disco
+            png_bytes = graph.get_graph().draw_mermaid_png()
+            with open("data/images/base_rag_graph.png", "wb") as f:
+                f.write(png_bytes)
+            print("Grafo guardado exitosamente como 'base_rag_graph.png'")
 
     except Exception as error:
         raise OperationalError(str(error)) from error
