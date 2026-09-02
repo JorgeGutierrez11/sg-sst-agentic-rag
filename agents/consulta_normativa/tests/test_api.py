@@ -144,6 +144,21 @@ class ApiAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(calls, ["built"])
 
+    def test_app_allows_localhost_frontend_origin(self) -> None:
+        app = create_app(runtime_builder=FakeRuntime)
+
+        with TestClient(app) as client:
+            response = client.options(
+                "/api/v1/query",
+                headers={
+                    "Origin": "http://localhost:3000",
+                    "Access-Control-Request-Method": "POST",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["access-control-allow-origin"], "http://localhost:3000")
+
 
 if __name__ == "__main__":
     unittest.main()

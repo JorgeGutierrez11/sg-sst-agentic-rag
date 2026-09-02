@@ -19,6 +19,7 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     references: list[str]
+    chunks: list[str]
     conversation_id: str
 
 

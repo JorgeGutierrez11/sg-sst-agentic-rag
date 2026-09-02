@@ -178,12 +178,12 @@ def print_answer(result: LangChainRagResult) -> None:
     print()
     print("Answer:")
     print(result.answer)
-    print("-----------------------------------")
-    if result.references:
-        print()
-        print("References:")
-        for reference in result.references:
-            print(f"- {reference}")
+    # print("-----------------------------------")
+    # if result.references:
+    #     print()
+    #     print("References:")
+    #     for reference in result.references:
+    #         print(f"- {reference}")
 
 
 def fail(stage: str, error: Exception) -> int:

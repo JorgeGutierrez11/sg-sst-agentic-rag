@@ -20,3 +20,4 @@ class LangChainRagResult:
     references: list[str]
     context: str
     prompt: str
+    chunks: list[str]

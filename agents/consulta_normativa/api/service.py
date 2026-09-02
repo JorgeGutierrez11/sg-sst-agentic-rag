@@ -15,5 +15,6 @@ class QueryService:
         return QueryResponse(
             answer=result.answer,
             references=list(result.references),
+            chunks=list(result.chunks),
             conversation_id=conversation_id or str(uuid4()),
         )

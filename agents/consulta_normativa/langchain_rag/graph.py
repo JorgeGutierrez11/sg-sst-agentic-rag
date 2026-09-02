@@ -1,5 +1,6 @@
 """LangGraph RAG flow for normative consultation."""
 
+from agents.consulta_normativa.api import dependencies
 from collections.abc import Callable
 from typing import Any
 
@@ -232,5 +233,6 @@ def format_result_node(state: RagGraphState) -> RagGraphState:
             references=state.get("references", []),
             context=state["context"],
             prompt=state["prompt"],
+            chunks=[document.document for document in state.get("documents", [])],
         )
     }
