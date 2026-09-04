@@ -1,4 +1,4 @@
-Query	Document	Answer
+Query	Document	Answer	Context_Relevance_Label	Answer_Faithfulness_Label	Answer_Relevance_Label
 ¿A quién aplica el Decreto 768 de 2022?	"[1] Decreto 768 de 2022 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -141,7 +141,7 @@ Contenido:
 *(Decreto número 1443 de 2014, artículo 22)*"	"El Decreto 768 de 2022 se aplica a los afiliados al Sistema General de Riesgos Laborales, a las Administradoras de Riesgos Laborales (ARL) y a los operadores de la Planilla Integrada de Liquidación de Aportes (PILA) [4]. Se exceptúa de su ámbito de aplicación a los trabajadores independientes que se afilien voluntariamente al Sistema General de Riesgos Laborales, a quienes se les aplicará la Tabla de Clasificación de Ocupaciones u Oficios más Representativos establecida en el Decreto 1072 de 2015 [4]. El contexto no menciona otros destinatarios adicionales.
 
 Fragmentos citados:
-- [4] Decreto 768 de 2022, artículo 2 (Campo de aplicación)."
+- [4] Decreto 768 de 2022, artículo 2 (Campo de aplicación)."	1	1	1
 Tengo dos sedes que realizan actividades económicas diferentes. ¿Pueden tener clases de riesgo distintas?	"[1] Decreto 768 de 2022, artículo 4 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -295,7 +295,7 @@ Fragmentos citados:
 - [1] Decreto 768 de 2022, artículo 4 (empresas con más de un centro de trabajo) y artículo 5 (clasificación de empresa).
 - [2] Decreto 768 de 2022, tabla 1, parte 24 de 71 (ejemplos de actividades con clase de riesgo 2).
 - [4] Decreto 768 de 2022, tabla 1, parte 23 de 71 (ejemplos de actividades con clase de riesgo 2).
-- [5] Decreto 768 de 2022, artículo 9, numeral 1 (composición del código de clasificación)."
+- [5] Decreto 768 de 2022, artículo 9, numeral 1 (composición del código de clasificación)."	1	1	1
 Mi actividad económica no aparece en la tabla de clasificación de riesgos. ¿Qué debo hacer en ese caso?	"[1] Decreto 768 de 2022, artículo 9, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -426,7 +426,7 @@ Contenido:
 **Parágrafo.** Se exceptúa del ámbito de aplicación del presente decreto los trabajadores independientes que se afilien voluntariamente al Sistema General de Riesgos Laborales, a los cuales se aplicará la Tabla de Clasificación de Ocupaciones u Oficios más Representativos, establecida en el artículo 2.2.4.2.5.9 del Decreto 1072 de 2015, Decreto Único Reglamentario del Sector Trabajo.  **Artículo 3. Definiciones.** Para efecto del presente decreto, se adoptan las siguientes definiciones:"	"Según el contexto recuperado, si su actividad económica no aparece en la tabla de clasificación de actividades económicas para el Sistema General de Riesgos Laborales, la empresa y la Administradora de Riesgos Laborales (ARL) deben efectuar la clasificación de acuerdo con la actividad más afín contemplada en la tabla, teniendo en cuenta el peligro y riesgo laboral, las materias primas, los materiales o insumos que se utilicen, los medios de producción, procesos, almacenamiento y transporte [4]. Esta disposición está contenida en el artículo 5 del Decreto 768 de 2022, que regula la clasificación de empresas cuando la actividad no está listada [4]. El contexto no proporciona información adicional sobre procedimientos alternativos o pasos específicos más allá de esta regla general, por lo que no puedo ampliar más allá de lo citado.
 
 Fragmentos citados:
-- [4] Decreto 768 de 2022, artículo 5 (Clasificación de empresa)."
+- [4] Decreto 768 de 2022, artículo 5 (Clasificación de empresa)."	1	1	1
 Tras una actualización de la tabla de clasificación, cambió la clase de riesgo de mi empresa. ¿Debo empezar a cotizar con la nueva clase de riesgo de inmediato?	"[1] Decreto 768 de 2022, artículo 4 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -555,7 +555,7 @@ Que el parágrafo del artículo 28 del Decreto Ley 1295 de 1994 dispone que: *«
 
 Fragmentos citados:
 - [1] Decreto 768 de 2022, artículo 6 (modificación de la clase de riesgo de la empresa).
-- [2] Decreto 768 de 2022, considerandos (actualización de la tabla y determinación de la clase de riesgo)."
+- [2] Decreto 768 de 2022, considerandos (actualización de la tabla y determinación de la clase de riesgo)."	1	1	1
 ¿Qué es la Seguridad y Salud en el Trabajo (SST)?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.3, parágrafo 1° (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -697,7 +697,7 @@ Contenido:
 7. Analizar el resultado de los indicadores y de las auditorías anteriores del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST);"	"La Seguridad y Salud en el Trabajo (SST) es la disciplina que trata de la prevención de las lesiones y enfermedades causadas por las condiciones de trabajo, y de la protección y promoción de la salud de los trabajadores [1]. Su objeto es mejorar las condiciones y el medio ambiente de trabajo, así como la salud en el trabajo, lo que conlleva la promoción y el mantenimiento del bienestar físico, mental y social de los trabajadores en todas las ocupaciones [1]. Esta definición proviene del artículo 2.2.4.6.3 del Decreto 1072 de 2015, que a su vez remite al artículo 3° del Decreto 1443 de 2014 [1].
 
 Fragmentos citados:
-[1] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.3, parágrafo 1° (que reproduce el artículo 3° del Decreto 1443 de 2014)."
+[1] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.3, parágrafo 1° (que reproduce el artículo 3° del Decreto 1443 de 2014)."	1	1	1
 ¿Qué es el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST)?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.17, parágrafo 1°, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -865,7 +865,7 @@ Contenido:
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.17, parágrafo 1°, numeral 1.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.8, numeral 1.
-- [4] Decreto 1072 de 2015, artículo 2.2.4.6.20, numeral 1."
+- [4] Decreto 1072 de 2015, artículo 2.2.4.6.20, numeral 1."	1	1	1
 Ya redacté la política de SST de mi empresa, pero todavía no he definido sus objetivos. ¿Qué objetivos debe incluir?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.7, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -1012,7 +1012,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.7, numeral 1: objetivos mínimos de la Política de SST.
-- [2] Decreto 1072 de 2015, artículo 2.2.4.6.18, numeral 1: características de los objetivos del SG-SST."
+- [2] Decreto 1072 de 2015, artículo 2.2.4.6.18, numeral 1: características de los objetivos del SG-SST."	1	1	1
 Soy una MiPyme y quiero saber qué apoyo puedo exigirle a mi ARL para implementar el SG-SST. ¿Qué obligaciones tiene la ARL frente a mi empresa?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -1212,7 +1212,7 @@ Dentro del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) en
 2. Asignación y Comunicación de Responsabilidades: Debe asignar, documentar y comunicar las responsabilidades específicas en Seguridad y Salud en el Trabajo (SST) a todos los niveles de la organización, incluida la alta dirección."	"De acuerdo con el contexto recuperado, las Administradoras de Riesgos Laborales (ARL) tienen la obligación de capacitar al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo (Copasst) en los aspectos relativos al SG-SST, y de prestar asesoría y asistencia técnica a sus empresas y trabajadores afiliados en la implementación del capítulo correspondiente [1]. Esto significa que, como MiPyme afiliada, puede exigir a su ARL tanto la capacitación del Copasst o Vigía como la asesoría y asistencia técnica para implementar el SG-SST [1]. El contexto no menciona otros apoyos específicos adicionales que la ARL deba brindar a las MiPymes, por lo que esa parte de su pregunta no puede responderse con la información disponible.
 
 Fragmentos citados:
-- [1] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9, numeral 1: obligación de las ARL de capacitar al Copasst o Vigía y prestar asesoría y asistencia técnica en la implementación del SG-SST."
+- [1] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9, numeral 1: obligación de las ARL de capacitar al Copasst o Vigía y prestar asesoría y asistencia técnica en la implementación del SG-SST."	1	1	1
 Quiero involucrar a mis trabajadores en el SG-SST. ¿Qué responsabilidades tienen ellos frente al sistema?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.8, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -1366,7 +1366,7 @@ Para el efecto, el empleador o contratante debe abordar la prevención de los ac
 
 Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.8, numeral 10.3: ""Promover la participación de todos los miembros de la empresa en la implementación del SG-SST"".
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.3, parágrafo 1°: ""El SG-SST debe ser liderado e implementado por el empleador o contratante, con la participación de los trabajadores y/o contratistas""."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.3, parágrafo 1°: ""El SG-SST debe ser liderado e implementado por el empleador o contratante, con la participación de los trabajadores y/o contratistas""."	1	1	1
 ¿Cómo debo conservar los documentos y registros de mi SG-SST?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.13, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -1556,7 +1556,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.13, numeral 1.
-- [2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.12, parágrafos 2° y 3°."
+- [2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.12, parágrafos 2° y 3°."	1	1	1
 Nunca he informado a mis trabajadores sobre el SG-SST. ¿Qué información debo comunicarles?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.8, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -1750,7 +1750,7 @@ Para el efecto, el empleador o contratante debe abordar la prevención de los ac
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.8, numeral 1.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.14, parágrafo 1°, numeral 1."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.14, parágrafo 1°, numeral 1."	1	1	1
 Voy a implementar el SG-SST por primera vez. ¿En qué consiste la evaluación inicial?	"[1] Resolución 0312 de 2019, tabla 4, parte 1 de 1 (table)
 Información general:
 - Tipo de registro: table
@@ -1875,7 +1875,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, tabla 4, parte 1 de 1 (fase 1: Evaluación inicial).
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.16, parágrafo 1°, numeral 1.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1."	1	1	1
 Ya realicé la evaluación inicial de mi SG-SST. ¿Cómo debo planificar el sistema a partir de sus resultados?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.16, parágrafo 1°, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2010,7 +2010,7 @@ Contenido:
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.16, parágrafo 1°, numeral 1.
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.17, parágrafo 1°, numeral 1.
-- [3] Decreto 1072 de 2015, tabla 1, parte 1 de 1."
+- [3] Decreto 1072 de 2015, tabla 1, parte 1 de 1."	1	1	1
 Quiero medir el avance de mi SG-SST. ¿Qué indicadores debo definir para evaluarlo?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.19, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2167,7 +2167,7 @@ Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.17, parágrafo 1°, numeral 1.
 - [4] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.2, parágrafo 1°, numeral 1."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.2, parágrafo 1°, numeral 1."	1	1	1
 Identifiqué un riesgo mecánico en un puesto de trabajo. ¿Qué tipo de medidas debo priorizar frente a ese peligro?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.23, parágrafo 1°, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2308,7 +2308,7 @@ Contenido:
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.24 (medidas de prevención y control con esquema de jerarquización).
 - [2] Resolución 0312 de 2019, tabla 3, parte 6 de 7 (medidas de prevención y control frente a peligros/riesgos identificados, priorizando fuente y medio).
-- [3] Resolución 0312 de 2019, tabla 3, parte 5 de 7 (metodología para identificación de peligros, evaluación y valoración de riesgos, incluyendo riesgos de seguridad)."
+- [3] Resolución 0312 de 2019, tabla 3, parte 5 de 7 (metodología para identificación de peligros, evaluación y valoración de riesgos, incluyendo riesgos de seguridad)."	1	1	1
 Mi empresa está ubicada en una zona con riesgo de sismos o incendios. ¿Debo tener un plan de prevención y respuesta ante emergencias?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.25, parágrafo 1°, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2454,7 +2454,7 @@ Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.25, parágrafo 1°, numeral 1.
 - [2] Resolución 0312 de 2019, tabla 3, parte 7 de 7.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.25, parágrafo 1°, numeral 1.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.25, parágrafo 1°, numeral 1."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.25, parágrafo 1°, numeral 1."	1	1	1
 Mi empresa lleva un año con el SG-SST implementado. ¿Debo realizar una auditoría anual?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.29 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2592,7 +2592,7 @@ La revisión de la alta dirección debe permitir:
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.29 (Auditoría de cumplimiento del SG-SST).
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.31 (Revisión por la alta dirección)."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.31 (Revisión por la alta dirección)."	1	1	1
 Delegué la gestión del SG-SST en un empleado. ¿Quién debe revisar el sistema y con qué frecuencia?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.31, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2796,7 +2796,7 @@ Contenido:
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1.
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.8, numeral 1."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.8, numeral 1."	1	1	1
 ¿Qué debo hacer para mejorar continuamente mi SG-SST?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.34, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -2987,7 +2987,7 @@ Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículos 2.2.4.6.3 y 2.2.4.6.4.
 - [3] Resolución 0312 de 2019, tabla 5 (estándares mínimos SG-SST).
 - [4] Decreto 1072 de 2015, artículo 2.2.4.6.31, numerales 4 a 7.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.9, numerales 5 y 6."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.9, numerales 5 y 6."	1	1	1
 Acabo de nombrar a una persona responsable del SG-SST. ¿Debe realizar algún curso obligatorio?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.35 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -3167,7 +3167,7 @@ El empleador debe garantizar la capacitación de los trabajadores en los aspecto
 Fragmentos citados:
 [1] Decreto 1072 de 2015, artículo 2.2.4.6.35 (Capacitación obligatoria).
 [2] Resolución 0312 de 2019, tabla 5 (Estándares Mínimos SG-SST, ítem 1.2.3).
-[3] Resolución 0312 de 2019, artículo 13, numeral 1 (actores de la cadena de suministro agrícola)."
+[3] Resolución 0312 de 2019, artículo 13, numeral 1 (actores de la cadena de suministro agrícola)."	1	1	1
 Mi empresa es de riesgo I y creció de 8 a 15 trabajadores. ¿Qué estándares mínimos debo cumplir ahora?	"[1] Resolución 0312 de 2019, artículo 16 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -3301,7 +3301,7 @@ Cuando en los Departamentos de Amazonas, Arauca, Chocó, Guainía, Guaviare, San
 
 Fragmentos citados:
 - [5] Resolución 0312 de 2019, artículo 9 y su parágrafo 1 (Capítulo II, Estándares Mínimos para empresas de once (11) a cincuenta (50) trabajadores clasificadas con riesgo I, II o III).
-- [4] Resolución 0312 de 2019, artículo 3 (Estándares Mínimos para empresas con diez (10) o menos trabajadores clasificadas con riesgo I, II o III)."
+- [4] Resolución 0312 de 2019, artículo 3 (Estándares Mínimos para empresas con diez (10) o menos trabajadores clasificadas con riesgo I, II o III)."	1	1	1
 Mi empresa tiene 20 trabajadores y todavía no tiene una persona asignada al SG-SST. ¿Quién puede diseñar el sistema?	"[1] Resolución 0312 de 2019, artículo 16 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -3428,7 +3428,7 @@ Contenido:
 Fragmentos citados:
 - [2] Resolución 0312 de 2019, tabla 1, parte 1 de 1 (criterios para empresas de diez (10) o menos trabajadores clasificadas en riesgo I, II, III).
 - [1] Resolución 0312 de 2019, artículo 17 (diseño e implementación para empresas de más de cincuenta (50) trabajadores o las de cincuenta (50) o menos con riesgo IV o V).
-- [5] Resolución 0312 de 2019, tabla 3, parte 1 de 7 (criterios para empresas de más de cincuenta (50) trabajadores o las de cincuenta (50) o menos con riesgo IV o V)."
+- [5] Resolución 0312 de 2019, tabla 3, parte 1 de 7 (criterios para empresas de más de cincuenta (50) trabajadores o las de cincuenta (50) o menos con riesgo IV o V)."	1	1	1
 Mi empresa tiene 30 trabajadores y busca apoyo externo para implementar el SG-SST. ¿Qué apoyo puede recibir?	"[1] Resolución 0312 de 2019, artículo 10, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -3555,7 +3555,7 @@ Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 10, numeral 1 y artículo 11.
 - [2] Resolución 0312 de 2019, artículo 5, numeral 1.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.3, parágrafo 1°.
-- [4] Resolución 0312 de 2019, artículo 13, numeral 1."
+- [4] Resolución 0312 de 2019, artículo 13, numeral 1."	1	1	1
 Voy a contratar un proveedor externo. ¿Puedo exigirle que cumpla los estándares mínimos de SST?	"[1] Resolución 0312 de 2019, artículo 21 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -3673,7 +3673,7 @@ Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 21 (Cumplimiento de los Estándares Mínimos del SG-SST).
 - [2] Resolución 0312 de 2019, artículo 14 (Selección y evaluación de proveedores y contratistas).
 - [4] Resolución 0312 de 2019, artículo 23 (Obligaciones del empleador o contratante).
-- [5] Resolución 0312 de 2019, artículo 23 (Obligaciones del empleador o contratante, continuación)."
+- [5] Resolución 0312 de 2019, artículo 23 (Obligaciones del empleador o contratante, continuación)."	1	1	1
 Mi empresa alcanzó los 80 trabajadores. ¿Qué estándares mínimos debe cumplir ahora?	"[1] Resolución 0312 de 2019, artículo 16 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -3801,7 +3801,7 @@ Se podrán realizar actividades, planes y programas de manera conjunta con otras
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 16: ""Estándares Mínimos para empresas de más de cincuenta (50) trabajadores... deben cumplir con los siguientes Estándares Mínimos, con el fin de proteger la seguridad y salud de los trabajadores"".
-- [5] Resolución 0312 de 2019, artículo 20: ""Los Estándares Mínimos del Sistema de Gestión de SST son de obligatorio cumplimiento para todas las personas naturales y jurídicas señaladas en el artículo 2°... su implementación se ajusta, adecua y armoniza a cada empresa o entidad de manera particular conforme al número de trabajadores, actividad económica, labor u oficios desarrollados""."
+- [5] Resolución 0312 de 2019, artículo 20: ""Los Estándares Mínimos del Sistema de Gestión de SST son de obligatorio cumplimiento para todas las personas naturales y jurídicas señaladas en el artículo 2°... su implementación se ajusta, adecua y armoniza a cada empresa o entidad de manera particular conforme al número de trabajadores, actividad económica, labor u oficios desarrollados""."	1	1	1
 ¿Los estándares mínimos del SG-SST cambian según el número de trabajadores de la empresa?	"[1] Resolución 0312 de 2019 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4008,7 +4008,7 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, Capítulo Preliminar (considerandos y objeto).
 - [2] Resolución 0312 de 2019, Tabla de Valores y Calificación (notas al pie).
-- [3] Resolución 0312 de 2019, artículo 20."
+- [3] Resolución 0312 de 2019, artículo 20."	1	1	1
 Mi empresa ya diseñó su SG-SST con base en los estándares mínimos. ¿Qué debe liderar el empleador frente a su cumplimiento?	"[1] Resolución 0312 de 2019, artículo 20 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4201,7 +4201,7 @@ Los presentes Estándares Mínimos corresponden al conjunto de normas, requisito
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 20.
-- [2] Resolución 0312 de 2019, artículo 21."
+- [2] Resolución 0312 de 2019, artículo 21."	1	1	1
 Mi empresa tiene un buen desempeño en SST. ¿Puede obtener algún reconocimiento oficial por ese desempeño?	"[1] Resolución 0312 de 2019, artículo 22, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4397,7 +4397,7 @@ Contenido:
 *(Decreto número 1443 de 2014, artículo 8°)*"	"Sí, su empresa puede obtener un reconocimiento oficial por su buen desempeño en SST. Según el contexto, el certificado de acreditación en seguridad y salud en el trabajo es el reconocimiento oficial que realiza el Ministerio del Trabajo a las empresas, entidades, empleadores y contratantes con excelente calificación en el cumplimiento de los Estándares Mínimos de SST, que aportan valor agregado y ejecutan de manera permanente actividades adicionales a las establecidas en la normativa de riesgos laborales, impactando positivamente en la salud y bienestar de los trabajadores, estudiantes y contratistas [1]. Para acceder a este reconocimiento, las entidades, empresas y empleadores que deseen acreditarse en excelencia en SST deberán cumplir con los requisitos que se establecen en la normativa [1]. El contexto no detalla cuáles son esos requisitos específicos, por lo que esa parte de la pregunta no puede responderse con la información disponible.
 
 Fragmentos citados:
-- [1] Resolución 0312 de 2019, artículo 22, numeral 1."
+- [1] Resolución 0312 de 2019, artículo 22, numeral 1."	1	1	1
 Además de trabajadores de planta, mi empresa tiene trabajadores independientes y trabajadores en misión. ¿Debo incluirlos en los indicadores de SST?	"[1] Resolución 0312 de 2019, artículo 23 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4544,7 +4544,7 @@ Contenido:
 *(Decreto número 1443 de 2014, artículo 1°)*"	"Sí, debe incluirlos. Según el artículo 23 de la Resolución 0312 de 2019, los empleadores deben cumplir con todos los Estándares Mínimos del SG-SST y, para el cálculo de los indicadores, se deben contabilizar a todos los trabajadores dependientes e independientes, cooperados, estudiantes, trabajadores en misión y, en general, todas las personas que presten servicios bajo cualquier modalidad de contratación en las instalaciones del empleador [1]. Esto significa que los trabajadores independientes y en misión forman parte de la población que debe considerarse en los indicadores de SST, sin que la implementación de los estándares mínimos exima al empleador de otras obligaciones del Sistema General de Riesgos Laborales [1]. El contexto no especifica detalles adicionales sobre cómo calcular indicadores específicos para estos grupos, pero la obligación de incluirlos es explícita.
 
 Fragmentos citados:
-- [1] Resolución 0312 de 2019, artículo 23 (obligaciones del empleador o contratante)."
+- [1] Resolución 0312 de 2019, artículo 23 (obligaciones del empleador o contratante)."	1	1	1
 Mi empresa afilia a sus trabajadores a riesgos laborales por medio de una agremiación. ¿Es válida esa forma de afiliación?	"[1] Resolución 0312 de 2019, artículo 24 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4681,7 +4681,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 24.
 - [2] Resolución 0312 de 2019, artículo 24.
-- [4] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a."
+- [4] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a."	1	1	1
 Mi empresa está implementando el SG-SST por fases. ¿En qué consisten las fases de adecuación y transición?	"[1] Resolución 0312 de 2019, artículo 25, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4836,7 +4836,7 @@ En el mes de diciembre de 2019, los empleadores y contratantes objeto de la pres
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 25, numeral 1 (resolución)
 - [4] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 1°, parágrafo 1° (decreto)
-- [5] Resolución 0312 de 2019, artículo 25, numeral 1 (resolución)"
+- [5] Resolución 0312 de 2019, artículo 25, numeral 1 (resolución)"	1	1	1
 Ya realicé la autoevaluación de los estándares mínimos de mi empresa. ¿Cómo se califican esos estándares?	"[1] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -4979,7 +4979,7 @@ Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1.
 - [2] Resolución 0312 de 2019, artículo 26, numeral 1.
 - [3] Resolución 0312 de 2019, artículo 25, numeral 1.
-- [4] Resolución 0312 de 2019, tabla 6 (Tabla de Valores de los Estándares Mínimos)."
+- [4] Resolución 0312 de 2019, tabla 6 (Tabla de Valores de los Estándares Mínimos)."	1	1	1
 La autoevaluación de estándares mínimos de mi empresa obtuvo un resultado no satisfactorio. ¿Qué debo hacer?	"[1] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -5120,7 +5120,7 @@ Contenido:
 
 Fragmentos citados:
 - [2] Resolución 0312 de 2019, artículo 26, numeral 1 (resolución)
-- [3] Resolución 0312 de 2019, tabla 6, parte 1 de 1 (table)"
+- [3] Resolución 0312 de 2019, tabla 6, parte 1 de 1 (table)"	1	1	1
 ¿Qué indicadores mínimos de SST debe registrar mi empresa cada año?	"[1] Decreto 1072 de 2015 Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.19, numeral 1 (decreto)
 Información general:
 - Tipo de registro: child_chunk
@@ -5271,7 +5271,7 @@ El Sistema de Gestión en Seguridad y Salud en el Trabajo es responsabilidad de 
 Se podrán realizar actividades, planes y programas de manera conjunta con otras empresas o entidades de la misma actividad económica, zona geográfica o gremio, sin que una empresa o entidad asuma o reemplace las funciones u obligaciones que por ley le competen a otra."	"De acuerdo con el contexto recuperado, su empresa debe definir indicadores (cualitativos o cuantitativos según corresponda) para evaluar la estructura, el proceso y los resultados del SG-SST, y hacer seguimiento a los mismos; estos indicadores deben alinearse con el plan estratégico de la empresa [1]. Cada indicador debe contar con una ficha técnica que incluya siete variables: definición, interpretación, límite o valor de cumplimiento, método de cálculo, fuente de información, periodicidad del reporte y personas que deben conocer el resultado [1]. Sin embargo, el contexto no especifica cuáles son los indicadores mínimos obligatorios que debe registrar cada año, ni detalla una lista concreta de indicadores; solo establece los requisitos generales para su definición y seguimiento. Por lo tanto, la parte que sí puede responderse es el marco general de los indicadores, pero no se identifica una lista mínima específica en los fragmentos recuperados.
 
 Fragmentos citados:
-- [1] Decreto 1072 de 2015, artículo 2.2.4.6.19, numeral 1: define los indicadores del SG-SST y las variables de la ficha técnica."
+- [1] Decreto 1072 de 2015, artículo 2.2.4.6.19, numeral 1: define los indicadores del SG-SST y las variables de la ficha técnica."	1	1	1
 En una cooperativa de trabajo asociado ocurrió un accidente de un trabajador cooperado. ¿La Resolución 1401 de 2007 aplica a este caso?	"[1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -5416,7 +5416,7 @@ Cuando el accidente se considere grave o produzca la muerte, en la investigació
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 8° (investigación de accidentes e incidentes ocurridos a trabajadores no vinculados mediante contrato de trabajo).
-- [3] Resolución 1401 de 2007, artículo 1° (campo de aplicación)."
+- [3] Resolución 1401 de 2007, artículo 1° (campo de aplicación)."	1	1	1
 Una máquina falló durante el trabajo, pero nadie resultó lesionado y no hubo daños. ¿Ese hecho se considera un incidente de trabajo?	"[1] Ley 1562 de 2012, artículo 3° (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -5539,7 +5539,7 @@ Contenido:
 **Artículo 11. Causas del accidente o incidente.** Son las razones por las cuales ocurre el accidente o incidente. En el informe se deben relacionar todas las causas encontradas dentro de la investigación, identificando las básicas o mediatas y las inmediatas y especificando en cada grupo, el listado de los actos subestándar o inseguros y las condiciones subestándar o inseguras."	"Sí, ese hecho se considera un incidente de trabajo, según la definición contenida en la Resolución 1401 de 2007: se trata de un suceso acaecido en el curso del trabajo o en relación con este, que tuvo el potencial de ser un accidente, en el que hubo personas involucradas sin que sufrieran lesiones ni se presentaran daños a la propiedad o pérdida en los procesos [2]. En su caso, la falla de la máquina ocurrió durante el trabajo, hubo personas involucradas (los trabajadores) y no hubo lesiones ni daños, por lo que encaja en esa definición. El contexto no menciona si la falla de la máquina en sí misma (sin lesiones ni daños) se clasifica de otra forma, pero la definición citada es la aplicable a este tipo de sucesos.
 
 Fragmentos citados:
-- [2] Resolución 1401 de 2007, artículo 3° (definición de incidente de trabajo)."
+- [2] Resolución 1401 de 2007, artículo 3° (definición de incidente de trabajo)."	1	1	1
 Mi empresa aún no ha conformado el equipo investigador de accidentes. ¿Qué debemos hacer respecto a ese equipo antes de que ocurra un accidente?	"[1] Resolución 1401 de 2007, artículo 6° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -5687,7 +5687,7 @@ Contenido:
 **Fragmentos citados:**
 - [1] Resolución 1401 de 2007, artículo 6° y artículo 7° (metodología de investigación y equipo investigador).
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.32, parágrafo 2° (conformación del equipo investigador).
-- [3] Resolución 1401 de 2007, artículo 4°, numerales 1 y 2 (obligaciones de los aportantes: conformar el equipo e investigar dentro de 15 días)."
+- [3] Resolución 1401 de 2007, artículo 4°, numerales 1 y 2 (obligaciones de los aportantes: conformar el equipo e investigar dentro de 15 días)."	1	1	1
 Mi empresa no tiene un formato definido para investigar accidentes de trabajo. ¿Debemos utilizar algún formato específico?	"[1] Resolución 1401 de 2007, artículo 4°, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -5847,7 +5847,7 @@ En relación con la investigación de incidentes y accidentes de trabajo, las ad
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 4°, numerales 1, 2, 3 y 4 (obligaciones de los aportantes).
-- [5] Resolución 1401 de 2007, artículo 5°, numerales 2 y 4 (obligaciones de las administradoras de riesgos profesionales)."
+- [5] Resolución 1401 de 2007, artículo 5°, numerales 2 y 4 (obligaciones de las administradoras de riesgos profesionales)."	1	1	1
 Después de un accidente de trabajo, la ARL recomendó medidas correctivas. ¿Mi empresa está obligada a implementarlas?	"[1] Resolución 1401 de 2007, artículo 4°, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -5989,7 +5989,7 @@ Contenido:
 **Fragmentos citados:**
 - [1] Resolución 1401 de 2007, artículo 4°, numerales 5, 6, 7 y 8.
 - [3] Resolución 1401 de 2007, artículo 5°, numerales 7, 8 y 9.
-- [4] Decreto 1072 de 2015, artículo 2.2.4.6.33, parágrafo 1°, numeral 1."
+- [4] Decreto 1072 de 2015, artículo 2.2.4.6.33, parágrafo 1°, numeral 1."	1	1	1
 Mi empresa es pequeña y no tiene una metodología propia para investigar accidentes. ¿La ARL debe proporcionarnos una metodología?	"[1] Resolución 1401 de 2007, artículo 6° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6135,7 +6135,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 6° (metodología de investigación de incidentes y accidentes de trabajo).
 - [2] Resolución 1401 de 2007, artículo 4°, numeral 3 (obligaciones de los aportantes: adoptar metodología y formato, siendo procedente adoptar los diseñados por la ARL).
-- [3] Resolución 1401 de 2007, artículo 5°, numerales 2 y 4 (obligaciones de las ARL: desarrollar e implementar metodología y suministrarla a los aportantes, y suministrar el formato con instructivo)."
+- [3] Resolución 1401 de 2007, artículo 5°, numerales 2 y 4 (obligaciones de las ARL: desarrollar e implementar metodología y suministrarla a los aportantes, y suministrar el formato con instructivo)."	1	1	1
 Mi empresa quiere utilizar una metodología propia para investigar accidentes de trabajo. ¿Puede hacerlo?	"[1] Resolución 1401 de 2007, artículo 6° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6284,7 +6284,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 6° (metodología de investigación de incidentes y accidentes de trabajo).
-- [4] Resolución 1401 de 2007, artículo 4°, numeral 3 (obligaciones de los aportantes: adoptar metodología y formato)."
+- [4] Resolución 1401 de 2007, artículo 4°, numeral 3 (obligaciones de los aportantes: adoptar metodología y formato)."	1	1	1
 Un trabajador en misión de una empresa de servicios temporales sufrió un accidente mientras trabajaba en la empresa usuaria. ¿Quién es responsable de investigar el accidente?	"[1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6427,7 +6427,7 @@ Cuando el accidente se considere grave o produzca la muerte, en la investigació
 **Fragmentos citados:**
 - [1] Resolución 1401 de 2007, artículo 8° (investigación de accidentes e incidentes ocurridos a trabajadores no vinculados mediante contrato de trabajo).
 - [3] Resolución 1401 de 2007, artículo 4°, numeral 2 (obligaciones de los aportantes: investigar dentro de los 15 días).
-- [5] Resolución 1401 de 2007, artículos 6° y 7° (metodología de investigación y conformación del equipo investigador)."
+- [5] Resolución 1401 de 2007, artículos 6° y 7° (metodología de investigación y conformación del equipo investigador)."	1	1	1
 Mi empresa está terminando el informe de investigación de un accidente de trabajo. ¿Qué información debe contener ese informe?	"[1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6558,7 +6558,7 @@ Para efecto de la investigación, se seguirá el mismo procedimiento señalado e
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 9° (contenido del informe de investigación).
-- [2] Resolución 1401 de 2007, artículo 10 (descripción del accidente o incidente)."
+- [2] Resolución 1401 de 2007, artículo 10 (descripción del accidente o incidente)."	1	1	1
 Ya realizamos la investigación de un accidente de trabajo. ¿Qué causas debemos identificar en el informe?	"[1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6688,7 +6688,7 @@ Contenido:
 
 Fragmentos citados:
 - [2] Resolución 1401 de 2007, artículo 11 (causas del accidente o incidente).
-- [4] Resolución 1401 de 2007, artículo 1° (definiciones de causas básicas e inmediatas)."
+- [4] Resolución 1401 de 2007, artículo 1° (definiciones de causas básicas e inmediatas)."	1	1	1
 Estamos documentando la investigación de un accidente de trabajo. ¿Qué datos sobre la propia investigación, como lugar, fecha e investigadores, deben registrarse en el informe?	"[1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6814,7 +6814,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 9° (contenido del informe de investigación).
-- [4] Resolución 1401 de 2007, artículo 11 (causas del accidente o incidente)."
+- [4] Resolución 1401 de 2007, artículo 11 (causas del accidente o incidente)."	1	1	1
 Mi empresa no investigó un accidente grave ocurrido en sus instalaciones. ¿Qué consecuencias puede tener ese incumplimiento?	"[1] Resolución 1401 de 2007, artículo 4°, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -6947,7 +6947,7 @@ Para obtener la información, el aportante puede acudir al reconocimiento del á
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 4°, numeral 1 (obligaciones del aportante: implementar medidas correctivas, proveer recursos, registrar seguimiento, calcular indicadores, remitir informes a la ARP).
 - [3] Resolución 1401 de 2007, artículos 6° y 7° (metodología de investigación y conformación del equipo investigador, incluyendo participación de profesional con licencia en accidentes graves o mortales).
-- [5] Resolución 1401 de 2007, artículo 10 (descripción del accidente o incidente en el informe)."
+- [5] Resolución 1401 de 2007, artículo 10 (descripción del accidente o incidente en el informe)."	1	1	1
 Un trabajador está recibiendo comentarios ofensivos reiterados por parte de un compañero. ¿Qué busca proteger la Ley 1010 de 2006 frente a este tipo de situaciones?	"[1] Ley 1010 de 2006 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7078,7 +7078,7 @@ Fragmentos citados:
 - [2] Ley 1010 de 2006, artículo 2°, numeral 1 (definición de acoso laboral y modalidad de maltrato laboral).
 - [3] Ley 1010 de 2006, artículo 9°, parágrafos 1° y 2° (obligación de adaptar el reglamento y tolerancia del acoso).
 - [4] Ley 1010 de 2006, artículo 1°, parágrafo (ámbito de aplicación).
-- [5] Ley 1010 de 2006, artículo 5°, parágrafo (ámbito de dependencia laboral)."
+- [5] Ley 1010 de 2006, artículo 5°, parágrafo (ámbito de dependencia laboral)."	1	1	1
 Un jefe cometió acoso laboral, pero después corrigió su conducta y se disculpó. Si el acoso ya está probado, ¿existen circunstancias atenuantes?	"[1] Ley 1010 de 2006, artículo 3°, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7229,7 +7229,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 3°, literal c (conductas atenuantes: procurar disminuir o anular consecuencias).
-- [2] Ley 1010 de 2006, artículo 7°, literal a (un solo acto hostil puede bastar para acreditar acoso laboral)."
+- [2] Ley 1010 de 2006, artículo 7°, literal a (un solo acto hostil puede bastar para acreditar acoso laboral)."	1	1	1
 Un directivo de alto cargo acosó a un subordinado. ¿Su posición jerárquica puede agravar la sanción?	"[1] Ley 1010 de 2006, artículo 4°, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7370,7 +7370,7 @@ Cuando la sanción fuere de competencia de los Jueces del Trabajo se citará a a
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 4°, literal f (ley)
-- [2] Ley 1010 de 2006, artículo 5° y artículo 6° (ley)"
+- [2] Ley 1010 de 2006, artículo 5° y artículo 6° (ley)"	1	1	1
 Un trabajador está siendo acosado por un compañero que no es su jefe. ¿Ese compañero puede ser sujeto activo de acoso laboral?	"[1] Ley 1010 de 2006, artículo 2°, numeral 1 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7510,7 +7510,7 @@ La persona natural que omita cumplir los requerimientos o amonestaciones que se 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 2°, numeral 1 (definición y modalidades de acoso laboral).
 - [2] Ley 1010 de 2006, artículo 6° (sujetos y ámbito de aplicación de la ley).
-- [3] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1 (consecuencias del acoso laboral)."
+- [3] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1 (consecuencias del acoso laboral)."	1	1	1
 Un jefe asigna de forma reiterada cargas de trabajo excesivas a un trabajador buscando que renuncie. ¿Esa conducta corresponde a alguna modalidad específica de acoso laboral?	"[1] Ley 1010 de 2006, artículo 2°, numeral 1 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7670,7 +7670,7 @@ g.) La solicitud de cumplir los deberes de la persona y el ciudadano, de que tra
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 2°, numeral 1 (definición y modalidades de acoso laboral, incluyendo maltrato laboral).
 - [4] Ley 1010 de 2006, artículo 7°, literal a (conductas que constituyen acoso laboral).
-- [5] Ley 1010 de 2006, artículo 8°, literal a (conductas que no constituyen acoso laboral)."
+- [5] Ley 1010 de 2006, artículo 8°, literal a (conductas que no constituyen acoso laboral)."	1	1	1
 Un compañero oculta documentos que otro trabajador necesita para cumplir sus funciones. ¿Esa conducta puede constituir una modalidad de acoso laboral?	"[1] Ley 1010 de 2006, artículo 2°, numeral 1 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7796,7 +7796,7 @@ Cuando las conductas descritas en este artículo tengan ocurrencias en privado, 
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 2°, numeral 1 (definición y modalidades de acoso laboral, incluyendo maltrato laboral).
-- [5] Ley 1010 de 2006, artículo 7°, literal a (sobre la posibilidad de que un solo acto hostil acredite acoso laboral)."
+- [5] Ley 1010 de 2006, artículo 7°, literal a (sobre la posibilidad de que un solo acto hostil acredite acoso laboral)."	1	1	1
 Denuncié un caso de acoso laboral y temo represalias de mi jefe. ¿Qué garantías tengo después de presentar la denuncia?	"[1] Ley 1010 de 2006, artículo 11, numeral 1 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -7927,7 +7927,7 @@ Las anteriores garantías cobijarán también a quienes hayan servido como testi
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 11, numeral 1 (garantías contra actitudes retaliatorias).
-- [5] Ley 1010 de 2006, artículo 11, numeral 1, parágrafo (excepciones a la garantía y cobertura a testigos)."
+- [5] Ley 1010 de 2006, artículo 11, numeral 1, parágrafo (excepciones a la garantía y cobertura a testigos)."	1	1	1
 Hay un caso de acoso laboral ya acreditado y se va a imponer una sanción. ¿Qué procedimiento debe seguirse?	"[1] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8061,7 +8061,7 @@ Los dineros recaudados por tales multas se destinarán a la entidad pública a q
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1 (ley)
-- [2] Ley 1010 de 2006, artículo 12 (ley)"
+- [2] Ley 1010 de 2006, artículo 12 (ley)"	1	1	1
 Presenté una queja de acoso laboral que finalmente resultó infundada. ¿Qué consecuencias puede tener para mí?	"[1] Ley 1010 de 2006, artículo 14 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8201,7 +8201,7 @@ En el contexto del inciso primero de este artículo, el acoso laboral puede dars
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 14.
-- [2] Ley 1010 de 2006, artículos 14 y 15."
+- [2] Ley 1010 de 2006, artículos 14 y 15."	1	1	1
 Quiero denunciar un hecho de acoso laboral ocurrido hace dos años. ¿Cuánto tiempo tengo para presentar la denuncia?	"[1] Ley 1010 de 2006, artículo 16 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8330,7 +8330,7 @@ Contenido:
 10. Adicionado por el art. 16, Ley 2365 de 2024. *\<El texto adicionado es el siguiente\>* Ante la ocurrencia de actos de presunto acoso sexual en el contexto laboral, sin importar el tipo de vinculación, el empleador o contratante del sector público o privado deberá implementar una campaña inmediata de acción colectiva orientada a la transformación del; ambiente laboral en un espacio de igualdad y libre de violencias."	"De acuerdo con el contexto recuperado, las acciones derivadas del acoso laboral caducan en tres (3) años a partir de la fecha en que hayan ocurrido las conductas [1]. Esto significa que, si el hecho ocurrió hace dos años, usted aún se encuentra dentro del plazo legal para presentar la denuncia, ya que el término de caducidad es de tres años desde la ocurrencia de los hechos [1]. El contexto no especifica un plazo diferente para la presentación de la denuncia, por lo que la respuesta se limita a la regla de caducidad mencionada.
 
 Fragmentos citados:
-- [1] Ley 1010 de 2006, artículo 18 (modificado por el art. 1, Ley 2209 de 2022): ""Las acciones derivadas del acoso laboral caducarán en tres (3) años a partir de la fecha en que hayan ocurrido las conductas a que hace referencia esta Ley."""
+- [1] Ley 1010 de 2006, artículo 18 (modificado por el art. 1, Ley 2209 de 2022): ""Las acciones derivadas del acoso laboral caducarán en tres (3) años a partir de la fecha en que hayan ocurrido las conductas a que hace referencia esta Ley."""	1	1	1
 Mi empresa tiene trabajadores vinculados mediante contratos de prestación de servicios. ¿Quiénes están obligados a afiliarse al Sistema General de Riesgos Laborales?	"[1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8465,7 +8465,7 @@ Que el artículo 56 del Decreto 1295 de 1994 prescribe como una de las responsab
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (modifica el artículo 13 del Decreto-ley 1295 de 1994).
 - [2] Ley 1562 de 2012, artículo 2°, parágrafo 3°.
-- [4] Resolución 0312 de 2019, artículo 23."
+- [4] Resolución 0312 de 2019, artículo 23."	1	1	1
 A un trabajador le diagnosticaron una enfermedad laboral. ¿Cómo se calcula el ingreso base para pagar las prestaciones correspondientes a esa enfermedad?	"[1] Ley 1562 de 2012, artículo 5°, parágrafo 1°, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8596,7 +8596,7 @@ Así mismo, cuando como consecuencia de la evaluación médica ocupacional reali
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 5°, literal a (para enfermedad laboral).
-- [2] Ley 1562 de 2012, artículo 5°, parágrafo 1° (indexación con IPC)."
+- [2] Ley 1562 de 2012, artículo 5°, parágrafo 1° (indexación con IPC)."	1	1	1
 Estoy incapacitado mientras se define si el origen de mi condición es laboral o común. ¿Quién debe pagarme la incapacidad durante ese período?	"[1] Ley 1562 de 2012, artículo 5°, parágrafo 1°, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8732,7 +8732,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 5°, parágrafo 3° (pago de incapacidad temporal según origen y controversia).
-- [5] Ley 1562 de 2012, artículo 5°, parágrafo 2° (base para el pago del subsidio por incapacidad temporal)."
+- [5] Ley 1562 de 2012, artículo 5°, parágrafo 2° (base para el pago del subsidio por incapacidad temporal)."	1	1	1
 Mi empresa va a contratar a una persona mediante un contrato de prestación de servicios. ¿También debemos cotizar riesgos laborales por ese contratista independiente?	"[1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -8864,7 +8864,7 @@ Modificado por el art 203, Ley 1955 de 2019. *\<El nuevo texto es el siguiente\>
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 2°, parágrafo 3° (ley)
-- [4] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (ley)"
+- [4] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (ley)"	1	1	1
 Mi empresa se atrasó en el pago de aportes a la ARL. ¿Ese atraso hace que mis trabajadores pierdan automáticamente la afiliación?	"[1] Ley 1562 de 2012, artículo 7°, parágrafo 1° (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9007,7 +9007,7 @@ b.) En forma voluntaria:"	"Según el contexto recuperado, el atraso en el pago d
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 7°, parágrafo 1° (comunicación de mora por correo certificado).
 - [2] Ley 1562 de 2012, artículo 7°, parágrafo 1° (no desafiliación automática y responsabilidades del empleador en mora).
-- [4] Ley 1562 de 2012, artículo 7°, parágrafo 2° (acciones de cobro por la ARL)."
+- [4] Ley 1562 de 2012, artículo 7°, parágrafo 2° (acciones de cobro por la ARL)."	1	1	1
 ¿Qué debe reportar una ARL sobre los resultados de sus actividades de promoción y prevención al Ministerio del Trabajo?	"[1] Ley 1562 de 2012, artículo 8°, parágrafo 1° (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9135,7 +9135,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 8°, parágrafo 1°.
-- [5] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a (parágrafos 2° y 3°)."
+- [5] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a (parágrafos 2° y 3°)."	1	1	1
 Como empresa afiliada, ¿qué servicios mínimos de promoción y prevención debe prestarme mi ARL?	"[1] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9274,7 +9274,7 @@ El Ministerio del Trabajo definirá los criterios técnicos con base en los cual
 - [1] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a.
 - [3] Ley 1562 de 2012, artículo 11, parágrafos 2°, 3° y 4°.
 - [4] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9.
-- [5] Ley 1562 de 2012, artículo 10."
+- [5] Ley 1562 de 2012, artículo 10."	1	1	1
 Mi empresa incumplió normas del Sistema General de Riesgos Laborales. ¿Qué sanciones prevé la ley por ese incumplimiento?	"[1] Ley 1562 de 2012, artículo 13 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9394,7 +9394,7 @@ El incumplimiento de los programas de promoción de la salud y prevención de ac
 **Fragmentos citados:**
 - [1] Ley 1562 de 2012, artículo 13 (Sanciones).
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.36 (Sanciones) y su parágrafo.
-- [3] Resolución 0312 de 2019, artículo 36, parágrafo 1 (Sanciones)."
+- [3] Resolución 0312 de 2019, artículo 36, parágrafo 1 (Sanciones)."	1	1	1
 ¿Las autoridades pueden realizar visitas a mi empresa para verificar el cumplimiento de las obligaciones en riesgos laborales?	"[1] Ley 1562 de 2012, artículo 14 (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9523,7 +9523,7 @@ Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 14: ""Garantía de la Calidad en Salud Ocupacional y Riesgos Laborales"" - establece visitas de verificación de estándares mínimos.
 - [2] Resolución 0312 de 2019, tabla 3, parte 4 de 7: criterios de verificación para empresas de más de 50 trabajadores o de 50 o menos en riesgo IV o V, incluyendo reporte de accidentes, investigación de incidentes, y restricciones médico laborales.
 - [3] Resolución 0312 de 2019, tabla 2, parte 2 de 2: criterios de verificación para empresas de 11 a 50 trabajadores en riesgo I, II o III, incluyendo reporte de accidentes, investigación de incidentes, y mantenimiento de equipos.
-- [4] Ley 1562 de 2012, artículo 32: facultades de los inspectores para realizar visitas periódicas y permanentes a ARL y empresas afiliadas."
+- [4] Ley 1562 de 2012, artículo 32: facultades de los inspectores para realizar visitas periódicas y permanentes a ARL y empresas afiliadas."	1	1	1
 Mi empresa está clasificada como de alto riesgo. ¿Recibe una supervisión diferente a la de una empresa de riesgo I?	"[1] Ley 1562 de 2012, artículo 9° (ley)
 Información general:
 - Tipo de registro: child_chunk
@@ -9650,7 +9650,7 @@ Para determinar la clase de riesgo en la que se clasifica la empresa se deberá 
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 9° (modifica el artículo 66 del Decreto-ley 1295 de 1994).
-- [4] Resolución 0312 de 2019, artículo 31."
+- [4] Resolución 0312 de 2019, artículo 31."	1	1	1
 Mi empresa tiene dos sucursales. ¿Puedo conformar un Comité Paritario distinto para cada sede?	"[1] Resolución 2013 de 1986, artículo 4º (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -9786,7 +9786,7 @@ Fragmentos citados:
 - [1] Resolución 2013 de 1986, artículo 4º y parágrafo.
 - [2] Resolución 2013 de 1986, artículo 1º.
 - [3] Resolución 2013 de 1986, artículo 8º (nota sobre cambio de denominación a COPASST).
-- [5] Resolución 2013 de 1986, tabla 1 (composición según número de trabajadores)."
+- [5] Resolución 2013 de 1986, tabla 1 (composición según número de trabajadores)."	1	1	1
 Mi empresa va a conformar por primera vez el Comité Paritario. ¿Cómo se eligen sus representantes?	"[1] Resolución 2013 de 1986, artículo 4º (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -9937,7 +9937,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 2013 de 1986, artículo 5º: ""El empleador nombrará directamente sus representantes al Comité y los trabajadores elegirán los suyos mediante votación libre.""
 - [2] Resolución 2013 de 1986, artículo 2º: ""Cada Comité de Medicina, Higiene y Seguridad Industrial estará compuesto por un número igual de representantes del empleador y de los trabajadores, con sus respectivos suplentes.""
-- [4] Resolución 2013 de 1986, artículo 14, literal a: ""Propiciar la elección de los representantes de los trabajadores al Comité, de acuerdo con lo ordenado en el articulo 2o., de esta Resolución, garantizando la libertad y oportunidad de las votaciones."""
+- [4] Resolución 2013 de 1986, artículo 14, literal a: ""Propiciar la elección de los representantes de los trabajadores al Comité, de acuerdo con lo ordenado en el articulo 2o., de esta Resolución, garantizando la libertad y oportunidad de las votaciones."""	1	1	1
 En una reunión del Comité Paritario solo está presente la mitad de sus miembros. ¿Con cuántos miembros puede sesionar válidamente?	"[1] Resolución 2013 de 1986, artículo 8º (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10078,7 +10078,7 @@ Contenido:
 **NOTA: Mediante el artículo 63 del Decreto-Ley 1295 de 1994, se cambia la denominación de Comité de Medicina, Higiene y Seguridad Industrial por Comité Paritario de Salud Ocupacional, además de establecer que el periodo de los miembros del Comité sería de dos (2) años. Con posteioridad, el parágrafo 2 del artículo 2 del Decreto Nacional 1443 de 2014, establece que el Comité Paritario de Salud Ocupacional -COPASO, en adelante se denominará Comité Paritario de Seguridad y Salud en el Trabajo ---COPASST.**"	"Según el contexto recuperado, el quórum para sesionar el Comité está constituido por la mitad más uno de sus miembros; sin embargo, si pasados los primeros treinta (30) minutos de la hora señalada no se alcanza ese quórum, el Comité sesionará con los miembros presentes y sus decisiones tendrán plena validez [1]. Por lo tanto, si solo está presente la mitad de los miembros, no se cumple el quórum inicial de ""mitad más uno"", pero transcurridos los 30 minutos, la reunión puede sesionar válidamente con los miembros presentes, incluyendo esa mitad [1]. No se especifica en el contexto un número mínimo distinto para ese caso, por lo que la validez depende de que hayan pasado los 30 minutos [1].
 
 Fragmentos citados:
-- [1] Resolución 2013 de 1986, artículo 8º: ""El quórum para sesionar el Comité estará constituido por la mitad más uno de sus miembros. Pasados los primeros treinta (30) minutos de la hora señalada para empezar la reunión del Comité sesionara con los miembros presentes y sus decisiones tendrán plena validez."""
+- [1] Resolución 2013 de 1986, artículo 8º: ""El quórum para sesionar el Comité estará constituido por la mitad más uno de sus miembros. Pasados los primeros treinta (30) minutos de la hora señalada para empezar la reunión del Comité sesionara con los miembros presentes y sus decisiones tendrán plena validez."""	1	1	1
 Acabamos de conformar el Comité Paritario y todavía no tiene presidente. ¿Quién debe designarlo?	"[1] Resolución 2013 de 1986, artículo 14, literal a (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10226,7 +10226,7 @@ Contenido:
 **c.** Llevar el archivo referente a las actividades desarrolladas por el Comité y suministrar toda la información que requieran el empleador y los trabajadores."	"El presidente del Comité debe ser designado anualmente por el empleador, entre los representantes que él mismo designa, según lo establece el artículo 9º de la Resolución 2013 de 1986 [2]. Esta norma indica que el empleador elige al presidente de entre sus propios representantes, mientras que el secretario es elegido por el Comité en pleno entre todos sus miembros [2]. El contexto no especifica si el presidente debe ser elegido en la primera reunión o si hay un plazo determinado para su designación, por lo que esa parte no puede responderse con la información disponible.
 
 Fragmentos citados:
-- [2] Resolución 2013 de 1986, artículo 9º (resolución)."
+- [2] Resolución 2013 de 1986, artículo 9º (resolución)."	1	1	1
 Un trabajador quiere llevar un asunto disciplinario al Comité Paritario. ¿El Comité puede resolver asuntos disciplinarios o contractuales de los trabajadores?	"[1] Resolución 2013 de 1986, artículo 8º (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10380,7 +10380,7 @@ Contenido:
 **c.** Cumplir con las normas de medicina, higiene y seguridad en el trabajo y con los reglamentos e instrucciones de servicios ordenados por el empleador."	"El Comité de Medicina, Higiene y Seguridad Industrial no puede resolver asuntos disciplinarios o contractuales de los trabajadores, ya que es un organismo de promoción y vigilancia de las normas y reglamentos de salud ocupacional dentro de la empresa, y no se ocupará de tramitar asuntos referentes a la relación contractual laboral propiamente dicha, los problemas de personal, disciplinarios o sindicales; estos se ventilan en otros organismos y están sujetos a reglamentación distinta [1]. Por lo tanto, el trabajador no debe llevar un asunto disciplinario al Comité, pues este no tiene competencia para ello.
 
 Fragmentos citados:
-[1] Resolución 2013 de 1986, artículo 10º."
+[1] Resolución 2013 de 1986, artículo 10º."	1	1	1
 Nuestro Comité Paritario ya está conformado. ¿Cuáles son sus funciones?	"[1] Resolución 2013 de 1986, artículo 8º (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10532,7 +10532,7 @@ Contenido:
 Fragmentos citados:
 - [2] Resolución 2013 de 1986, artículo 12, literal a (funciones del Presidente) y artículo 13 (funciones del Secretario).
 - [4] Resolución 2013 de 1986, artículo 14, literal a (obligaciones del empleador).
-- [5] Resolución 2013 de 1986, artículo 10 (naturaleza del Comité)."
+- [5] Resolución 2013 de 1986, artículo 10 (naturaleza del Comité)."	1	1	1
 Mi empresa ya tiene conformado el Comité Paritario. ¿Qué obligaciones tiene el empleador frente al Comité?	"[1] Resolución 2013 de 1986, artículo 14, literal a (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10697,7 +10697,7 @@ Contenido:
 Fragmentos citados:
 - [2] Resolución 2013 de 1986, artículo 14, literal a (obligaciones del empleador).
 - [5] Resolución 2013 de 1986, artículo 9º (designación anual del Presidente del Comité).
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9 (obligaciones de las ARL, no del empleador)."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9 (obligaciones de las ARL, no del empleador)."	1	1	1
 Soy trabajador y miembro del Comité Paritario. ¿Qué obligaciones tienen los trabajadores frente al Comité?	"[1] Resolución 2013 de 1986, artículo 14, literal a (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -10864,7 +10864,7 @@ Dicha vigilancia comprende tanto la vigilancia de la salud de los trabajadores c
 
 Fragmentos citados:
 - [2] Resolución 2013 de 1986, artículo 15, literales a, b y c.
-- [3] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.10, numerales 1 a 4."
+- [3] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.10, numerales 1 a 4."	1	1	1
 ¿Qué tipos de evaluaciones médicas ocupacionales debe realizar mi empresa?	"[1] Resolución 2346 de 2007, artículo 3°, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11027,7 +11027,7 @@ El empleador las podrá contratar con Instituciones Prestadoras de Servicios de 
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones) y artículo 4° (evaluación preocupacional).
 - [2] Resolución 2346 de 2007, artículo 6° (evaluación de egreso).
-- [3] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones periódicas programadas)."
+- [3] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones periódicas programadas)."	1	1	1
 Un trabajador lleva tres años en el mismo puesto y no ha cambiado de cargo. ¿Debo realizarle evaluaciones médicas ocupacionales periódicas?	"[1] Resolución 2346 de 2007, artículo 5°, literal A (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11184,7 +11184,7 @@ El empleador deberá informar al trabajador sobre el trámite para la realizaci�
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas).
 - [2] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones médicas ocupacionales obligatorias).
-- [3] Resolución 2346 de 2007, artículo 5°, literal A, parágrafo (actualización y revisión comparativa de antecedentes)."
+- [3] Resolución 2346 de 2007, artículo 5°, literal A, parágrafo (actualización y revisión comparativa de antecedentes)."	1	1	1
 Mi empresa va a contratar el servicio de evaluaciones médicas ocupacionales. ¿Quién está autorizado para realizarlas?	"[1] Resolución 2346 de 2007, artículo 10 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11324,7 +11324,7 @@ Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 11 (contratación y costo de las evaluaciones médicas ocupacionales).
 - [3] Resolución 2346 de 2007, artículo 9° (personal responsable de realizar las evaluaciones médicas ocupacionales).
 - [4] Resolución 0312 de 2019, artículo 8, parágrafo 2 (modalidades de prestación de servicio extramural y telemedicina).
-- [5] Resolución 0312 de 2019, artículo 3, parágrafo 1 (excepción para departamentos sin médicos especialistas)."
+- [5] Resolución 0312 de 2019, artículo 3, parágrafo 1 (excepción para departamentos sin médicos especialistas)."	1	1	1
 Un trabajador está expuesto a ruido o sustancias químicas durante su labor. ¿Debo realizarle evaluaciones médicas específicas según esos riesgos?	"[1] Resolución 2346 de 2007, artículo 12, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11487,7 +11487,7 @@ Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 13 (evaluaciones médicas específicas según factores de riesgo).
 - [2] Resolución 2346 de 2007, artículo 13 (elementos del protocolo de evaluación).
 - [3] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas).
-- [5] Resolución 2346 de 2007, artículo 5°, literal B (evaluaciones por cambios de ocupación)."
+- [5] Resolución 2346 de 2007, artículo 5°, literal B (evaluaciones por cambios de ocupación)."	1	1	1
 Un trabajador tiene varios exámenes ocupacionales realizados durante su vida laboral. ¿Qué es la historia clínica ocupacional?	"[1] Resolución 2346 de 2007, artículo 14 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11649,7 +11649,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 14 (definición y contenido mínimo de la historia clínica ocupacional).
 - [2] Resolución 2346 de 2007, artículo 14, parágrafos 1° y 2° (antecedentes y actualización).
-- [3] Resolución 2346 de 2007, artículo 16, numerales 1 a 4 y parágrafo (reserva y confidencialidad)."
+- [3] Resolución 2346 de 2007, artículo 16, numerales 1 a 4 y parágrafo (reserva y confidencialidad)."	1	1	1
 Como empleador, quiero revisar la historia clínica ocupacional de uno de mis trabajadores. ¿Puedo acceder a ella?	"[1] Resolución 2346 de 2007, artículo 16, numeral 1 (resolución)
 Información general:
 - Tipo de registro: child_chunk
@@ -11811,4 +11811,4 @@ Contenido:
 **Fragmentos citados:**
 - [1] Resolución 2346 de 2007, artículo 16, numeral 1 y parágrafo (resolución).
 - [3] Resolución 2346 de 2007, artículo 14 (resolución).
-- [4] Resolución 2346 de 2007, artículo 17, numeral 1 (resolución)."
+- [4] Resolución 2346 de 2007, artículo 17, numeral 1 (resolución)."	1	1	1

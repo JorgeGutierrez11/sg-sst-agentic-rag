@@ -1,4 +1,4 @@
-Query	Document	Answer
+Query	Document	Answer	Context_Relevance_Label	Answer_Faithfulness_Label	Answer_Relevance_Label
 Tengo una empresa de mantenimiento y reparación de motocicletas, somos 8 trabajadores y estamos clasificados en riesgo I. ¿Qué estándares mínimos debemos cumplir?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -126,7 +126,7 @@ Contenido:
 **ESTÁNDARES MÍNIMOS PARA EMPRESAS DE ONCE (11) A CINCUENTA (50) TRABAJADORES CLASIFICADAS CON RIESGO I, II ó III**"	"De acuerdo con el contexto normativo recuperado, su empresa, al tener 8 trabajadores (es decir, diez o menos) y estar clasificada con riesgo I, debe cumplir con los Estándares Mínimos establecidos en el artículo 3 de la Resolución 0312 de 2019, que aplican específicamente a empresas con diez (10) o menos trabajadores clasificadas con riesgo I, II o III [3]. Este artículo indica que dichas empresas deben cumplir con los estándares mínimos allí señalados para proteger la seguridad y salud de los trabajadores [3]. Además, el parágrafo 1 de ese mismo artículo establece que las evaluaciones médicas ocupacionales deben ser realizadas por médicos especialistas en medicina del trabajo o en seguridad y salud en el trabajo (SST), con licencia vigente en SST, siguiendo los criterios definidos en el Sistema de Gestión de SST y los sistemas de vigilancia epidemiológica [3]. Es importante aclarar que el contexto recuperado no incluye el contenido detallado de la tabla de estándares mínimos del artículo 3 (la tabla está referenciada como ""TABLE_0"" pero su contenido no aparece en los fragmentos), por lo que no es posible enumerar aquí los estándares específicos que debe cumplir su empresa; solo se puede confirmar que le aplica el artículo 3 y su parágrafo 1 [3]. Los demás fragmentos recuperados no aplican a su caso: el artículo 14 y el artículo 16 se refieren a empresas de más de cincuenta (50) trabajadores o de cincuenta (50) o menos con riesgo IV o V [1][2], el artículo 7 aplica a unidades de producción agropecuaria [4], y el artículo 8 aplica a empresas de diez o menos trabajadores con riesgo IV o V [5], ninguno de los cuales corresponde a su situación (8 trabajadores, riesgo I).
 
 Fragmentos citados:
-- [3] Resolución 0312 de 2019, artículo 3 y su parágrafo 1: Estándares Mínimos para empresas con diez (10) o menos trabajadores clasificadas con riesgo I, II o III, y requisito de médicos especialistas para evaluaciones médicas ocupacionales."
+- [3] Resolución 0312 de 2019, artículo 3 y su parágrafo 1: Estándares Mínimos para empresas con diez (10) o menos trabajadores clasificadas con riesgo I, II o III, y requisito de médicos especialistas para evaluaciones médicas ocupacionales."	1	1	1
 ¿Quién puede diseñar nuestro SG-SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -253,7 +253,7 @@ Fragmentos citados:
 - [2] Resolución 0312 de 2019, artículo 17: Diseño e implementación del SG-SST para empresas de más de cincuenta (50) trabajadores o de cincuenta (50) o menos con riesgo IV o V.
 - [3] Resolución 0312 de 2019, artículo 5, numeral 2: Capacitación y asesoría por gremios, cámaras de comercio y otras entidades.
 - [4] Resolución 0312 de 2019, artículo 13, numeral 4: Asesoría y capacitación por actores de la cadena de suministro agrícola.
-- [5] Resolución 0312 de 2019, artículo 10: Diseño e implementación del SG-SST para empresas de once (11) a cincuenta (50) trabajadores."
+- [5] Resolución 0312 de 2019, artículo 10: Diseño e implementación del SG-SST para empresas de once (11) a cincuenta (50) trabajadores."	1	1	1
 ¿Qué apoyo podemos pedirle a la ARL para implementarlo?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -407,7 +407,7 @@ Lo dispuesto en este numeral no revivirá situaciones ya prescritas."	"De acuerd
 
 Fragmentos citados:
 - [1] Decreto 768 de 2022, artículo 7: Obligación de las ARL de capacitar y asesorar a sus afiliados sobre la implementación de la Tabla de Actividades Económicas.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9: Obligaciones de las ARL de capacitar al Copasst o Vigía y prestar asesoría y asistencia técnica en la implementación del SG-SST."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9: Obligaciones de las ARL de capacitar al Copasst o Vigía y prestar asesoría y asistencia técnica en la implementación del SG-SST."	1	1	1
 ¿Qué responsabilidades tienen mis trabajadores frente al SG-SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -572,7 +572,7 @@ La implementación de los Estándares Mínimos establecidos en la presente Resol
 
 Fragmentos citados:
 - [4] Decreto 1072 de 2015, artículo 2.2.4.6.10, numerales 1 a 4: Responsabilidades de los trabajadores en el SG-SST.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.1: Objeto y campo de aplicación del capítulo del SG-SST."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.1: Objeto y campo de aplicación del capítulo del SG-SST."	1	1	1
 ¿Qué debo comunicarles sobre el sistema?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -800,7 +800,7 @@ Contenido:
 
 Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.14: Obligación del empleador de establecer mecanismos eficaces de comunicación interna y externa sobre el SG-SST.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.12, parágrafo 2°: Requisitos de claridad, difusión y disposición de la documentación del SG-SST a los trabajadores."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.12, parágrafo 2°: Requisitos de claridad, difusión y disposición de la documentación del SG-SST a los trabajadores."	1	1	1
 ¿Cómo debo conservar los documentos y registros del SG-SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -1035,7 +1035,7 @@ Contenido:
 **Artículo 2.2.4.6.4. *Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***El Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) consiste en el desarrollo de un proceso lógico y por etapas, basado en la mejora continua y que incluye la política, la organización, la planificación, la aplicación, la evaluación, la auditoría y las acciones de mejora con el objetivo de anticipar, reconocer, evaluar y controlar los riesgos que puedan afectar la seguridad y la salud en el trabajo."	"De acuerdo con el contexto normativo recuperado, el empleador debe conservar los registros y documentos que soportan el SG-SST de manera controlada, garantizando que sean legibles, fácilmente identificables y accesibles, y protegidos contra daño, deterioro o pérdida [1]. El responsable del SG-SST tendrá acceso a todos los documentos y registros, exceptuando las historias clínicas ocupacionales cuando no tenga perfil de médico especialista en seguridad y salud en el trabajo [1]. La conservación puede hacerse de forma electrónica siempre que se garantice la preservación de la información [1]. Además, los resultados de los perfiles epidemiológicos de salud de los trabajadores y los conceptos de los exámenes de ingreso, periódicos y de retiro deben conservarse por un periodo mínimo de veinte (20) años, contados desde que cese la relación laboral del trabajador con la empresa, en caso de que no se cuente con los servicios de médico especialista en áreas afines a la SST [1]. El contexto no especifica otros requisitos de conservación (como formatos físicos específicos o procedimientos de archivo adicionales), por lo que esa parte no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-- [1] Decreto 1072 de 2015, artículo 2.2.4.6.13, numeral 1: Conservación de documentos y registros del SG-SST, acceso del responsable, conservación electrónica y periodo mínimo de veinte (20) años para perfiles epidemiológicos y conceptos de exámenes médicos."
+- [1] Decreto 1072 de 2015, artículo 2.2.4.6.13, numeral 1: Conservación de documentos y registros del SG-SST, acceso del responsable, conservación electrónica y periodo mínimo de veinte (20) años para perfiles epidemiológicos y conceptos de exámenes médicos."	1	1	1
 ¿Debo realizar una evaluación inicial aunque sea una empresa pequeña?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -1212,7 +1212,7 @@ La evaluación inicial debe incluir, entre otros, los siguientes aspectos:
 
 Fragmentos citados:
 - [3] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, tabla 1: Fases del SG-SST, incluyendo la evaluación inicial como primera fase, aplicable a todos los empleadores públicos y privados.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.16, parágrafo 1°, numeral 1: Contenido de la evaluación inicial, incluyendo la identificación de normatividad vigente y estándares mínimos aplicables."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.16, parágrafo 1°, numeral 1: Contenido de la evaluación inicial, incluyendo la identificación de normatividad vigente y estándares mínimos aplicables."	1	1	1
 Después de esa evaluación, ¿cómo debo planificar el SG-SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -1408,7 +1408,7 @@ Contenido:
 
 Fragmentos citados:
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.17: Planificación del SG-SST basada en la evaluación inicial, con fines de cumplimiento normativo, fortalecimiento de componentes y mejoramiento continuo, y definición de prioridades.
-- [5] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1: Indicadores que evalúan el proceso del SG-SST, incluyendo la evaluación inicial (línea base) y la ejecución del plan de trabajo anual."
+- [5] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1: Indicadores que evalúan el proceso del SG-SST, incluyendo la evaluación inicial (línea base) y la ejecución del plan de trabajo anual."	1	1	1
 ¿Qué indicadores debería usar para medir su avance?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -1624,7 +1624,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.19, numeral 1: Obligación de definir indicadores de estructura, proceso y resultado, con ficha técnica que incluya las variables enumeradas.
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1: Indicadores que evalúan el proceso, incluyendo la evaluación inicial (línea base) y la ejecución del plan de trabajo anual y su cronograma."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.21, numeral 1: Indicadores que evalúan el proceso, incluyendo la evaluación inicial (línea base) y la ejecución del plan de trabajo anual y su cronograma."	1	1	1
 Si más adelante crecemos a 15 trabajadores, ¿cambiarían los estándares mínimos que debemos cumplir?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: mantenimiento y reparación de motocicletas
@@ -1824,7 +1824,7 @@ Fragmentos citados:
 - [2] Resolución 0312 de 2019, Capítulo II: Estándares Mínimos para empresas de once (11) a cincuenta (50) trabajadores clasificadas con riesgo I, II o III.
 - [1] Resolución 0312 de 2019, artículo 16: Estándares Mínimos para empresas de más de cincuenta (50) trabajadores o de cincuenta (50) o menos con riesgo IV o V.
 - [2] Resolución 0312 de 2019, artículo 8: Estándares Mínimos para empresas de diez (10) o menos trabajadores con riesgo IV o V.
-- [4] Resolución 0312 de 2019, artículo 14: Selección y evaluación de proveedores y contratistas."
+- [4] Resolución 0312 de 2019, artículo 14: Selección y evaluación de proveedores y contratistas."	1	1	1
 Mi empresa fabrica calzado, tiene 30 trabajadores y está clasificada en riesgo II. Estamos implementando el SG-SST. ¿Qué estándares mínimos debemos cumplir?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2018,7 +2018,7 @@ Contenido:
 Fragmentos citados:
 - [2] Resolución 0312 de 2019, tabla 5, parte 1 de 1 (tabla de valores y calificación de estándares mínimos).
 - [3] Resolución 0312 de 2019, artículo 17 (diseño e implementación para empresas de más de 50 trabajadores o de 50 o menos con riesgo IV o V).
-- [5] Resolución 0312 de 2019, tabla 1, parte 1 de 1 (criterios para empresas de diez o menos trabajadores, aplicable por analogía al perfil del responsable del SG-SST)."
+- [5] Resolución 0312 de 2019, tabla 1, parte 1 de 1 (criterios para empresas de diez o menos trabajadores, aplicable por analogía al perfil del responsable del SG-SST)."	1	1	1
 ¿Quién puede diseñar el SG-SST en nuestro caso?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2144,7 +2144,7 @@ Fragmentos citados:
 - [2] Resolución 0312 de 2019, artículo 17 (diseño e implementación para empresas de más de 50 trabajadores o de 50 o menos con riesgo IV o V).
 - [3] Resolución 0312 de 2019, artículo 5, numeral 1 (capacitación y asesoría gratuita por gremios y otras entidades).
 - [4] Resolución 0312 de 2019, artículo 13, numeral 1 (asesoría en unidades de producción agropecuaria).
-- [5] Resolución 0312 de 2019, artículo 13, numeral 1 (diseño e implementación en unidades de producción agropecuaria de 11 a 50 trabajadores)."
+- [5] Resolución 0312 de 2019, artículo 13, numeral 1 (diseño e implementación en unidades de producción agropecuaria de 11 a 50 trabajadores)."	1	1	1
 ¿Qué apoyo externo podemos recibir para implementarlo?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2345,7 +2345,7 @@ Contenido:
 **Parágrafo 2.** Para facilitar el acceso de los trabajadores a las evaluaciones médicas ocupacionales, estas se podrán hacer a través de las modalidades de prestación de servicio extramural y telemedicina, en cumplimiento de la Resolución 2003 de 2014, del Ministerio de Salud y Protección Social o la norma que la adicione, modifique o sustituya."	"Según la evidencia normativa recuperada, su empresa de fabricación de calzado (30 trabajadores, riesgo II) puede recibir apoyo externo para el diseño del SG-SST a través de los Gremios, Cámaras de Comercio, Asociaciones de Agricultores y de diferentes sectores o actividades económicas, las Sociedades Científicas, Universidades, Fundaciones, Organismos Internacionales e instituciones de educación formal y de formación para el trabajo y desarrollo humano, quienes podrán brindar capacitación y asesoría para el diseño del Sistema de Gestión de SST, de manera gratuita y con personal idóneo debidamente licenciado en SST [1]. Esto significa que, como empresa del sector calzado, podría acudir a su gremio o cámara de comercio para obtener esta asesoría sin costo. El contexto normativo no especifica otros tipos de apoyo externo (como financiamiento, acompañamiento técnico adicional o programas específicos para su actividad económica), por lo que esa parte no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-- [1] Resolución 0312 de 2019, artículo 5, numeral 1 (capacitación y asesoría gratuita por gremios, cámaras de comercio, universidades y otras entidades para el diseño del SG-SST)."
+- [1] Resolución 0312 de 2019, artículo 5, numeral 1 (capacitación y asesoría gratuita por gremios, cámaras de comercio, universidades y otras entidades para el diseño del SG-SST)."	1	1	1
 ¿Qué debe liderar el empleador frente al cumplimiento de esos estándares?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2488,7 +2488,7 @@ Contenido:
 Los empleadores o contratantes podrán verificar, constatar y tener documentado el cumplimiento de los Estándares Mínimos establecidos en la presente Resolución por parte de los diferentes proveedores, contratistas, cooperativas, empresas de servicio temporal y en general de toda empresa o entidad que preste servicios en las instalaciones, sedes o centros de trabajo de las empresas o entidades contratantes y de las personas que lo asesoran o asisten en SST, quienes deben tener licencia en SST vigente y aprobar el curso virtual de cincuenta (50) horas en SST."	"El empleador debe liderar y comprometerse con la aplicación de los Estándares Mínimos del SG-SST, así como con la elaboración, ejecución y seguimiento del plan de trabajo anual, y con el cumplimiento en la ejecución de las auditorías internas para identificar fallas y oportunidades de mejora al interior del sistema [2]. Además, debe integrar el SG-SST a los demás sistemas de gestión de la organización, teniendo en cuenta el Sistema de Garantía de Calidad del Sistema General de Riesgos Laborales [2]. También debe promover, garantizar y contar con la participación de todos los trabajadores, contratistas, estudiantes y demás personas que presten o ejecuten actividades en las sedes, instalaciones o dependencias de la empresa para la implementación del sistema y el cumplimiento de los estándares [2]. En su caso, como empleador de una empresa de fabricación de calzado con 30 trabajadores y riesgo II, esto implica liderar activamente la implementación de los estándares mínimos, asegurando la participación de sus trabajadores y la integración del sistema con otros procesos de gestión. El contexto normativo no especifica otras obligaciones de liderazgo adicionales, por lo que esa parte no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-- [2] Resolución 0312 de 2019, artículo 21 (cumplimiento de los Estándares Mínimos del SG-SST)."
+- [2] Resolución 0312 de 2019, artículo 21 (cumplimiento de los Estándares Mínimos del SG-SST)."	1	1	1
 ¿Debemos conformar un Comité Paritario?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2669,7 +2669,7 @@ Fragmentos citados:
 - [1] Resolución 2013 de 1986, artículos 8º, 9º y 10 (quórum, designación de Presidente y Secretario, y naturaleza del Comité).
 - [2] Resolución 2013 de 1986, artículos 12 y 13 (funciones del Presidente y del Secretario).
 - [3] Resolución 2013 de 1986, artículos 6º y 7º (periodo de los miembros y reuniones mensuales y extraordinarias).
-- [4] Resolución 2013 de 1986, artículo 8º, nota (cambio de denominación a COPASST)."
+- [4] Resolución 2013 de 1986, artículo 8º, nota (cambio de denominación a COPASST)."	1	1	1
 ¿Cómo se eligen sus representantes?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -2842,7 +2842,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Resolución 2013 de 1986, artículo 14, literal a (obligaciones del empleador de propiciar la elección de los representantes de los trabajadores, designar sus representantes y designar al Presidente).
-- [2] Resolución 2013 de 1986, tabla 1 (número de representantes por cada parte según el número de trabajadores: de 10 a 49 trabajadores, un representante por cada una de las partes)."
+- [2] Resolución 2013 de 1986, tabla 1 (número de representantes por cada parte según el número de trabajadores: de 10 a 49 trabajadores, un representante por cada una de las partes)."	1	1	1
 ¿Quién designa al presidente del Comité?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -3044,7 +3044,7 @@ Contenido:
 **PARÁGRAFO:** En caso de accidente grave o riesgo inminente, el Comité se reunirá con carácter extraordinario y con la presencia del responsable del área donde ocurrió el accidente o se determinó el riesgo, dentro de los cinco días siguientes a la ocurrencia del hecho."	"El presidente del Comité Paritario de Seguridad y Salud en el Trabajo (COPASST) es designado anualmente por el empleador, quien lo elige de entre los representantes que él mismo designa en el Comité [2]. En su empresa de fabricación de calzado, esto significa que usted, como empleador, tiene la facultad de nombrar al presidente cada año, escogiéndolo entre sus propios representantes. El contexto normativo no especifica otros detalles sobre el proceso de designación, por lo que esa parte no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-- [2] Resolución 2013 de 1986, artículo 9º (designación anual del Presidente del Comité por el empleador)."
+- [2] Resolución 2013 de 1986, artículo 9º (designación anual del Presidente del Comité por el empleador)."	1	1	1
 ¿Con cuántos miembros puede sesionar válidamente?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -3232,7 +3232,7 @@ Los integrantes de las Juntas estarán sujetos al régimen de impedimentos y rec
 
 Fragmentos citados:
 - [2] Resolución 2013 de 1986, tabla 1 (número de representantes por cada parte según el número de trabajadores: de 10 a 49 trabajadores, un representante por cada una de las partes).
-- [3] Resolución 2013 de 1986, artículo 8º (quórum para sesionar y validez de decisiones con los miembros presentes después de treinta minutos)."
+- [3] Resolución 2013 de 1986, artículo 8º (quórum para sesionar y validez de decisiones con los miembros presentes después de treinta minutos)."	1	1	1
 ¿Qué obligaciones tengo como empleador frente al Comité?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -3448,7 +3448,7 @@ La implementación de los Estándares Mínimos establecidos en la presente Resol
 
 Fragmentos citados:
 - [1] Resolución 2013 de 1986, artículo 14, literal a (obligaciones del empleador frente al Comité Paritario).
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.8, numerales 1 y 2 (obligaciones del empleador en el SG-SST: política y asignación de responsabilidades)."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.8, numerales 1 y 2 (obligaciones del empleador en el SG-SST: política y asignación de responsabilidades)."	1	1	1
 Si un trabajador lleva un asunto disciplinario o contractual, ¿el Comité puede resolverlo?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: fabrica calzado
@@ -3654,7 +3654,7 @@ Las anteriores garantías cobijarán también a quienes hayan servido como testi
 **Parágrafo.** La garantía de que trata el numeral uno no regirá para los despidos autorizados por el Ministerio de la Protección Social conforme a las leyes, para las sanciones disciplinarias que imponga el Ministerio Público o las Salas Disciplinarias de los Consejos Superiores o Seccionales de la Judicatura, ni para las sanciones disciplinarias que se dicten como consecuencia de procesos iniciados antes de la denuncia o queja de acoso laboral."	"No, el Comité Paritario de Seguridad y Salud en el Trabajo (COPASST) no puede resolver asuntos disciplinarios o contractuales. Según la normativa, el Comité es un organismo de promoción y vigilancia de las normas y reglamentos de salud ocupacional dentro de la empresa, y no se ocupará de tramitar asuntos referentes a la relación contractual laboral propiamente dicha, los problemas de personal, disciplinarios o sindicales; estos se ventilan en otros organismos y están sujetos a reglamentación distinta [4]. En su empresa de fabricación de calzado, esto significa que si un trabajador lleva un asunto disciplinario o contractual, el Comité debe abstenerse de tratarlo, pues su competencia se limita a temas de seguridad y salud en el trabajo.
 
 Fragmentos citados:
-- [4] Resolución 2013 de 1986, artículo 10 (naturaleza del Comité y exclusión de asuntos contractuales, disciplinarios o sindicales)."
+- [4] Resolución 2013 de 1986, artículo 10 (naturaleza del Comité y exclusión de asuntos contractuales, disciplinarios o sindicales)."	1	1	1
 Tengo una empresa con dos sedes: en una fabricamos calzado y en la otra solo realizamos actividades administrativas. ¿Las dos sedes necesariamente deben tener la misma clase de riesgo?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -3780,7 +3780,7 @@ Contenido:
 *(Decreto número 1443 de 2014, artículo 25)*"	"No, las dos sedes no necesariamente deben tener la misma clase de riesgo. Según el Decreto 768 de 2022, las empresas con más de un centro de trabajo pueden tener diferentes clases de riesgo para cada uno de ellos por separado, siempre que exista una diferenciación clara en la actividad que desarrollan, en las instalaciones locativas y en la exposición a peligros [1]. En su caso, la sede donde fabrican calzado y la sede donde solo realizan actividades administrativas presentan actividades claramente diferenciadas, por lo que podrían clasificarse con clases de riesgo distintas. Sin embargo, si la actividad económica de alguna de las sedes no aparece en la tabla de clasificación, la empresa y la ARL deberán clasificarla según la actividad más afín, considerando el peligro y riesgo laboral, materias primas, materiales, insumos, medios de producción, procesos, almacenamiento y transporte [1]. El contexto no especifica qué clase de riesgo corresponde a cada actividad, por lo que esa determinación depende de la tabla de clasificación vigente y del análisis conjunto con la ARL.
 
 Fragmentos citados:
-[1] Decreto 768 de 2022, artículos 4 y 5."
+[1] Decreto 768 de 2022, artículos 4 y 5."	1	1	1
 ¿Cómo se determina la clase de riesgo de cada sede?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -3925,7 +3925,7 @@ Que el parágrafo del artículo 28 del Decreto Ley 1295 de 1994 dispone que: *«
 
 Fragmentos citados:
 [1] Decreto 768 de 2022, artículos 4 y 5.
-[2] Decreto 768 de 2022, artículo 9, numeral 1."
+[2] Decreto 768 de 2022, artículo 9, numeral 1."	1	1	1
 Si una de las actividades no aparece exactamente en la tabla de clasificación, ¿qué debemos hacer?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4083,7 +4083,7 @@ También se considerará como accidente de trabajo el ocurrido durante el ejerci
 De igual forma se considera accidente de trabajo el que se produzca por la ejecución de actividades recreativas, deportivas o culturales, cuando se actúe por cuenta o en representación del empleador o de la empresa usuaria cuando se trate de trabajadores de empresas de servicios temporales que se encuentren en misión."	"Si una de las actividades de su empresa no aparece exactamente en la Tabla de Clasificación de Actividades Económicas, el procedimiento a seguir es clasificarla según la actividad económica más afín, considerando el peligro y riesgo laboral, las materias primas, materiales, insumos, medios de producción, procesos, almacenamiento y transporte [1]. Esta determinación debe realizarse de manera conjunta entre la empresa y la ARL [1]. El contexto normativo recuperado no especifica un procedimiento adicional más allá de esta regla general, por lo que la parte relativa a cómo se materializa ese análisis conjunto con la ARL no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-[1] Decreto 768 de 2022, artículos 4 y 5."
+[1] Decreto 768 de 2022, artículos 4 y 5."	1	1	1
 ¿El Decreto 768 de 2022 aplica a una empresa como la nuestra?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4247,7 +4247,7 @@ Contenido:
 **Parágrafo.** Se exceptúa del ámbito de aplicación del presente decreto los trabajadores independientes que se afilien voluntariamente al Sistema General de Riesgos Laborales, a los cuales se aplicará la Tabla de Clasificación de Ocupaciones u Oficios más Representativos, establecida en el artículo 2.2.4.2.5.9 del Decreto 1072 de 2015, Decreto Único Reglamentario del Sector Trabajo.  **Artículo 3. Definiciones.** Para efecto del presente decreto, se adoptan las siguientes definiciones:"	"El Decreto 768 de 2022 sí aplica a su empresa, dado que su actividad económica (actividades administrativas) corresponde a un afiliado al Sistema General de Riesgos Laborales. El artículo 2 del Decreto establece que su campo de aplicación incluye a los afiliados al Sistema General de Riesgos Laborales, a las ARL y a los operadores de la PILA [5]. Como su empresa, dedicada a actividades administrativas, es un afiliado a dicho sistema, queda cobijada por esta norma. No obstante, el contexto no especifica si su empresa está excluida por el parágrafo del artículo 2, que exceptúa a los trabajadores independientes que se afilien voluntariamente [5]; si su empresa no es un trabajador independiente en esa condición, la norma le aplica plenamente.
 
 Fragmentos citados:
-[5] Decreto 768 de 2022, artículo 2 y su parágrafo."
+[5] Decreto 768 de 2022, artículo 2 y su parágrafo."	1	1	1
 Si actualizan la tabla y cambia la clase de riesgo de una sede, ¿debemos empezar a cotizar con la nueva clase inmediatamente?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4405,7 +4405,7 @@ Que teniendo en cuenta las razones fácticas y jurídicas expresadas, se hace ne
 Que el artículo 3.1.1 del Decreto 1072 de 2015, Único Reglamentario del Sector Trabajo, en el numeral 2 indica que el Decreto 1607 de 2002, no quedó cobijado por la derogatoria integral."	"No, no deben empezar a cotizar con la nueva clase de riesgo inmediatamente. Según el Decreto 768 de 2022, cuando por efecto de la actualización de la Tabla de Clasificación de Actividades Económicas la clase de riesgo de la empresa sea modificada, esta deberá cotizar por el valor inicial que le corresponda conforme con lo previsto en el artículo 2.2.4.3 del Decreto 1072 de 2015 [1]. El contexto recuperado no especifica el contenido de ese artículo 2.2.4.3, por lo que no puede precisarse si existe un plazo o una condición para aplicar la nueva cotización; solo se indica que la cotización se hará por el ""valor inicial"" que corresponda [1]. En su caso, si la sede administrativa o la de fabricación de calzado viera modificada su clase de riesgo por la actualización de la tabla, la regla aplicable es la descrita, sin que el contexto permita determinar el momento exacto de entrada en vigor de la nueva cotización.
 
 Fragmentos citados:
-[1] Decreto 768 de 2022, artículo 6."
+[1] Decreto 768 de 2022, artículo 6."	1	1	1
 ¿Pueden realizarnos visitas de verificación por el cumplimiento en riesgos laborales?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4582,7 +4582,7 @@ En el caso de contarse con servicios de médico especialista en medicina laboral
 
 Fragmentos citados:
 [1] Ley 1562 de 2012, artículo 14.
-[2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 1°, parágrafo 1°."
+[2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 1°, parágrafo 1°."	1	1	1
 ¿La supervisión cambia si una de las sedes queda clasificada como de alto riesgo?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4746,7 +4746,7 @@ Contenido:
 **Indice Biológico de Exposición (BEI):** Es un valor límite de exposición biológica, es decir, un indicador de riesgo de encontrar efectos adversos en una persona ante determinado agente."	"Sí, la supervisión cambia si una de sus sedes queda clasificada como de alto riesgo. Según la Ley 1562 de 2012, las Entidades Administradoras de Riesgos Laborales y el Ministerio de Trabajo supervisarán en forma prioritaria a las empresas de alto riesgo, especialmente en la aplicación del Programa de Salud Ocupacional según el Sistema de Garantía de Calidad, los Sistemas de Control de Riesgos Laborales y las Medidas Especiales de Promoción y Prevención [1]. Esto significa que, si su sede de fabricación de calzado o la sede administrativa fuera clasificada como de alto riesgo, esa sede específica recibiría una supervisión prioritaria por parte de la ARL y el Ministerio del Trabajo, en contraste con las sedes que no tengan esa clasificación. El contexto no especifica qué actividades se consideran de alto riesgo ni cómo se determina esa clasificación, por lo que esa parte no puede responderse con la evidencia disponible.
 
 Fragmentos citados:
-[1] Ley 1562 de 2012, artículo 9° (modifica el artículo 66 del Decreto-ley 1295 de 1994)."
+[1] Ley 1562 de 2012, artículo 9° (modifica el artículo 66 del Decreto-ley 1295 de 1994)."	1	1	1
 ¿Qué sanciones pueden imponernos si incumplimos obligaciones del Sistema General de Riesgos Laborales?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -4919,7 +4919,7 @@ Fragmentos citados:
 [2] Ley 1562 de 2012, artículo 13.
 [3] Ley 1562 de 2012, artículo 8°, parágrafo 1°.
 [4] Resolución 0312 de 2019, artículo 36, parágrafo 1.
-[5] Resolución 0312 de 2019, artículo 24."
+[5] Resolución 0312 de 2019, artículo 24."	1	1	1
 ¿Qué servicios mínimos de promoción y prevención debe prestarnos la ARL?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -5117,7 +5117,7 @@ Contenido:
 
 Fragmentos citados:
 [1] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a.
-[2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9."
+[2] Decreto 1072 de 2015, Libro 2, Parte 2, Título 4, Capítulo 6, artículo 2.2.4.6.9."	1	1	1
 ¿Qué debe reportar la ARL al Ministerio del Trabajo sobre esas actividades?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Actividad económica: actividades administrativas
@@ -5320,7 +5320,7 @@ El informe deberá contener los siguientes datos: Nombre o razón social, docume
 
 Fragmentos citados:
 [1] Ley 1562 de 2012, artículo 8°, parágrafo 1°.
-[2] Decreto 768 de 2022, artículo 7."
+[2] Decreto 768 de 2022, artículo 7."	1	1	1
 En mi empresa usuaria trabaja una persona enviada por una empresa de servicios temporales y sufrió un accidente mientras realizaba su labor aquí. ¿Quién debe investigar ese accidente?	"CONTEXTO NORMATIVO RECUPERADO
 [1] Resolución 1401 de 2007, artículo 8° (resolución)
 Información general:
@@ -5453,7 +5453,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 8°: investigación de accidentes e incidentes ocurridos a trabajadores no vinculados mediante contrato de trabajo, responsabilidad compartida entre empresa de servicios temporales y empresa usuaria.
-- [2] Resolución 1401 de 2007, artículos 6° y 7°: metodología de investigación y conformación del equipo investigador."
+- [2] Resolución 1401 de 2007, artículos 6° y 7°: metodología de investigación y conformación del equipo investigador."	1	1	1
 ¿Qué equipo debe participar en la investigación?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -5591,7 +5591,7 @@ El Instituto Nacional de Salud desarrollará proyectos de investigación en salu
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículos 6° y 7°: metodología de investigación y conformación del equipo investigador.
-- [4] Resolución 1401 de 2007, artículo 8°: investigación de accidentes e incidentes ocurridos a trabajadores no vinculados mediante contrato de trabajo, responsabilidad compartida entre empresa de servicios temporales y empresa usuaria."
+- [4] Resolución 1401 de 2007, artículo 8°: investigación de accidentes e incidentes ocurridos a trabajadores no vinculados mediante contrato de trabajo, responsabilidad compartida entre empresa de servicios temporales y empresa usuaria."	1	1	1
 ¿Debemos utilizar un formato específico para investigar el accidente?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -5732,7 +5732,7 @@ Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 10: descripción del accidente o incidente en el informe.
 - [2] Resolución 1401 de 2007, artículo 6°: metodología de investigación flexible según necesidades del aportante.
 - [4] Resolución 1401 de 2007, artículo 9°: contenido del informe de investigación, incluyendo variables de la Resolución 156 de 2005.
-- [5] Resolución 1401 de 2007, artículo 11: causas del accidente o incidente que deben relacionarse en el informe."
+- [5] Resolución 1401 de 2007, artículo 11: causas del accidente o incidente que deben relacionarse en el informe."	1	1	1
 ¿Podemos usar una metodología propia de investigación?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -5899,7 +5899,7 @@ La empresa implementará las acciones recomendadas, llevará los registros de cu
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 6°: metodología de investigación flexible según necesidades del aportante.
-- [3] Resolución 1401 de 2007, artículo 8°: responsabilidad compartida entre empresa de servicios temporales y empresa usuaria en la investigación de accidentes de trabajadores en misión."
+- [3] Resolución 1401 de 2007, artículo 8°: responsabilidad compartida entre empresa de servicios temporales y empresa usuaria en la investigación de accidentes de trabajadores en misión."	1	1	1
 Si no tenemos una metodología, ¿la ARL debe proporcionarnos una?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -6069,7 +6069,7 @@ Modificado por el art 203, Ley 1955 de 2019. *\<El nuevo texto es el siguiente\>
 ***El texto original era el siguiente:***"	"El contexto normativo recuperado no establece expresamente que la ARL deba proporcionar una metodología de investigación de accidentes cuando la empresa no tenga una propia. Lo que sí se indica es que la ARL tiene la obligación de capacitar al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo (Copasst) en aspectos relativos al SG-SST y prestar asesoría y asistencia técnica a sus empresas afiliadas en la implementación del capítulo correspondiente del Decreto 1072 de 2015 [3]. Esta asesoría y asistencia técnica podría interpretarse como un apoyo general en la implementación del sistema, pero el fragmento no menciona específicamente la entrega de una metodología de investigación de accidentes. Por lo tanto, la parte de si la ARL debe suministrar una metodología concreta no puede responderse con la evidencia disponible; solo se confirma que la ARL debe brindar capacitación y asistencia técnica en el marco del SG-SST [3].
 
 Fragmentos citados:
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9: obligaciones de las ARL de capacitar al Copasst y prestar asesoría y asistencia técnica a las empresas afiliadas en la implementación del SG-SST."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.9: obligaciones de las ARL de capacitar al Copasst y prestar asesoría y asistencia técnica a las empresas afiliadas en la implementación del SG-SST."	1	1	1
 ¿Qué información debe contener el informe final?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -6231,7 +6231,7 @@ Para efecto de la investigación del accidente de trabajo mortal, los formatos d
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 9°: contenido del informe de investigación, incluyendo variables de la Resolución 156 de 2005 y características específicas del accidente.
-- [3] Resolución 1401 de 2007, artículo 10: descripción del accidente o incidente en el informe y técnicas para obtener la información."
+- [3] Resolución 1401 de 2007, artículo 10: descripción del accidente o incidente en el informe y técnicas para obtener la información."	1	1	1
 ¿Qué tipos de causas debemos identificar en ese informe?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -6403,7 +6403,7 @@ El informe deberá contener los siguientes datos: Nombre o razón social, docume
 
 Fragmentos citados:
 - [1] Resolución 1401 de 2007, artículo 11: causas del accidente o incidente que deben relacionarse en el informe.
-- [3] Resolución 1401 de 2007, artículo 1°: definiciones de causas básicas e inmediatas."
+- [3] Resolución 1401 de 2007, artículo 1°: definiciones de causas básicas e inmediatas."	1	1	1
 ¿Qué datos sobre lugar, fecha e investigadores deben quedar registrados?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -6597,7 +6597,7 @@ El informe deberá contener los siguientes datos: Nombre o razón social, docume
 
 Fragmentos citados:
 - [2] Resolución 1401 de 2007, artículo 9°: contenido del informe de investigación, incluyendo el sitio exacto donde ocurrió el evento.
-- [3] Resolución 1401 de 2007, artículo 4°, numeral 2: obligación de investigar dentro de los quince días siguientes a la ocurrencia del accidente; y artículo 4°, numeral 1: conformación del equipo investigador según el artículo 7°."
+- [3] Resolución 1401 de 2007, artículo 4°, numeral 2: obligación de investigar dentro de los quince días siguientes a la ocurrencia del accidente; y artículo 4°, numeral 1: conformación del equipo investigador según el artículo 7°."	1	1	1
 Si la ARL recomienda medidas correctivas después de revisar el caso, ¿estamos obligados a implementarlas?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -6802,7 +6802,7 @@ Fragmentos citados:
 - [2] Resolución 1401 de 2007, artículo 4°, numeral 1: obligación de implementar medidas correctivas recomendadas por la ARL y proveer recursos para ello.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.33: obligación del empleador de definir e implementar acciones preventivas y correctivas.
 - [4] Resolución 1401 de 2007, artículo 5°, numeral 1: funciones de la ARL de emitir conceptos técnicos y recomendaciones, y hacer seguimiento a las medidas.
-- [5] Resolución 1401 de 2007, artículo 12: compromiso de adopción de medidas de intervención en el informe de investigación."
+- [5] Resolución 1401 de 2007, artículo 12: compromiso de adopción de medidas de intervención en el informe de investigación."	1	1	1
 ¿Qué consecuencias puede haber si el accidente fue grave y no se investiga?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7006,7 +7006,7 @@ Cuando el accidente se considere grave o produzca la muerte, en la investigació
 
 Fragmentos citados:
 - [4] Resolución 1401 de 2007, artículo 5°, numeral 1: funciones de la ARL de emitir conceptos técnicos y hacer seguimiento a las medidas de control.
-- [5] Resolución 1401 de 2007, artículo 7°: conformación del equipo investigador, incluyendo la participación de un profesional con licencia en Salud Ocupacional en accidentes graves o mortales."
+- [5] Resolución 1401 de 2007, artículo 7°: conformación del equipo investigador, incluyendo la participación de un profesional con licencia en Salud Ocupacional en accidentes graves o mortales."	1	1	1
 En mi empresa un trabajador recibe comentarios ofensivos reiterados por parte de un compañero. ¿Esta situación puede estar protegida por la Ley 1010 de 2006?	"CONTEXTO NORMATIVO RECUPERADO
 [1] Ley 1010 de 2006 (ley)
 Información general:
@@ -7142,7 +7142,7 @@ Contenido:
 Fragmentos citados:
 - [3] Ley 1010 de 2006, artículo 7°, literales a, b y c: conductas que constituyen acoso laboral (expresiones injuriosas, comentarios hostiles y humillantes).
 - [4] Ley 1010 de 2006, artículo 7°: excepción de un solo acto hostil y prueba de conductas en privado.
-- [5] Ley 1010 de 2006, artículo 11, numeral 1: garantías contra actitudes retaliatorias (protección contra despido dentro de los 6 meses siguientes a la queja)."
+- [5] Ley 1010 de 2006, artículo 11, numeral 1: garantías contra actitudes retaliatorias (protección contra despido dentro de los 6 meses siguientes a la queja)."	1	1	1
 ¿Puede existir acoso laboral aunque quien realiza la conducta no sea jefe de la víctima?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7298,7 +7298,7 @@ g.) La solicitud de cumplir los deberes de la persona y el ciudadano, de que tra
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 2°, numeral 1: definición de acoso laboral y sujetos activos (incluye compañeros de trabajo).
 - [2] Ley 1010 de 2006, artículo 5°, parágrafo: ámbito de relaciones de dependencia o subordinación laboral.
-- [3] Ley 1010 de 2006, artículo 7°, literal c: comentarios hostiles y humillantes de descalificación profesional en presencia de compañeros."
+- [3] Ley 1010 de 2006, artículo 7°, literal c: comentarios hostiles y humillantes de descalificación profesional en presencia de compañeros."	1	1	1
 Si un jefe asigna cargas de trabajo excesivas buscando que un trabajador renuncie, ¿a qué modalidad de acoso podría corresponder?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7456,7 +7456,7 @@ En los demás casos no enumerados en este artículo, la autoridad competente val
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 2°, numeral 1: definición de acoso laboral y modalidad de maltrato laboral.
-- [3] Ley 1010 de 2006, artículo 7°, literal a: conductas que constituyen acoso laboral (imposición de deberes extraños y exigencias desproporcionadas)."
+- [3] Ley 1010 de 2006, artículo 7°, literal a: conductas que constituyen acoso laboral (imposición de deberes extraños y exigencias desproporcionadas)."	1	1	1
 Si un compañero oculta documentos necesarios para que otro pueda trabajar, ¿eso puede constituir acoso laboral?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7629,7 +7629,7 @@ g.) La solicitud de cumplir los deberes de la persona y el ciudadano, de que tra
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 7°, literal a: conductas que constituyen acoso laboral (lista taxativa de presunciones).
 - [2] Ley 1010 de 2006, artículo 2°, numeral 1: definición general de acoso laboral y modalidad de maltrato laboral.
-- [3] Ley 1010 de 2006, artículo 7°: excepción de un solo acto hostil y prueba de conductas en privado."
+- [3] Ley 1010 de 2006, artículo 7°: excepción de un solo acto hostil y prueba de conductas en privado."	1	1	1
 Si el acosador ocupa un cargo directivo alto, ¿eso puede agravar la sanción?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7794,7 +7794,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1: tratamiento sancionatorio al acoso laboral (falta disciplinaria gravísima, terminación del contrato con indemnización, multa).
-- [4] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1: justa causa de terminación o no renovación del contrato cuando el acoso es ejercido por compañero de trabajo o subalterno."
+- [4] Ley 1010 de 2006, artículo 10, parágrafo 1, numeral 1: justa causa de terminación o no renovación del contrato cuando el acoso es ejercido por compañero de trabajo o subalterno."	1	1	1
 Si después corrige su conducta y se disculpa, ¿puede considerarse un atenuante?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -7990,7 +7990,7 @@ h.) Cuando en la conducta desplegada por el sujeto activo se causa un daño en l
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 3°, literales a, c y d: conductas atenuantes del acoso laboral (buena conducta anterior, procurar disminuir o anular consecuencias, reparar el daño).
-- [2] Ley 1010 de 2006, artículo 4°, literales a y e: circunstancias agravantes (reiteración de la conducta, aumento deliberado del daño)."
+- [2] Ley 1010 de 2006, artículo 4°, literales a y e: circunstancias agravantes (reiteración de la conducta, aumento deliberado del daño)."	1	1	1
 Si el trabajador denuncia, ¿qué garantías tiene frente a posibles represalias?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -8170,7 +8170,7 @@ La denuncia deberá dirigirse por escrito en que se detallen los hechos denuncia
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 11, numeral 1: garantías contra actitudes retaliatorias (nulidad del despido dentro de 6 meses y poder preferente del Ministerio Público).
-- [3] Ley 1010 de 2006, artículo 11, numeral 1, parágrafo: extensión de garantías a testigos y excepciones a la protección."
+- [3] Ley 1010 de 2006, artículo 11, numeral 1, parágrafo: extensión de garantías a testigos y excepciones a la protección."	1	1	1
 ¿Qué procedimiento debe seguirse una vez que el acoso está acreditado?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -8357,7 +8357,7 @@ Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 9°, parágrafo 1°, numeral 1: medidas preventivas y correctivas (denuncia ante autoridades y conminación al empleador).
 - [3] Ley 1010 de 2006, artículo 9°, parágrafo 1°, numeral 1: intervención de institución de conciliación autorizada.
 - [4] Ley 1010 de 2006, artículo 14: sanción por temeridad de la queja (multa entre medio y tres salarios mínimos).
-- [5] Ley 1010 de 2006, artículo 13: procedimiento sancionatorio (audiencia, notificación, pruebas, decisión y apelación)."
+- [5] Ley 1010 de 2006, artículo 13: procedimiento sancionatorio (audiencia, notificación, pruebas, decisión y apelación)."	1	1	1
 ¿Qué pasa si finalmente la queja resulta infundada?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -8550,7 +8550,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1010 de 2006, artículo 14: sanción por formular más de una denuncia o queja con base en los mismos hechos.
-- [2] Ley 1010 de 2006, artículo 14: sanción por temeridad de la queja (multa entre medio y tres salarios mínimos, descontables de la remuneración)."
+- [2] Ley 1010 de 2006, artículo 14: sanción por temeridad de la queja (multa entre medio y tres salarios mínimos, descontables de la remuneración)."	1	1	1
 Si los hechos ocurrieron hace dos años, ¿todavía se pueden denunciar?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -8750,7 +8750,7 @@ Los dineros recaudados por tales multas se destinarán a la entidad pública a q
 **Artículo 15.** ***Llamamiento en garantía.*** En los procesos relativos a nulidad y restablecimiento del derecho en los cuales se discutan vicios de legalidad de falsa motivación o desviación de poder, basados en hechos que pudieran ser constitutivos de acoso laboral, la parte demandada podrá, en el término de fijación en lista, llamar en garantía al autor de la conducta de acoso."	"Sí, todavía se pueden denunciar. La Ley 1010 de 2006, modificada por la Ley 2209 de 2022, establece que las acciones derivadas del acoso laboral caducan en tres (3) años a partir de la fecha en que hayan ocurrido las conductas [4]. Como los hechos ocurrieron hace dos años, el plazo de tres años aún no ha vencido, por lo que la acción sigue vigente. No obstante, es importante tener en cuenta que la caducidad es un término perentorio: si se superan los tres años desde la ocurrencia de las conductas sin ejercer la acción, esta ya no podrá interponerse [4]. En el caso de su empresa, si el trabajador desea denunciar, debería hacerlo antes de que se cumpla el término de tres años contado desde la fecha de los hechos.
 
 Fragmentos citados:
-- [4] Ley 1010 de 2006, artículo 18, modificado por el art. 1, Ley 2209 de 2022: caducidad de las acciones derivadas del acoso laboral en tres (3) años a partir de la fecha de ocurrencia de las conductas."
+- [4] Ley 1010 de 2006, artículo 18, modificado por el art. 1, Ley 2209 de 2022: caducidad de las acciones derivadas del acoso laboral en tres (3) años a partir de la fecha de ocurrencia de las conductas."	1	1	1
 Mi empresa tiene trabajadores vinculados directamente y también personas contratadas por prestación de servicios. ¿Quiénes deben estar afiliados al Sistema General de Riesgos Laborales?	"CONTEXTO NORMATIVO RECUPERADO
 [1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a (ley)
 Información general:
@@ -8877,7 +8877,7 @@ Contenido:
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a: define los afiliados obligatorios al Sistema General de Riesgos Laborales, incluyendo trabajadores dependientes y contratistas por prestación de servicios con duración superior a un mes.
 - [2] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a: establece que la afiliación del contratista corre por cuenta del contratante y el pago por cuenta del contratista.
-- [3] Resolución 0312 de 2019, artículo 24: prohíbe a los empleadores o contratantes utilizar agremiaciones o asociaciones para afiliar a sus trabajadores, siendo la afiliación un deber directo del empleador o contratante."
+- [3] Resolución 0312 de 2019, artículo 24: prohíbe a los empleadores o contratantes utilizar agremiaciones o asociaciones para afiliar a sus trabajadores, siendo la afiliación un deber directo del empleador o contratante."	1	1	1
 ¿También debemos cotizar riesgos laborales por los contratistas independientes?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9012,7 +9012,7 @@ Contenido:
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a: establece que los trabajadores independientes pueden cotizar al Sistema de Riesgos Laborales siempre que coticen también al régimen contributivo en salud.
 - [3] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a, parágrafo 3°: dispone que la afiliación del contratista corre por cuenta del contratante y el pago por cuenta del contratista.
-- [5] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a, parágrafo 1°: indica que en la reglamentación se adoptarán todas las obligaciones del Sistema de Riesgos Laborales aplicables a estos trabajadores, con precisión de tiempo, modo y lugar de la prestación."
+- [5] Ley 1562 de 2012, artículo 2°, parágrafo 1°, numeral 1, literal a, parágrafo 1°: indica que en la reglamentación se adoptarán todas las obligaciones del Sistema de Riesgos Laborales aplicables a estos trabajadores, con precisión de tiempo, modo y lugar de la prestación."	1	1	1
 Si además recibimos trabajadores en misión, ¿debemos contarlos en nuestros indicadores de SST?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9200,7 +9200,7 @@ Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.22: indica los aspectos a considerar para indicadores de resultado, incluyendo cumplimiento de requisitos normativos, objetivos, plan de trabajo, no conformidades, acciones preventivas/correctivas, programas de vigilancia, rehabilitación, análisis de registros de enfermedades, incidentes, accidentes y ausentismo, y medidas de control.
 - [3] Decreto 1072 de 2015, artículo 2.2.4.6.21: indica los aspectos para indicadores de proceso, incluyendo evaluación inicial y ejecución del plan de trabajo anual.
 - [4] Decreto 1072 de 2015, artículo 2.2.4.6.20: indica los aspectos para indicadores de estructura, incluyendo política, objetivos, plan de trabajo, responsabilidades, recursos, método de identificación de peligros, COPASST y documentos del sistema.
-- [5] Resolución 0312 de 2019, tabla 3: exige garantizar la afiliación de todos los trabajadores al Sistema de Seguridad Social Integral, independientemente de su forma de vinculación, y verificar mediante listas de trabajadores vinculados laboralmente y por prestación de servicios."
+- [5] Resolución 0312 de 2019, tabla 3: exige garantizar la afiliación de todos los trabajadores al Sistema de Seguridad Social Integral, independientemente de su forma de vinculación, y verificar mediante listas de trabajadores vinculados laboralmente y por prestación de servicios."	1	1	1
 ¿Es válida la afiliación a riesgos laborales por medio de una agremiación?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9368,7 +9368,7 @@ b.) En forma voluntaria:"	"No, en su caso la afiliación a riesgos laborales por
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 24: prohíbe a los empleadores o contratantes patrocinar, permitir o utilizar agremiaciones o asociaciones para afiliar a sus trabajadores dependientes o independientes al Sistema de Riesgos Laborales, siendo la afiliación responsabilidad o deber directo del empleador o contratante; solo se admite excepcionalmente la afiliación colectiva de trabajadores independientes si la agremiación está aprobada y registrada en el Ministerio de Salud y Protección Social.
-- [2] Resolución 0312 de 2019, artículo 24: establece sanciones de hasta 5000 salarios mínimos para la agremiación o entidad que afilie irregularmente y de hasta 500 salarios mínimos para las empresas o entidades contratantes; las ARL deben verificar el registro y autorización de las agremiaciones y reportar irregularidades al Ministerio del Trabajo."
+- [2] Resolución 0312 de 2019, artículo 24: establece sanciones de hasta 5000 salarios mínimos para la agremiación o entidad que afilie irregularmente y de hasta 500 salarios mínimos para las empresas o entidades contratantes; las ARL deben verificar el registro y autorización de las agremiaciones y reportar irregularidades al Ministerio del Trabajo."	1	1	1
 Nos atrasamos en el pago de algunos aportes a la ARL. ¿Los trabajadores pierden automáticamente la afiliación?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9538,7 +9538,7 @@ En los casos excepcionales que sea permitida la participación de agremiaciones 
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 7°, parágrafo 1°: establece que la mora en el pago de aportes no genera desafiliación automática y que el empleador o contratista en mora responde por gastos asistenciales, aportes en mora con intereses y prestaciones económicas.
-- [2] Ley 1562 de 2012, artículo 7°, parágrafo 1°: define cuándo se entiende que la empresa está en mora y el procedimiento de comunicación por correo certificado que debe enviar la ARL en un plazo no mayor a un mes, con copia al representante de los trabajadores en el Copaso."
+- [2] Ley 1562 de 2012, artículo 7°, parágrafo 1°: define cuándo se entiende que la empresa está en mora y el procedimiento de comunicación por correo certificado que debe enviar la ARL en un plazo no mayor a un mes, con copia al representante de los trabajadores en el Copaso."	1	1	1
 Mientras exista ese atraso, ¿quién responde por las prestaciones derivadas de un accidente de trabajo?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9712,7 +9712,7 @@ En caso de accidente que ocasione la muerte del trabajador donde se demuestre el
 El Ministerio de Trabajo reglamentará dentro de un plazo no mayor a un (1) año contado a partir de la expedición de la presente ley, los criterios de graduación de las multas a que se refiere el presente artículo y las garantías que se deben respetar para el debido proceso."	"Mientras exista el atraso en el pago de aportes al Sistema General de Riesgos Laborales, los trabajadores no pierden automáticamente su afiliación [4]. En ese escenario, es su empresa, como empleador o contratista en mora, la que responde por los gastos en que incurra la ARL por las prestaciones asistenciales otorgadas, así como por el pago de los aportes en mora con sus respectivos intereses y el pago de las prestaciones económicas a que hubiere lugar [4]. Además, la liquidación que realice la ARL por estos conceptos presta mérito ejecutivo, lo que facilita su cobro [4]. El contexto recuperado no menciona otras consecuencias adicionales, como sanciones administrativas específicas por la mora.
 
 Fragmentos citados:
-- [4] Ley 1562 de 2012, artículo 7°, parágrafo 1°: establece que la mora en el pago de aportes no genera desafiliación automática y que el empleador o contratista en mora responde por los gastos de prestaciones asistenciales, aportes en mora con intereses y prestaciones económicas, con liquidación que presta mérito ejecutivo."
+- [4] Ley 1562 de 2012, artículo 7°, parágrafo 1°: establece que la mora en el pago de aportes no genera desafiliación automática y que el empleador o contratista en mora responde por los gastos de prestaciones asistenciales, aportes en mora con intereses y prestaciones económicas, con liquidación que presta mérito ejecutivo."	1	1	1
 Si un trabajador es diagnosticado con una enfermedad laboral, ¿cómo se calcula el ingreso base para sus prestaciones?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -9887,7 +9887,7 @@ Contenido:
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 5°, parágrafo 1°, literal b: define el ingreso base de liquidación para enfermedad laboral como el promedio del último año o fracción de año del IBC anterior a la calificación en primera oportunidad, y el procedimiento cuando el trabajador está desvinculado.
-- [4] Ley 1562 de 2012, artículo 5°, parágrafo 1°: establece que las sumas pagadas por prestaciones económicas deben indexarse con base en el IPC certificado por el DANE."
+- [4] Ley 1562 de 2012, artículo 5°, parágrafo 1°: establece que las sumas pagadas por prestaciones económicas deben indexarse con base en el IPC certificado por el DANE."	1	1	1
 Si está incapacitado mientras se define si el origen es laboral o común, ¿quién debe pagarle la incapacidad?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -10071,7 +10071,7 @@ d.) La fecha de presentación de la factura de la IPS a la EPS, cumpliendo con l
 No obstante lo anterior, será de tres (3) años la prescripción cuando se trate del pago de subsidios por incapacidad temporal, para lo cual el término se contará desde el momento en que esté en firme el dictamen según lo establecido en el parágrafo 3° del artículo 5º de la presente ley."	"Según la norma recuperada, mientras se define si el origen de la incapacidad es laboral o común, el pago de la incapacidad temporal será asumido por la Entidad Promotora de Salud (EPS) si la calificación de origen en primera oportunidad es común, o por la Administradora de Riesgos Laborales (ARL) si dicha calificación es laboral [1]. Si existe controversia sobre el origen, la entidad que venía cubriendo la incapacidad continúa haciéndolo de esa manera hasta que haya un dictamen en firme de la Junta Regional o Nacional, según corresponda [1]. En el caso específico de que el pago corresponda a la ARL y esté en controversia, esta pagará el mismo porcentaje estipulado por la normatividad vigente para el régimen contributivo del Sistema General de Seguridad Social en Salud; una vez el dictamen esté en firme, las entidades podrán realizar los respectivos reembolsos entre ellas, y la ARL reconocerá al trabajador la diferencia si el dictamen en firme indica que el origen era laboral [1]. El contexto recuperado no permite precisar otros aspectos, como el procedimiento cuando la controversia se resuelve en contra del trabajador o reglas especiales para trabajadores independientes.
 
 Fragmentos citados:
-- [1] Ley 1562 de 2012, artículo 5°, parágrafo 1°, literal a, parágrafo 3°: establece quién asume el pago de la incapacidad temporal según la calificación de origen en primera oportunidad (EPS si es común, ARL si es laboral), la continuidad del pago en caso de controversia hasta el dictamen en firme, el porcentaje que paga la ARL en controversia y los reembolsos entre entidades."
+- [1] Ley 1562 de 2012, artículo 5°, parágrafo 1°, literal a, parágrafo 3°: establece quién asume el pago de la incapacidad temporal según la calificación de origen en primera oportunidad (EPS si es común, ARL si es laboral), la continuidad del pago en caso de controversia hasta el dictamen en firme, el porcentaje que paga la ARL en controversia y los reembolsos entre entidades."	1	1	1
 ¿Qué servicios mínimos de prevención debe prestarnos la ARL?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -10272,7 +10272,7 @@ Contenido:
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 11, parágrafo 1°, numeral 1, literal a: establece que las actividades mínimas de promoción y prevención corresponden al 5% del total de la cotización e incluyen programas, campañas y acciones de educación y prevención para que las empresas afiliadas conozcan y cumplan las normas y reglamentos técnicos en salud ocupacional.
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.9: obliga a las ARL a capacitar al COPASST o Vigía en SST y prestar asesoría y asistencia técnica a sus empresas y trabajadores afiliados en la implementación del SG-SST.
-- [3] Decreto 768 de 2022, artículo 7: establece que las ARL deben capacitar y asesorar a sus afiliados sobre la implementación de la Tabla de Actividades Económicas, pero no lo define como un servicio mínimo de prevención."
+- [3] Decreto 768 de 2022, artículo 7: establece que las ARL deben capacitar y asesorar a sus afiliados sobre la implementación de la Tabla de Actividades Económicas, pero no lo define como un servicio mínimo de prevención."	1	1	1
 ¿Qué sanciones puede tener la empresa si incumple las obligaciones del Sistema General de Riesgos Laborales?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -10463,7 +10463,7 @@ El incumplimiento de los programas de promoción de la salud y prevención de ac
 
 Fragmentos citados:
 - [1] Ley 1562 de 2012, artículo 13: establece multa de hasta 500 salarios mínimos por incumplimiento de programas de salud ocupacional, normas y obligaciones del empleador, y suspensión de actividades hasta 120 días o cierre definitivo en caso de reincidencia.
-- [5] Ley 1562 de 2012, artículo 8°, parágrafo 1°: establece multa de hasta 500 salarios mínimos por incumplimiento de los programas de promoción y prevención definidos en la tabla del Ministerio de Salud y Trabajo."
+- [5] Ley 1562 de 2012, artículo 8°, parágrafo 1°: establece multa de hasta 500 salarios mínimos por incumplimiento de los programas de promoción y prevención definidos en la tabla del Ministerio de Salud y Trabajo."	1	1	1
 Uno de nuestros trabajadores está expuesto a ruido y sustancias químicas durante su labor. ¿Qué evaluaciones médicas ocupacionales debemos realizarle?	"CONTEXTO NORMATIVO RECUPERADO
 [1] Resolución 2346 de 2007, artículo 12, numeral 1 (resolución)
 Información general:
@@ -10623,7 +10623,7 @@ Fragmentos citados:
 - [2] Resolución 2346 de 2007, artículo 13 (evaluaciones médicas específicas según factores de riesgo, uso de BEI de ACGIH, criterios de IARC, OIT, CDC, y protocolo de evaluación cuando no existan parámetros).
 - [3] Resolución 2346 de 2007, artículo 3° (tipos de evaluaciones médicas ocupacionales obligatorias: preingreso, periódicas, egreso, y otras como posincapacidad o reintegro).
 - [4] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas: monitoreo de exposición, detección precoz, criterios según tipo, magnitud y frecuencia de exposición).
-- [5] Resolución 2346 de 2007, artículo 5°, literal B (evaluaciones médicas por cambios de ocupación: obligación cuando hay cambio de medio ambiente laboral, funciones, tareas o exposición a nuevos o mayores factores de riesgo)."
+- [5] Resolución 2346 de 2007, artículo 5°, literal B (evaluaciones médicas por cambios de ocupación: obligación cuando hay cambio de medio ambiente laboral, funciones, tareas o exposición a nuevos o mayores factores de riesgo)."	1	1	1
 Aunque permanezca varios años en el mismo cargo, ¿debemos hacerle evaluaciones periódicas?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -10783,7 +10783,7 @@ La información mínima que debe quedar registrada en las diferentes evaluacione
 
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas: monitoreo de exposición, detección precoz, criterios según tipo, magnitud y frecuencia de exposición).
-- [3] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones médicas ocupacionales obligatorias: preingreso, periódicas, egreso)."
+- [3] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones médicas ocupacionales obligatorias: preingreso, periódicas, egreso)."	1	1	1
 ¿Quién está autorizado para realizar esas evaluaciones?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -10938,7 +10938,7 @@ Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 9° (personal responsable de realizar las evaluaciones médicas ocupacionales: médicos especialistas en medicina del trabajo o salud ocupacional con licencia vigente, y excepción para departamentos específicos con médicos de dos años de experiencia).
 - [2] Resolución 2346 de 2007, artículo 10 (el empleador puede contratar las valoraciones directamente con médicos especialistas en medicina del trabajo o salud ocupacional con licencia vigente).
 - [3] Resolución 0312 de 2019, artículo 3, parágrafos 1 y 2 (excepción para departamentos específicos con médicos de dos años de experiencia en SST, y modalidades extramural y telemedicina).
-- [4] Resolución 2346 de 2007, artículo 11 (contratación con IPS de Salud Ocupacional o EPS que cuenten con médicos especialistas en medicina del trabajo o salud ocupacional con licencia vigente)."
+- [4] Resolución 2346 de 2007, artículo 11 (contratación con IPS de Salud Ocupacional o EPS que cuenten con médicos especialistas en medicina del trabajo o salud ocupacional con licencia vigente)."	1	1	1
 ¿Qué otros tipos de evaluaciones médicas ocupacionales debemos contemplar además de las periódicas?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -11113,7 +11113,7 @@ La información mínima que debe quedar registrada en las diferentes evaluacione
 2. Persona que realiza la evaluación médica."	"Además de las evaluaciones médicas ocupacionales periódicas, el empleador está obligado a realizar como mínimo la evaluación médica preocupacional o de preingreso, que se efectúa antes de la contratación para determinar las condiciones de salud del trabajador en función de las condiciones de trabajo a las que estaría expuesto, acorde con los requerimientos de la tarea y perfil del cargo [1]; y la evaluación médica posocupacional o de egreso [1]. También se deben ordenar otro tipo de evaluaciones, como las posincapacidad o por reintegro, para identificar condiciones de salud que puedan verse agravadas o que puedan interferir en la labor o afectar a terceros, en razón de situaciones particulares [1]. En el caso de su trabajador expuesto a ruido y sustancias químicas, estas evaluaciones complementan las periódicas para cubrir los momentos de ingreso, egreso y situaciones especiales de salud.
 
 Fragmentos citados:
-- [1] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones médicas ocupacionales obligatorias: preingreso, periódicas, egreso, y otras como posincapacidad o reintegro)."
+- [1] Resolución 2346 de 2007, artículo 3°, numeral 1 (tipos de evaluaciones médicas ocupacionales obligatorias: preingreso, periódicas, egreso, y otras como posincapacidad o reintegro)."	1	1	1
 ¿Los resultados de esos exámenes forman parte de una historia clínica ocupacional?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -11315,7 +11315,7 @@ En mérito de lo expuesto,
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículos 14 y 15 (definición de historia clínica ocupacional y contenido mínimo: documentos de cada evaluación, pruebas complementarias y recomendaciones).
 - [2] Resolución 2346 de 2007, artículo 14, parágrafos 1° y 2° (actualización y revisión comparativa de la historia clínica ocupacional en cada evaluación periódica).
-- [3] Resolución 2346 de 2007, artículo 16 (reserva de la historia clínica ocupacional y prohibición de acceso al empleador)."
+- [3] Resolución 2346 de 2007, artículo 16 (reserva de la historia clínica ocupacional y prohibición de acceso al empleador)."	1	1	1
 ¿Qué es exactamente la historia clínica ocupacional?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -11527,7 +11527,7 @@ Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículos 14 y 15 (definición de historia clínica ocupacional, su carácter de documento privado y reservado, su integración con la historia clínica general, y contenido mínimo).
 - [2] Resolución 2346 de 2007, artículo 14, parágrafos 1° y 2° (actualización y revisión comparativa de la historia clínica ocupacional en cada evaluación periódica).
 - [3] Resolución 2346 de 2007, artículo 16, numeral 1 y parágrafo (reserva de la historia clínica ocupacional y prohibición de acceso al empleador).
-- [5] Resolución 2346 de 2007, artículo 19, numeral 1 (registro de evaluaciones médicas ocupacionales en la historia clínica ocupacional)."
+- [5] Resolución 2346 de 2007, artículo 19, numeral 1 (registro de evaluaciones médicas ocupacionales en la historia clínica ocupacional)."	1	1	1
 Como empleador, ¿puedo acceder directamente a esa historia clínica?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -11718,7 +11718,7 @@ El diagnóstico de salud debe comprender como mínimo, lo siguiente:"	"No, como 
 
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 16, numeral 1 y parágrafo (reserva de la historia clínica ocupacional y prohibición expresa de acceso al empleador).
-- [5] Resolución 2346 de 2007, artículo 18 (obligación de entregar al empleador un diagnóstico general de salud de la población trabajadora, no la historia clínica individual)."
+- [5] Resolución 2346 de 2007, artículo 18 (obligación de entregar al empleador un diagnóstico general de salud de la población trabajadora, no la historia clínica individual)."	1	1	1
 Si no puedo verla completa, ¿qué información sí puede recibir la empresa después de una evaluación ocupacional?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -11948,7 +11948,7 @@ El diagnóstico de salud debe comprender como mínimo, lo siguiente:"	"Aunque la
 
 Fragmentos citados:
 - [5] Resolución 2346 de 2007, artículo 18 (obligación de entregar al empleador un diagnóstico general de salud de la población trabajadora, utilizado para los subprogramas de medicina preventiva y del trabajo).
-- [2] Resolución 2346 de 2007, artículo 7° (información básica que el empleador debe suministrar para realizar las evaluaciones: indicadores epidemiológicos, estudios de higiene industrial e indicadores biológicos específicos)."
+- [2] Resolución 2346 de 2007, artículo 7° (información básica que el empleador debe suministrar para realizar las evaluaciones: indicadores epidemiológicos, estudios de higiene industrial e indicadores biológicos específicos)."	1	1	1
 ¿Quién debe custodiar esa información clínica?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -12160,7 +12160,7 @@ El diagnóstico de salud debe comprender como mínimo, lo siguiente:"	"De acuerd
 
 Fragmentos citados:
 - [5] Resolución 2346 de 2007, artículo 17 (guarda y custodia de las evaluaciones médicas ocupacionales y de la historia clínica ocupacional por la EPS, y remisión dentro de los dos meses siguientes a su realización).
-- [4] Decreto 1072 de 2015, artículo 2.2.4.6.12, parágrafo 3° (derecho del trabajador a consultar sus registros de salud y garantía de confidencialidad)."
+- [4] Decreto 1072 de 2015, artículo 2.2.4.6.12, parágrafo 3° (derecho del trabajador a consultar sus registros de salud y garantía de confidencialidad)."	1	1	1
 Si cambian los riesgos a los que está expuesto el trabajador, ¿deben cambiar también los exámenes que se le realizan?	"CONTEXTO EMPRESARIAL
 HISTORIAL DE CONVERSACIÓN
 Turno 1
@@ -12392,7 +12392,7 @@ B. **Evaluaciones médicas por cambios de ocupación**"	"Sí, si cambian los rie
 Fragmentos citados:
 - [1] Resolución 2346 de 2007, artículo 5°, literal B (evaluaciones médicas por cambios de ocupación: obligación cuando hay cambio de medio ambiente laboral, funciones, tareas o exposición a nuevos o mayores factores de riesgo).
 - [4] Resolución 2346 de 2007, artículo 12, numeral 1 (identificación del agente o factor de riesgo, incluido el número CAS para agentes químicos).
-- [5] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas: criterios según tipo, magnitud y frecuencia de exposición)."
+- [5] Resolución 2346 de 2007, artículo 5°, literal A (evaluaciones médicas periódicas programadas: criterios según tipo, magnitud y frecuencia de exposición)."	1	1	1
 Nuestra empresa tiene 80 trabajadores y estamos revisando el SG-SST. ¿Qué estándares mínimos debemos cumplir?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -12581,7 +12581,7 @@ Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 1, parágrafo 1: objeto de la resolución y definición de Estándares Mínimos.
 - [2] Resolución 0312 de 2019, artículo 20: obligatoriedad y ajuste de los estándares según características de la empresa.
 - [3] Resolución 0312 de 2019, tabla 5: tabla de valores y calificación de los estándares mínimos por ciclo.
-- [4] Resolución 0312 de 2019, artículo 23: verificación del cumplimiento de estándares por parte de proveedores y contratistas."
+- [4] Resolución 0312 de 2019, artículo 23: verificación del cumplimiento de estándares por parte de proveedores y contratistas."	1	1	1
 ¿Quién puede diseñar el SG-SST en una empresa de nuestro tamaño?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -12709,7 +12709,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 17: diseño e implementación del SG-SST para empresas de más de cincuenta (50) trabajadores, clasificadas con riesgo I, II, III, IV o V, y las de 50 o menos trabajadores con riesgo IV o V, por profesionales en SST o con posgrado en SST con licencia vigente y curso de 50 horas.
 - [2] Resolución 0312 de 2019, artículo 4: diseño del SG-SST para empresas de diez (10) o menos trabajadores con riesgo I, II o III, por técnicos en SST con licencia vigente, un año de experiencia y curso de 50 horas.
-- [3] Resolución 0312 de 2019, artículo 10: diseño e implementación del SG-SST para empresas de once (11) a cincuenta (50) trabajadores con riesgo I, II o III, por tecnólogos en SST con licencia vigente, dos años de experiencia y curso de 50 horas."
+- [3] Resolución 0312 de 2019, artículo 10: diseño e implementación del SG-SST para empresas de once (11) a cincuenta (50) trabajadores con riesgo I, II o III, por tecnólogos en SST con licencia vigente, dos años de experiencia y curso de 50 horas."	1	1	1
 ¿Qué debe liderar el empleador frente al cumplimiento de esos estándares?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -12843,7 +12843,7 @@ Los empleadores o contratantes podrán verificar, constatar y tener documentado 
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 23: obligaciones del empleador o contratante de cumplir con todos los Estándares Mínimos y contabilizar a todos los trabajadores en los indicadores.
-- [2] Resolución 0312 de 2019, artículo 21: liderazgo del empleador en la aplicación de los Estándares Mínimos, plan de trabajo anual, auditorías internas, integración con otros sistemas y participación de los trabajadores."
+- [2] Resolución 0312 de 2019, artículo 21: liderazgo del empleador en la aplicación de los Estándares Mínimos, plan de trabajo anual, auditorías internas, integración con otros sistemas y participación de los trabajadores."	1	1	1
 ¿Qué indicadores mínimos de SST debemos registrar cada año?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -13086,7 +13086,7 @@ La Política de SST de la empresa debe entre otros, cumplir con los siguientes r
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, tabla 5: tabla de valores y calificación de los estándares mínimos por ciclo, que incluye indicadores de gestión de la salud (frecuencia, severidad, mortalidad, prevalencia, incidencia y ausentismo) y de verificación del SG-SST (definición de indicadores, auditoría anual, revisión por alta dirección y planificación con COPASST).
-- [3] Decreto 1072 de 2015, artículo 2.2.4.6.19: obligación del empleador de definir indicadores de estructura, proceso y resultado, con ficha técnica que contenga las variables señaladas."
+- [3] Decreto 1072 de 2015, artículo 2.2.4.6.19: obligación del empleador de definir indicadores de estructura, proceso y resultado, con ficha técnica que contenga las variables señaladas."	1	1	1
 ¿Cómo se califican los estándares mínimos en la autoevaluación?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -13264,7 +13264,7 @@ En el mes de diciembre de 2019, los empleadores y contratantes objeto de la pres
 
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1: tabla de valores de los Estándares Mínimos y asignación de porcentajes según cumplimiento o no del ítem, con la excepción de la columna ""No Aplica"" para empresas de menos de 50 trabajadores con riesgo I, II o III.
-- [3] Resolución 0312 de 2019, tabla 6, parte 1 de 1: criterios de valoración de la autoevaluación (crítico, moderadamente aceptable y aceptable) y acciones correspondientes según el puntaje obtenido."
+- [3] Resolución 0312 de 2019, tabla 6, parte 1 de 1: criterios de valoración de la autoevaluación (crítico, moderadamente aceptable y aceptable) y acciones correspondientes según el puntaje obtenido."	1	1	1
 Si el resultado de la autoevaluación no es satisfactorio, ¿qué debemos hacer?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -13440,7 +13440,7 @@ Contenido:
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, tabla 6, parte 1 de 1: criterios de valoración de la autoevaluación (crítico, moderadamente aceptable y aceptable) y acciones correspondientes según el puntaje obtenido.
 - [3] Resolución 0312 de 2019, artículo 26, numeral 1: elaboración del Plan de Mejora conforme al resultado de la autoevaluación, aprobación en el Plan Anual del SG-SST y registro en la aplicación del Ministerio del Trabajo.
-- [5] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1: registro paulatino y progresivo de autoevaluaciones y planes de mejoramiento en la aplicación del Ministerio del Trabajo a partir de diciembre de 2020."
+- [5] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1: registro paulatino y progresivo de autoevaluaciones y planes de mejoramiento en la aplicación del Ministerio del Trabajo a partir de diciembre de 2020."	1	1	1
 ¿Debemos realizar una auditoría anual del SG-SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -13688,7 +13688,7 @@ De 2020 y en adelante, en el mes de diciembre las empresas deberán:
 
 Fragmentos citados:
 - [2] Decreto 1072 de 2015, artículo 2.2.4.6.29: obligación del empleador de realizar auditoría anual planificada con el COPASST o Vigía, con programa de auditoría y comunicación de resultados.
-- [4] Resolución 0312 de 2019, tabla 5: ítem 6.1.2 del estándar de verificación del SG-SST, que exige que la empresa adelante auditoría por lo menos una vez al año."
+- [4] Resolución 0312 de 2019, tabla 5: ítem 6.1.2 del estándar de verificación del SG-SST, que exige que la empresa adelante auditoría por lo menos una vez al año."	1	1	1
 ¿Quién debe revisar el sistema y con qué frecuencia?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -13888,7 +13888,7 @@ Los resultados de la auditoría deben ser comunicados a los responsables de adel
 
 Fragmentos citados:
 - [1] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1: obligación de la alta dirección de adelantar revisión del SG-SST por lo menos una vez al año, con carácter proactivo y reactivo, y aspectos a revisar (estrategias, plan de trabajo anual, recursos, entre otros).
-- [4] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1: continuación de los aspectos que debe revisar la alta dirección (capacidad del sistema, necesidad de cambios, eficacia de medidas de seguimiento y análisis de indicadores y auditorías anteriores)."
+- [4] Decreto 1072 de 2015, artículo 2.2.4.6.31, numeral 1: continuación de los aspectos que debe revisar la alta dirección (capacidad del sistema, necesidad de cambios, eficacia de medidas de seguimiento y análisis de indicadores y auditorías anteriores)."	1	1	1
 ¿Qué debemos hacer con los resultados de auditorías y revisiones para mejorar continuamente?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -14108,7 +14108,7 @@ A partir del mes de diciembre de 2019, las empresas deben remitir copia de la au
 Fragmentos citados:
 - [1] Resolución 0312 de 2019, artículo 12, numeral 1: recomendaciones al plan de mejora conforme a la evaluación de los Estándares Mínimos.
 - [4] Resolución 0312 de 2019, artículo 26, numeral 1: elaboración del Plan de Mejora conforme al resultado de la autoevaluación y aprobación en el Plan Anual del SG-SST.
-- [5] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1: contenido mínimo del plan de mejoramiento y obligación de rendir informe de avance en julio de cada año."
+- [5] Resolución 0312 de 2019, artículo 27, parágrafo 1, numeral 1: contenido mínimo del plan de mejoramiento y obligación de rendir informe de avance en julio de cada año."	1	1	1
 ¿Puede una empresa con buen desempeño obtener algún reconocimiento oficial en SST?	"CONTEXTO EMPRESARIAL
 PERFIL EMPRESARIAL
 - Número de trabajadores: 80
@@ -14370,4 +14370,4 @@ Contenido:
 **Artículo 17. Diseño e implementación del Sistema de Gestión de SST para las empresas de más de cincuenta (50) trabajadores.** El diseño e implementación del Sistema de Gestión de SST, para empresas de más de cincuenta (50) trabajadores, clasificadas con riesgo I, II, III, IV ó V y las de (50) o menos trabajadores con riesgo IV ó V, podrá ser realizado por profesionales en SST, profesionales con posgrado en SST; que cuenten con licencia en SST vigente y el curso de capacitación virtual de cincuenta (50) horas en SST, quienes igualmente están facultados para asesorar, capacitar, ejecutar o diseñar el Sistema de Gestión de SST en cualquier empresa o entidad, sin importar la clase de riesgo, número de trabajadores o actividad económica."	"Sí, una empresa con buen desempeño en SST puede obtener un reconocimiento oficial. La norma establece que el certificado de acreditación en seguridad y salud en el trabajo es el reconocimiento oficial que realiza el Ministerio del Trabajo a las empresas, entidades, empleadores y contratantes con excelente calificación en el cumplimiento de los Estándares Mínimos de SST, que aportan valor agregado y ejecutan de manera permanente actividades adicionales a las establecidas en la normativa de riesgos laborales, impactando positivamente en la salud y bienestar de los trabajadores, estudiantes y contratistas [1]. El contexto recuperado indica que las entidades, empresas y empleadores que deseen acreditarse en excelencia en SST deberán cumplir ciertos requisitos, pero no detalla cuáles son esos requisitos específicos, por lo que esa parte no puede responderse con la evidencia disponible [1]. Para su empresa, con 80 trabajadores, esta posibilidad aplica plenamente, ya que la norma no establece excepciones por tamaño.
 
 Fragmentos citados:
-- [1] Resolución 0312 de 2019, artículo 22, numeral 1: definición del certificado de acreditación en SST como reconocimiento oficial del Ministerio del Trabajo para empresas con excelente calificación en Estándares Mínimos y actividades adicionales, y mención de que las entidades interesadas deberán cumplir requisitos no especificados en el fragmento."
+- [1] Resolución 0312 de 2019, artículo 22, numeral 1: definición del certificado de acreditación en SST como reconocimiento oficial del Ministerio del Trabajo para empresas con excelente calificación en Estándares Mínimos y actividades adicionales, y mención de que las entidades interesadas deberán cumplir requisitos no especificados en el fragmento."	1	1	1

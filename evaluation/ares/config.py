@@ -6,7 +6,7 @@ load_dotenv()
 
 ROOT = Path(__file__).resolve().parents[2]
 GOLD_TSV = str(ROOT / "evaluation/datasets/conjunto_a_gold/conjunto_a_gold.tsv")
-EVALUATION_TSV = str(ROOT / "evaluation/results/ares_runs/query_understanding/rewrite_query.tsv")
+EVALUATION_TSV = str(ROOT / "evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv")
 
 ppi_config = {
     "evaluation_datasets": [EVALUATION_TSV],
@@ -16,8 +16,6 @@ ppi_config = {
     "gold_label_paths": [GOLD_TSV],
     "llm_judge": "deepseek-v4-flash",
     "model_choice": "deepseek-v4-flash",
-    #"llm_judge": "claude-haiku-4-5-20251001",
-    #"model_choice": "claude-haiku-4-5-20251001",
     "rag_type": "question_answering",
 }
 
