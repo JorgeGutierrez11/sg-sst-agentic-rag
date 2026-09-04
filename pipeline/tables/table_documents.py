@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
 
-from pipeline.chunking.core.io_jsonl import write_jsonl
+from pipeline.chunking.io_jsonl import write_jsonl
 from pipeline.chunking.hierarchical_splitter.models import JsonDict
 from pipeline.chunking.structural_analysis.metadata_infer import slugify
 

@@ -8,7 +8,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from pipeline.chunking.core.cli import main
+from pipeline.chunking.cli import main
 from pipeline.tables.table_references import (
     audit_table_references,
     missing_table_html_paths,
@@ -160,11 +160,11 @@ class TableReferencesTest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 return_value=10,
-            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
-                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch("pipeline.chunking.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
             ), patch(
-                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
-            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stderr(stderr):
+                "pipeline.chunking.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
+            ), patch("pipeline.chunking.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stderr(stderr):
                 exit_code = main(["build-parents"])
 
             self.assertEqual(exit_code, 2)
@@ -181,9 +181,9 @@ class TableReferencesTest(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
 
-            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
-                "pipeline.chunking.core.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
-            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stdout(
+            with patch("pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
+                "pipeline.chunking.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
+            ), patch("pipeline.chunking.cli.DEFAULT_TABLES_ROOT", workspace / "tables"), redirect_stdout(
                 stdout
             ), redirect_stderr(stderr):
                 exit_code = main(["audit-table-references"])
@@ -221,9 +221,9 @@ class TableReferencesTest(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
 
-            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
-                "pipeline.chunking.core.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
-            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), redirect_stdout(stdout), redirect_stderr(
+            with patch("pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", chunks_path), patch(
+                "pipeline.chunking.cli.DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH", workspace / "missing.jsonl"
+            ), patch("pipeline.chunking.cli.DEFAULT_TABLES_ROOT", tables_root), redirect_stdout(stdout), redirect_stderr(
                 stderr
             ):
                 exit_code = main(["audit-table-references"])

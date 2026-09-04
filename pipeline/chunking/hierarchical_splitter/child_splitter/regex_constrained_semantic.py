@@ -5,8 +5,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_MIN_TOKENS, DEFAULT_TABLES_ROOT
-from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_MIN_TOKENS, DEFAULT_TABLES_ROOT
+from pipeline.chunking.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     build_child_chunk,
     embedding_kwargs_for_model,

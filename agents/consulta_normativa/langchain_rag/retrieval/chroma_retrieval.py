@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
 
 DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
 Retriever = Callable[[str, int], dict[str, Any]]

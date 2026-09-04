@@ -11,13 +11,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pipeline.chunking.core.config import (
+from pipeline.chunking.config import (
     DEFAULT_COMPARISON_DIR,
     DEFAULT_MAX_TOKENS,
     DEFAULT_MIN_TOKENS,
     STRATEGY_OUTPUTS,
 )
-from pipeline.chunking.core.io_jsonl import read_child_chunks
+from pipeline.chunking.io_jsonl import read_child_chunks
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk
 
 

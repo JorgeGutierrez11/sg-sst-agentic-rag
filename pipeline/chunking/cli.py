@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from pipeline.chunking.core.config import (
+from pipeline.chunking.config import (
     DEFAULT_CLEANED_MARKDOWN_DIR,
     DEFAULT_MAX_TOKENS,
     DEFAULT_MIN_TOKENS,

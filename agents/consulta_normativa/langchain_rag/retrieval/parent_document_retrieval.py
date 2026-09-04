@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
-from pipeline.chunking.core.io_jsonl import read_parent_chunks
+from pipeline.chunking.io_jsonl import read_parent_chunks
 
 
 JsonDict = dict[str, Any]

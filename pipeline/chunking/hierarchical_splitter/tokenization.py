@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
 
 try:
     # pyrefly: ignore [missing-import]

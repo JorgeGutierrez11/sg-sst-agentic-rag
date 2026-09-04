@@ -8,8 +8,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from pipeline.chunking.core.cli import build_parser, main
-from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.cli import build_parser, main
+from pipeline.chunking.io_jsonl import write_parent_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import build_child_chunk, child_offsets
 from pipeline.chunking.hierarchical_splitter.child_splitter.sliding_window import write_sliding_window_child_output
 from pipeline.chunking.hierarchical_splitter.models import ParentChunk
@@ -32,8 +32,8 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             )
             write_parent_chunks([parent], input_path)
 
-            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
-                "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+            with patch("pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+                "pipeline.chunking.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
             ), redirect_stdout(io.StringIO()):
                 exit_code = main(["build-sliding-window"])
 
@@ -175,8 +175,8 @@ class ChunkingPhase2SlidingWindowTest(unittest.TestCase):
             input_path.write_text('{"chunk_id": "missing-required-fields"}\n', encoding="utf-8")
             stderr = io.StringIO()
 
-            with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
-                "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+            with patch("pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+                "pipeline.chunking.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
             ), redirect_stderr(stderr):
                 exit_code = main(["build-sliding-window"])
 
@@ -223,8 +223,8 @@ def build_parent_fixture(workspace: Path, parent: ParentChunk) -> Path:
     input_path = workspace / "parents.jsonl"
     output_path = workspace / "chunks.jsonl"
     write_parent_chunks([parent], input_path)
-    with patch("pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
-        "pipeline.chunking.core.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
+    with patch("pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", input_path), patch(
+        "pipeline.chunking.cli.DEFAULT_SLIDING_WINDOW_CHUNKS_PATH", output_path
     ), redirect_stdout(io.StringIO()):
         exit_code = main(["build-sliding-window"])
     if exit_code != 0:

@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from pipeline.chunking.core.cli import main
+from pipeline.chunking.cli import main
 from pipeline.tables.table_markdown import (
     convert_table_html_batch,
     convert_table_html_to_markdown,
@@ -75,8 +75,8 @@ class TableMarkdownTest(unittest.TestCase):
             with patch.dict(
                 "sys.modules",
                 {"pypandoc": SimpleNamespace(convert_file=Mock(return_value="| value |\n|---|\n"))},
-            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
-                "pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
+            ), patch("pipeline.chunking.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
+                "pipeline.chunking.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
             ), redirect_stdout(stdout):
                 exit_code = main(["build-table-markdown"])
 
@@ -112,8 +112,8 @@ class TableMarkdownTest(unittest.TestCase):
             with patch.dict(
                 "sys.modules",
                 {"pypandoc": SimpleNamespace(convert_file=Mock(side_effect=OSError("pandoc failed")))},
-            ), patch("pipeline.chunking.core.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
-                "pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
+            ), patch("pipeline.chunking.cli.DEFAULT_TABLES_ROOT", tables_root), patch(
+                "pipeline.chunking.cli.DEFAULT_TABLE_MARKDOWN_ROOT", output_root
             ), redirect_stderr(stderr):
                 exit_code = main(["build-table-markdown"])
 

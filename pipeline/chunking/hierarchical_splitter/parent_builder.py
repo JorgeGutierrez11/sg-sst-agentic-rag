@@ -4,8 +4,8 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from pipeline.chunking.core.config import DEFAULT_TABLES_ROOT, is_generated_output_path
-from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.config import DEFAULT_TABLES_ROOT, is_generated_output_path
+from pipeline.chunking.io_jsonl import write_parent_chunks
 from pipeline.chunking.hierarchical_splitter.models import JsonDict, ParentBuildResult, ParentChunk, SourceDocument
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count
 from pipeline.chunking.structural_analysis.boundaries import BoundaryMatch, find_article_boundaries

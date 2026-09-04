@@ -4,14 +4,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from pipeline.chunking.core.config import (
+from pipeline.chunking.config import (
     DEFAULT_PARENT_CHUNKS_PATH,
     DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH,
     DEFAULT_TABLE_DOCUMENTS_PATH,
     DEFAULT_TABLE_MARKDOWN_ROOT,
     DEFAULT_TABLES_ROOT,
 )
-from pipeline.chunking.core.io_jsonl import read_jsonl
+from pipeline.chunking.io_jsonl import read_jsonl
 from pipeline.tables.table_documents import write_table_documents
 from pipeline.tables.table_markdown import convert_table_html_batch
 from pipeline.tables.table_references import audit_table_references

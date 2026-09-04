@@ -325,25 +325,25 @@ Las administradoras de riesgos laborales deben verificar que las agremiaciones, 
 Entre junio de 2017 y noviembre de 2019 se implementará el Sistema de Gestión de SST de acuerdo con las fechas que se especifican en la siguiente gráfica:
 :::
 
--   ::: {custom-style="List Paragraph"}
-    **FASE 1:** Evaluación inicial -- De junio a agosto 2017.
-    :::
+- ::: {custom-style="List Paragraph"}
+  **FASE 1:** Evaluación inicial -- De junio a agosto 2017.
+  :::
 
--   ::: {custom-style="List Paragraph"}
-    **FASE 2:** Plan de mejoramiento conforme a evaluación inicial -- 1. Autoevaluación 2. Plan de mejora 3. Diseñar y formular Plan Anual 2018 -- De septiembre a diciembre 2017.
-    :::
+- ::: {custom-style="List Paragraph"}
+  **FASE 2:** Plan de mejoramiento conforme a evaluación inicial -- 1. Autoevaluación 2. Plan de mejora 3. Diseñar y formular Plan Anual 2018 -- De septiembre a diciembre 2017.
+  :::
 
--   ::: {custom-style="List Paragraph"}
-    **FASE 3:** Ejecución -- Formular plan Anula 2019 -- De enero a diciembre 2018.
-    :::
+- ::: {custom-style="List Paragraph"}
+  **FASE 3:** Ejecución -- Formular plan Anula 2019 -- De enero a diciembre 2018.
+  :::
 
--   ::: {custom-style="List Paragraph"}
-    **FASE 4:** Seguimiento y plan de mejora -- 1. Autoevaluación 2. Plan de Mejora - De enero a octubre 2019.
-    :::
+- ::: {custom-style="List Paragraph"}
+  **FASE 4:** Seguimiento y plan de mejora -- 1. Autoevaluación 2. Plan de Mejora - De enero a octubre 2019.
+  :::
 
--   ::: {custom-style="List Paragraph"}
-    **FASE 5:** Inspección Vigilancia y Control (IVC) -- De noviembre 2019 en adelante.
-    :::
+- ::: {custom-style="List Paragraph"}
+  **FASE 5:** Inspección Vigilancia y Control (IVC) -- De noviembre 2019 en adelante.
+  :::
 
 Durante estas fases las empresas aplicarán para la evaluación la Tabla de Valores y Calificación de los Estándares Mínimos del Sistema de Gestión de SST, mediante el diligenciamiento del formulario de evaluación establecido en el artículo 27 de la presente Resolución.
 

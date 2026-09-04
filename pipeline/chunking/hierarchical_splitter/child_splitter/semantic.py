@@ -3,22 +3,17 @@
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.core.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_TABLES_ROOT
-from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_TABLES_ROOT
+from pipeline.chunking.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SEMANTIC_BACKEND,
     SEMANTIC_SPLIT_REASON,
-    build_child_chunk   ,
+    build_child_chunk,
     embedding_kwargs_for_model,
     next_child_start,
 )
 from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult, ChildChunk, ParentChunk
 from pipeline.tables.table_references import validate_table_html_references
-
-# pyrefly: ignore [missing-import]
-from langchain_experimental.text_splitter import SemanticChunker
-# pyrefly: ignore [missing-import]
-from langchain_huggingface import HuggingFaceEmbeddings
 
 # Pipeline orchestration
 
@@ -112,6 +107,15 @@ def create_semantic_splitter(
     breakpoint_threshold_amount: float,
 ) -> Any:
     """Create LangChain's SemanticChunker with multilingual normalized embeddings."""
+
+    try:
+        # pyrefly: ignore [missing-import]
+        from langchain_experimental.text_splitter import SemanticChunker
+        # pyrefly: ignore [missing-import]
+        from langchain_huggingface import HuggingFaceEmbeddings
+    except ImportError as error:
+        raise RuntimeError(f"Could not initialize semantic backend: {error}") from error
+
     embedding_kwargs = embedding_kwargs_for_model(embedding_model)
     embeddings = HuggingFaceEmbeddings(
         model_name=embedding_model,

@@ -8,8 +8,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from pipeline.chunking.core.cli import build_parser, main
-from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.cli import build_parser, main
+from pipeline.chunking.io_jsonl import write_parent_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.regex_constrained_semantic import (
     write_regex_constrained_semantic_child_output,
 )

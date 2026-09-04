@@ -1,1 +1,1 @@
-"""Chunking primitives for the SG-SST normative corpus."""
+"""Shared local infrastructure for the chunking pipeline."""

@@ -1,5 +1,7 @@
 """Public child chunking API."""
 
+from importlib import import_module
+
 from pipeline.chunking.hierarchical_splitter.child_splitter.regex_constrained_semantic import (
     build_regex_constrained_semantic_child_chunks,
     extract_text_units,
@@ -18,13 +20,13 @@ from pipeline.chunking.hierarchical_splitter.models import ChildBuildResult
 
 
 def _semantic_export(name: str):
-    from pipeline.chunking.hierarchical_splitter.child_splitter import semantic
+    semantic = import_module("pipeline.chunking.hierarchical_splitter.child_splitter.semantic")
 
     return getattr(semantic, name)
 
 
 def _sliding_window_export(name: str):
-    from pipeline.chunking.hierarchical_splitter.child_splitter import sliding_window
+    sliding_window = import_module("pipeline.chunking.hierarchical_splitter.child_splitter.sliding_window")
 
     return getattr(sliding_window, name)
 

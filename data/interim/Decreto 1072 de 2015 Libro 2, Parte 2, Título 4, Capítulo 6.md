@@ -110,11 +110,11 @@ Dicha vigilancia comprende tanto la vigilancia de la salud de los trabajadores c
 
 *(Decreto número 1443 de 2014, artículo 2°)*
 
-**Artículo 2.2.4.6.3. *Seguridad y Salud en el Trabajo (SST). ***La Seguridad y Salud en el Trabajo (SST) es la disciplina que trata de la prevención de las lesiones y enfermedades causadas por las condiciones de trabajo, y de la protección y promoción de la salud de los trabajadores. Tiene por objeto mejorar las condiciones y el medio ambiente de trabajo, así como la salud en el trabajo, que conlleva la promoción y el mantenimiento del bienestar físico, mental y social de los trabajadores en todas las ocupaciones.
+**Artículo 2.2.4.6.3. *Seguridad y Salud en el Trabajo (SST).*** La Seguridad y Salud en el Trabajo (SST) es la disciplina que trata de la prevención de las lesiones y enfermedades causadas por las condiciones de trabajo, y de la protección y promoción de la salud de los trabajadores. Tiene por objeto mejorar las condiciones y el medio ambiente de trabajo, así como la salud en el trabajo, que conlleva la promoción y el mantenimiento del bienestar físico, mental y social de los trabajadores en todas las ocupaciones.
 
 *(Decreto número 1443 de 2014, artículo 3°)*
 
-**Artículo 2.2.4.6.4. *Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***El Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) consiste en el desarrollo de un proceso lógico y por etapas, basado en la mejora continua y que incluye la política, la organización, la planificación, la aplicación, la evaluación, la auditoría y las acciones de mejora con el objetivo de anticipar, reconocer, evaluar y controlar los riesgos que puedan afectar la seguridad y la salud en el trabajo.
+**Artículo 2.2.4.6.4. *Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** El Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) consiste en el desarrollo de un proceso lógico y por etapas, basado en la mejora continua y que incluye la política, la organización, la planificación, la aplicación, la evaluación, la auditoría y las acciones de mejora con el objetivo de anticipar, reconocer, evaluar y controlar los riesgos que puedan afectar la seguridad y la salud en el trabajo.
 
 El SG-SST debe ser liderado e implementado por el empleador o contratante, con la participación de los trabajadores y/o contratistas, garantizando a través de dicho sistema, la aplicación de las medidas de Seguridad y Salud en el Trabajo, el mejoramiento del com­portamiento de los trabajadores, las condiciones y el medio ambiente laboral, y el control eficaz de los peligros y riesgos en el lugar de trabajo.
 
@@ -126,11 +126,11 @@ Para el efecto, el empleador o contratante debe abordar la prevención de los ac
 
 *(Decreto número 1443 de 2014, artículo 4°)*
 
-**Artículo 2.2.4.6.5. *Política de seguridad y salud en el trabajo (SST). ***El empleador o contratante debe establecer por escrito una política de Seguridad y Salud en el Trabajo (SST) que debe ser parte de las políticas de gestión de la empresa, con alcance sobre todos sus centros de trabajo y todos sus trabajadores, independiente de su forma de contratación o vinculación, incluyendo los contratistas y subcontratistas. Esta política debe ser comuni­cada al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo según corresponda de conformidad con la normatividad vigente.
+**Artículo 2.2.4.6.5. *Política de seguridad y salud en el trabajo (SST).*** El empleador o contratante debe establecer por escrito una política de Seguridad y Salud en el Trabajo (SST) que debe ser parte de las políticas de gestión de la empresa, con alcance sobre todos sus centros de trabajo y todos sus trabajadores, independiente de su forma de contratación o vinculación, incluyendo los contratistas y subcontratistas. Esta política debe ser comuni­cada al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo según corresponda de conformidad con la normatividad vigente.
 
 *(Decreto número 1443 de 2014, artículo 5°)*
 
-**Artículo 2.2.4.6.6. *Requisitos de la Política de Seguridad y Salud en el Trabajo (SST). ***
+**Artículo 2.2.4.6.6. *Requisitos de la Política de Seguridad y Salud en el Trabajo (SST).***
 
 La Política de SST de la empresa debe entre otros, cumplir con los siguientes requi­sitos:
 
@@ -146,7 +146,7 @@ La Política de SST de la empresa debe entre otros, cumplir con los siguientes r
 
 *(Decreto número 1443 de 2014, artículo 6°)*
 
-**Artículo 2.2.4.6.7. *Objetivos de la Política de Seguridad y Salud en el Trabajo (SST). ***La Política de SST de la empresa debe incluir como mínimo los siguientes objetivos sobre los cuales la organización expresa su compromiso:
+**Artículo 2.2.4.6.7. *Objetivos de la Política de Seguridad y Salud en el Trabajo (SST).*** La Política de SST de la empresa debe incluir como mínimo los siguientes objetivos sobre los cuales la organización expresa su compromiso:
 
 1\. Identificar los peligros, evaluar y valorar los riesgos y establecer los respectivos controles.
 
@@ -156,7 +156,7 @@ La Política de SST de la empresa debe entre otros, cumplir con los siguientes r
 
 *(Decreto número 1443 de 2014, artículo 7°)*
 
-**Artículo 2.2.4.6.8. *Obligaciones de los empleadores. ***El empleador está obligado a la protección de la seguridad y la salud de los trabajadores, acorde con lo establecido en la normatividad vigente.
+**Artículo 2.2.4.6.8. *Obligaciones de los empleadores.*** El empleador está obligado a la protección de la seguridad y la salud de los trabajadores, acorde con lo establecido en la normatividad vigente.
 
 Dentro del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) en la empresa, el empleador tendrá entre otras, las siguientes obligaciones:
 
@@ -196,11 +196,11 @@ El empleador debe garantizar la capacitación de los trabajadores en los aspecto
 
 *(Decreto número 1443 de 2014, artículo 8°)*
 
-**Artículo 2.2.4.6.9. *Obligaciones de las Administradoras de Riesgos Laborales (ARL). ***Las Administradoras de Riesgos Laborales (ARL), dentro de las obligaciones que le confiere la normatividad vigente en el Sistema General de Riesgos Laborales, capaci­tarán al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo (Copasst) o Vigía en Seguridad y Salud en el Trabajo en los aspectos relativos al SG-SST y prestarán asesoría y asistencia técnica a sus empresas y trabajadores afiliados, en la implementación del presente capítulo.
+**Artículo 2.2.4.6.9. *Obligaciones de las Administradoras de Riesgos Laborales (ARL).*** Las Administradoras de Riesgos Laborales (ARL), dentro de las obligaciones que le confiere la normatividad vigente en el Sistema General de Riesgos Laborales, capaci­tarán al Comité Paritario o Vigía de Seguridad y Salud en el Trabajo (Copasst) o Vigía en Seguridad y Salud en el Trabajo en los aspectos relativos al SG-SST y prestarán asesoría y asistencia técnica a sus empresas y trabajadores afiliados, en la implementación del presente capítulo.
 
 *(Decreto número 1443 de 2014, artículo 9°)*
 
-**Artículo 2.2.4.6.10. *Responsabilidades de los trabajadores. ***Los trabajadores, de con­formidad con la normatividad vigente tendrán entre otras, las siguientes responsabilidades:
+**Artículo 2.2.4.6.10. *Responsabilidades de los trabajadores.*** Los trabajadores, de con­formidad con la normatividad vigente tendrán entre otras, las siguientes responsabilidades:
 
 1\. Procurar el cuidado integral de su salud;
 
@@ -216,7 +216,7 @@ El empleador debe garantizar la capacitación de los trabajadores en los aspecto
 
 *(Decreto número 1443 de 2014, artículo 10)*
 
-**Artículo 2.2.4.6.11. *Capacitación en Seguridad y Salud en el Trabajo (SST). ***El em­pleador o contratante debe definir los requisitos de conocimiento y práctica en seguridad y salud en el trabajo necesarios para sus trabajadores, también debe adoptar y mantener disposiciones para que estos los cumplan en todos los aspectos de la ejecución de sus de­beres u obligaciones, con el fin de prevenir accidentes de trabajo y enfermedades laborales. Para ello, debe desarrollar un programa de capacitación que proporcione conocimiento para identificar los peligros y controlar los riesgos relacionados con el trabajo, hacerlo extensivo a todos los niveles de la organización incluyendo a trabajadores dependientes, contratistas, trabajadores cooperados y los trabajadores en misión, estar documentado, ser impartido por personal idóneo conforme a la normatividad vigente.
+**Artículo 2.2.4.6.11. *Capacitación en Seguridad y Salud en el Trabajo (SST).*** El em­pleador o contratante debe definir los requisitos de conocimiento y práctica en seguridad y salud en el trabajo necesarios para sus trabajadores, también debe adoptar y mantener disposiciones para que estos los cumplan en todos los aspectos de la ejecución de sus de­beres u obligaciones, con el fin de prevenir accidentes de trabajo y enfermedades laborales. Para ello, debe desarrollar un programa de capacitación que proporcione conocimiento para identificar los peligros y controlar los riesgos relacionados con el trabajo, hacerlo extensivo a todos los niveles de la organización incluyendo a trabajadores dependientes, contratistas, trabajadores cooperados y los trabajadores en misión, estar documentado, ser impartido por personal idóneo conforme a la normatividad vigente.
 
 **Parágrafo 1°**. El programa de capacitación en Seguridad y Salud en el Trabajo (SST), debe ser revisado mínimo una (1) vez al año, con la participación del Comité Paritario o Vigía de Seguridad y Salud en el Trabajo y la alta dirección de la empresa: con el fin de identificar las acciones de mejora.
 
@@ -224,7 +224,7 @@ El empleador debe garantizar la capacitación de los trabajadores en los aspecto
 
 *(Decreto número 1443 de 2014, artículo 11)*
 
-**Artículo 2.2.4.6.12. *Documentación. ***El empleador debe mantener disponibles y de­bidamente actualizados entre otros, los siguientes documentos en relación con el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST):
+**Artículo 2.2.4.6.12. *Documentación.*** El empleador debe mantener disponibles y de­bidamente actualizados entre otros, los siguientes documentos en relación con el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST):
 
 1\. La política y los objetivos de la empresa en materia de Seguridad y Salud en el Tra­bajo (SST), firmados por el empleador;
 
@@ -268,7 +268,7 @@ En el caso de contarse con servicios de médico especialista en medicina laboral
 
 *(Decreto número 1443 de 2014, artículo 12)*
 
-**Artículo 2.2.4.6.13. *Conservación de los documentos. ***El empleador debe conservar los registros y documentos que soportan el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) de manera controlada, garantizando que sean legibles, fácilmente identificables y accesibles, protegidos contra daño, deterioro o pérdida. El responsable del SG-SST tendrá acceso a todos los documentos y registros exceptuando el acceso a las historias clínicas ocupacionales de los trabajadores cuando no tenga perfil de médico especialista en seguridad y salud en el trabajo. La conservación puede hacerse de forma electrónica de conformidad con lo establecido en el presente capítulo siempre y cuando se garantice la preservación de la información.
+**Artículo 2.2.4.6.13. *Conservación de los documentos.*** El empleador debe conservar los registros y documentos que soportan el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) de manera controlada, garantizando que sean legibles, fácilmente identificables y accesibles, protegidos contra daño, deterioro o pérdida. El responsable del SG-SST tendrá acceso a todos los documentos y registros exceptuando el acceso a las historias clínicas ocupacionales de los trabajadores cuando no tenga perfil de médico especialista en seguridad y salud en el trabajo. La conservación puede hacerse de forma electrónica de conformidad con lo establecido en el presente capítulo siempre y cuando se garantice la preservación de la información.
 
 Los siguientes documentos y registros, deben ser conservados por un periodo mínimo de veinte (20) años, contados a partir del momento en que cese la relación laboral del trabajador con la empresa:
 
@@ -314,7 +314,7 @@ Cuando en el proceso productivo, se involucren agentes potencialmente canceríge
 
 *(Decreto número 1443 de 2014, artículo 15)*
 
-**Artículo 2.2.4.6.16. *Evaluación inicial del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***La evaluación inicial deberá realizarse con el fin de iden­tificar las prioridades en seguridad y salud en el trabajo para establecer el plan de trabajo anual o para la actualización del existente. El Sistema de Gestión de la Seguridad y Salud en el Trabajo existente al 31 de julio de 2014 deberá examinarse teniendo en cuenta lo establecido en el presente artículo. Esta autoevaluación debe ser realizada por personal idóneo de conformidad con la normatividad vigente, incluyendo los estándares mínimos que se reglamenten.
+**Artículo 2.2.4.6.16. *Evaluación inicial del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** La evaluación inicial deberá realizarse con el fin de iden­tificar las prioridades en seguridad y salud en el trabajo para establecer el plan de trabajo anual o para la actualización del existente. El Sistema de Gestión de la Seguridad y Salud en el Trabajo existente al 31 de julio de 2014 deberá examinarse teniendo en cuenta lo establecido en el presente artículo. Esta autoevaluación debe ser realizada por personal idóneo de conformidad con la normatividad vigente, incluyendo los estándares mínimos que se reglamenten.
 
 La evaluación inicial permitirá mantener vigentes las prioridades en seguridad y salud en el trabajo acorde con los cambios en las condiciones y procesos de trabajo de la empresa y su entorno, y acorde con las modificaciones en la normatividad del Sistema General de Riesgos Laborales en Colombia.
 
@@ -344,7 +344,7 @@ La evaluación inicial debe incluir, entre otros, los siguientes aspectos:
 
 *(Decreto número 1443 de 2014, artículo 16)*
 
-**Artículo 2.2.4.6.17. *Planificación del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***El empleador o contratante debe adoptar mecanismos para planificar el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), basado en la eva­luación inicial y otros datos disponibles que aporten a este propósito.
+**Artículo 2.2.4.6.17. *Planificación del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** El empleador o contratante debe adoptar mecanismos para planificar el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), basado en la eva­luación inicial y otros datos disponibles que aporten a este propósito.
 
 1\. La planificación debe aportar a:
 
@@ -372,7 +372,7 @@ La evaluación inicial debe incluir, entre otros, los siguientes aspectos:
 
 *(Decreto número 1443 de 2014, artículo 17)*
 
-**Artículo 2.2.4.6.18. *Objetivos del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***Los objetivos deben expresarse de conformidad con la política de seguridad y salud en el trabajo establecida en la empresa y el resultado de la evaluación inicial y auditorías que se realicen.
+**Artículo 2.2.4.6.18. *Objetivos del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** Los objetivos deben expresarse de conformidad con la política de seguridad y salud en el trabajo establecida en la empresa y el resultado de la evaluación inicial y auditorías que se realicen.
 
 Estos objetivos deben tener en cuenta entre otros aspectos, los siguientes:
 
@@ -390,7 +390,7 @@ Estos objetivos deben tener en cuenta entre otros aspectos, los siguientes:
 
 *(Decreto número 1443 de 2014, artículo 18)*
 
-**Artículo 2.2.4.6.19. *Indicadores del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***El empleador debe definir los indicadores (cualitativos o cuantitati­vos según corresponda) mediante los cuales se evalúen la estructura, el proceso y los resul­tados del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) y debe hacer el seguimiento a los mismos. Estos indicadores deben alinearse con el plan estratégico de la empresa y hacer parte del mismo.
+**Artículo 2.2.4.6.19. *Indicadores del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** El empleador debe definir los indicadores (cualitativos o cuantitati­vos según corresponda) mediante los cuales se evalúen la estructura, el proceso y los resul­tados del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST) y debe hacer el seguimiento a los mismos. Estos indicadores deben alinearse con el plan estratégico de la empresa y hacer parte del mismo.
 
 Cada indicador debe contar con una ficha técnica que contenga las siguientes variables:
 
@@ -410,7 +410,7 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 
 *(Decreto número 1443 de 2014, artículo 19)*
 
-**Artículo 2.2.4.6.20. *Indicadores que evalúan la estructura del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***Para la definición y construcción de los indicadores que evalúan la estructura, el empleador debe considerar entre otros, los siguientes aspectos:
+**Artículo 2.2.4.6.20. *Indicadores que evalúan la estructura del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** Para la definición y construcción de los indicadores que evalúan la estructura, el empleador debe considerar entre otros, los siguientes aspectos:
 
 1\. La política de seguridad y salud en el trabajo y que esté comunicada;
 
@@ -436,7 +436,7 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 
 *(Decreto número 1443 de 2014, artículo 20)*
 
-**Artículo 2.2.4.6.21. *Indicadores que evalúan el proceso del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***Para la definición y construcción de los indicadores que evalúan el proceso, el empleador debe considerar entre otros:
+**Artículo 2.2.4.6.21. *Indicadores que evalúan el proceso del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** Para la definición y construcción de los indicadores que evalúan el proceso, el empleador debe considerar entre otros:
 
 1\. Evaluación inicial (línea base);
 
@@ -464,7 +464,7 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 
 *(Decreto número 1443 de 2014, artículo 21)*
 
-**Artículo 2.2.4.6.22. *Indicadores que evalúan el resultado del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***Para la definición y construcción de los indicadores que evalúan el resultado, el empleador debe considerar entre otros:
+**Artículo 2.2.4.6.22. *Indicadores que evalúan el resultado del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** Para la definición y construcción de los indicadores que evalúan el resultado, el empleador debe considerar entre otros:
 
 1\. Cumplimiento de los requisitos normativos aplicables;
 
@@ -488,11 +488,11 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 
 *(Decreto número 1443 de 2014, artículo 22)*
 
-**Artículo 2.2.4.6.23. *Gestión de los peligros y riesgos. ***El empleador o contratante debe adoptar métodos para la identificación, prevención, evaluación, valoración y control de los peligros y riesgos en la empresa.
+**Artículo 2.2.4.6.23. *Gestión de los peligros y riesgos.*** El empleador o contratante debe adoptar métodos para la identificación, prevención, evaluación, valoración y control de los peligros y riesgos en la empresa.
 
 *(Decreto número 1443 de 2014, artículo 23)*
 
-**Artículo 2.2.4.6.24. *Medidas de prevención y control. ***Las medidas de prevención y control deben adoptarse con base en el análisis de pertinencia, teniendo en cuenta el siguiente esquema de jerarquización:
+**Artículo 2.2.4.6.24. *Medidas de prevención y control.*** Las medidas de prevención y control deben adoptarse con base en el análisis de pertinencia, teniendo en cuenta el siguiente esquema de jerarquización:
 
 1\. Eliminación del peligro/riesgo: Medida que se toma para suprimir (hacer desapare­cer) el peligro/riesgo;
 
@@ -514,7 +514,7 @@ Cada indicador debe contar con una ficha técnica que contenga las siguientes va
 
 *(Decreto número 1443 de 2014, artículo 24)*
 
-**Artículo 2.2.4.6.25. *Prevención, preparación y respuesta ante emergencias. ***El em­pleador o contratante debe implementar y mantener las disposiciones necesarias en materia de prevención, preparación y respuesta ante emergencias, con cobertura a todos los centros y turnos de trabajo y todos los trabajadores, independiente de su forma de contratación o vinculación, incluidos contratistas y subcontratistas, así como proveedores y visitantes.
+**Artículo 2.2.4.6.25. *Prevención, preparación y respuesta ante emergencias.*** El em­pleador o contratante debe implementar y mantener las disposiciones necesarias en materia de prevención, preparación y respuesta ante emergencias, con cobertura a todos los centros y turnos de trabajo y todos los trabajadores, independiente de su forma de contratación o vinculación, incluidos contratistas y subcontratistas, así como proveedores y visitantes.
 
 Para ello debe implementar un plan de prevención, preparación y respuesta ante emer­gencias que considere como mínimo, los siguientes aspectos:
 
@@ -548,7 +548,7 @@ Para ello debe implementar un plan de prevención, preparación y respuesta ante
 
 *(Decreto número 1443 de 2014, artículo 25)*
 
-**Artículo 2.2.4.6.26. *Gestión del cambio. ***El empleador o contratante debe implemen­tar y mantener un procedimiento para evaluar el impacto sobre la seguridad y salud en el trabajo que puedan generar los cambios internos (introducción de nuevos procesos, cambio en los métodos de trabajo, cambios en instalaciones, entre otros) o los cambios externos (cambios en la legislación, evolución del conocimiento en seguridad y salud en el trabajo, entre otros).
+**Artículo 2.2.4.6.26. *Gestión del cambio.*** El empleador o contratante debe implemen­tar y mantener un procedimiento para evaluar el impacto sobre la seguridad y salud en el trabajo que puedan generar los cambios internos (introducción de nuevos procesos, cambio en los métodos de trabajo, cambios en instalaciones, entre otros) o los cambios externos (cambios en la legislación, evolución del conocimiento en seguridad y salud en el trabajo, entre otros).
 
 Para ello debe realizar la identificación de peligros y la evaluación de riesgos que pue­dan derivarse de estos cambios y debe adoptar las medidas de prevención y control antes de su implementación, con el apoyo del Comité Paritario o Vigía de Seguridad y Salud en el Trabajo. De la misma manera, debe actualizar el plan de trabajo anual en seguridad y salud en el trabajo.
 
@@ -588,7 +588,7 @@ Los resultados de la auditoría deben ser comunicados a los responsables de adel
 
 *(Decreto número 1443 de 2014, artículo 29)*
 
-**Artículo 2.2.4.6.30. *Alcance de la auditoría de cumplimiento del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST). ***El proceso de auditoría de que trata el presente capítulo, deberá abarcar entre otros lo siguiente:
+**Artículo 2.2.4.6.30. *Alcance de la auditoría de cumplimiento del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST).*** El proceso de auditoría de que trata el presente capítulo, deberá abarcar entre otros lo siguiente:
 
 1\. El cumplimiento de la política de seguridad y salud en el trabajo;
 
@@ -690,7 +690,7 @@ La revisión de la alta dirección debe permitir:
 
 *(Decreto número 1443 de 2014, artículo 32)*
 
-**Artículo 2.2.4.6.33. *Acciones preventivas y correctivas. ***El empleador debe garantizar que se definan e implementen las acciones preventivas y correctivas necesarias, con base en los resultados de la supervisión y medición de la eficacia del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), de las auditorías y de la revisión por la alta dirección.
+**Artículo 2.2.4.6.33. *Acciones preventivas y correctivas.*** El empleador debe garantizar que se definan e implementen las acciones preventivas y correctivas necesarias, con base en los resultados de la supervisión y medición de la eficacia del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), de las auditorías y de la revisión por la alta dirección.
 
 Estas acciones entre otras, deben estar orientadas a:
 
@@ -704,7 +704,7 @@ Estas acciones entre otras, deben estar orientadas a:
 
 *(Decreto número 1443 de 2014, artículo 33)*
 
-**Artículo 2.2.4.6.34. *Mejora continua. ***El empleador debe dar las directrices y otorgar los recursos necesarios para la mejora continua del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), con el objetivo de mejorar la eficacia de todas sus activida­des y el cumplimiento de sus propósitos. Entre otras, debe considerar las siguientes fuentes para identificar oportunidades de mejora:
+**Artículo 2.2.4.6.34. *Mejora continua.*** El empleador debe dar las directrices y otorgar los recursos necesarios para la mejora continua del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), con el objetivo de mejorar la eficacia de todas sus activida­des y el cumplimiento de sus propósitos. Entre otras, debe considerar las siguientes fuentes para identificar oportunidades de mejora:
 
 1\. El cumplimiento de los objetivos del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST);
 
@@ -722,7 +722,7 @@ Estas acciones entre otras, deben estar orientadas a:
 
 *(Decreto número 1443 de 2014, artículo 34)*
 
-**Artículo 2.2.4.6.35. *Capacitación obligatoria. ***Los responsables de la ejecución de los Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), deberán realizar el curso de capacitación virtual de cincuenta (50) horas sobre el Sistema de Gestión de la Se­guridad y Salud en el Trabajo (SG-SST) que defina el Ministerio del Trabajo en desarrollo de las acciones señaladas en el literal a) del artículo 12 de la Ley 1562 de 2012, y obtener el certificado de aprobación del mismo.
+**Artículo 2.2.4.6.35. *Capacitación obligatoria.*** Los responsables de la ejecución de los Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), deberán realizar el curso de capacitación virtual de cincuenta (50) horas sobre el Sistema de Gestión de la Se­guridad y Salud en el Trabajo (SG-SST) que defina el Ministerio del Trabajo en desarrollo de las acciones señaladas en el literal a) del artículo 12 de la Ley 1562 de 2012, y obtener el certificado de aprobación del mismo.
 
 *(Decreto número 1443 de 2014, artículo 35)*
 
@@ -772,7 +772,7 @@ Para la organización y administración del Plan Nacional se determinan los sigu
 
 *(Decreto número 614 de 1984, artículo 11)*
 
-**Artículo 2.2.4.6.40. *Servicios privados de Seguridad y Salud en el Trabajo. ***Cual­quier persona natural o jurídica podrá prestar servicios de Seguridad y Salud en el Trabajo a empleadores o trabajadores, sujetándose a la supervisión y vigilancia del Ministerio de Salud y Protección Social o de la entidad en que éste delegue.
+**Artículo 2.2.4.6.40. *Servicios privados de Seguridad y Salud en el Trabajo.*** Cual­quier persona natural o jurídica podrá prestar servicios de Seguridad y Salud en el Trabajo a empleadores o trabajadores, sujetándose a la supervisión y vigilancia del Ministerio de Salud y Protección Social o de la entidad en que éste delegue.
 
 *(Decreto número 614 de 1984, artículo 32)*
 

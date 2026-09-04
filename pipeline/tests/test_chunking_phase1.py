@@ -8,8 +8,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from pipeline.chunking.core import config
-from pipeline.chunking.core.cli import build_parser, main
+from pipeline.chunking import config
+from pipeline.chunking.cli import build_parser, main
 from pipeline.chunking.hierarchical_splitter.parent_builder import (
     build_parent_chunks_for_document,
     discover_markdown_sources,
@@ -74,10 +74,10 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
-            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
-                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch("pipeline.chunking.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
             ), patch(
-                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
+                "pipeline.chunking.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
             ), redirect_stdout(stdout):
                 exit_code = main(["build-parents"])
 
@@ -104,9 +104,9 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
-            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
-                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", workspace / "parents.jsonl"
-            ), patch("pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", manifest_path), redirect_stderr(stderr):
+            ), patch("pipeline.chunking.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", workspace / "parents.jsonl"
+            ), patch("pipeline.chunking.cli.DEFAULT_SOURCE_MANIFEST_PATH", manifest_path), redirect_stderr(stderr):
                 exit_code = main(["build-parents"])
 
             self.assertEqual(exit_code, 2)
@@ -128,10 +128,10 @@ class ChunkingPhase1CLITest(unittest.TestCase):
             with patch(
                 "pipeline.chunking.hierarchical_splitter.parent_builder.estimate_token_count",
                 side_effect=count_words,
-            ), patch("pipeline.chunking.core.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
-                "pipeline.chunking.core.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
+            ), patch("pipeline.chunking.cli.DEFAULT_CLEANED_MARKDOWN_DIR", input_dir), patch(
+                "pipeline.chunking.cli.DEFAULT_PARENT_CHUNKS_PATH", output_path
             ), patch(
-                "pipeline.chunking.core.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
+                "pipeline.chunking.cli.DEFAULT_SOURCE_MANIFEST_PATH", workspace / "missing_manifest.json"
             ), redirect_stdout(io.StringIO()):
                 exit_code = main(["build-parents"])
 

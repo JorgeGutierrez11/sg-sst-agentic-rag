@@ -8,7 +8,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from pipeline.chunking.core.cli import main
+from pipeline.chunking.cli import main
 from pipeline.tables.table_documents import (
     MAX_TABLE_DOCUMENT_CHARS,
     build_table_documents,
@@ -237,8 +237,8 @@ class TableDocumentsTest(unittest.TestCase):
             output_path = workspace / "processed" / "table_documents.jsonl"
             stdout = io.StringIO()
 
-            with patch("pipeline.chunking.core.cli.DEFAULT_TABLE_MARKDOWN_ROOT", markdown_root), patch(
-                "pipeline.chunking.core.cli.DEFAULT_TABLE_DOCUMENTS_PATH", output_path
+            with patch("pipeline.chunking.cli.DEFAULT_TABLE_MARKDOWN_ROOT", markdown_root), patch(
+                "pipeline.chunking.cli.DEFAULT_TABLE_DOCUMENTS_PATH", output_path
             ), redirect_stdout(stdout):
                 exit_code = main(["build-table-documents"])
 

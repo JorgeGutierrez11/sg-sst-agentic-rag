@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.core.io_jsonl import read_jsonl
+from pipeline.chunking.io_jsonl import read_jsonl
 
 
 ScalarMetadata = str | int | float | bool

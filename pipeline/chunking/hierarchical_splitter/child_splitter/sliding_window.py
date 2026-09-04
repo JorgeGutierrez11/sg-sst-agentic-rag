@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from pipeline.chunking.core.config import DEFAULT_TABLES_ROOT
-from pipeline.chunking.core.io_jsonl import read_parent_chunks, write_child_chunks
+from pipeline.chunking.config import DEFAULT_TABLES_ROOT
+from pipeline.chunking.io_jsonl import read_parent_chunks, write_child_chunks
 from pipeline.chunking.hierarchical_splitter.child_splitter.shared import (
     SLIDING_WINDOW_BACKEND,
     SLIDING_WINDOW_SPLIT_REASON,

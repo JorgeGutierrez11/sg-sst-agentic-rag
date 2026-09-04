@@ -4,7 +4,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from pipeline.chunking.core.config import (
+from pipeline.chunking.config import (
     DEFAULT_REGEX_CONSTRAINED_SEMANTIC_CHUNKS_PATH,
     DEFAULT_TABLE_DOCUMENTS_PATH,
     PROJECT_ROOT,

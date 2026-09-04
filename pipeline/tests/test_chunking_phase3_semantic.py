@@ -4,18 +4,18 @@ import io
 import json
 import tempfile
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from pipeline.chunking.core.cli import build_parser, main
-from pipeline.chunking.core.config import (
+from pipeline.chunking.cli import build_parser, main
+from pipeline.chunking.config import (
     DEFAULT_EMBEDDING_MODEL,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
     DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE,
 )
-from pipeline.chunking.core.io_jsonl import write_parent_chunks
+from pipeline.chunking.io_jsonl import write_parent_chunks
 from pipeline.chunking.hierarchical_splitter.models import ParentChunk
 
 
@@ -169,12 +169,23 @@ def patch_normalized_semantic_splitter():
     )
 
 
+@contextmanager
 def semantic_cli_defaults(input_path: Path, output_path: Path):
-    return patch.multiple(
-        "pipeline.chunking.core.cli",
-        DEFAULT_PARENT_CHUNKS_PATH=input_path,
-        DEFAULT_SEMANTIC_CHUNKS_PATH=output_path,
-    )
+    with ExitStack() as stack:
+        stack.enter_context(
+            patch.multiple(
+                "pipeline.chunking.cli",
+                DEFAULT_PARENT_CHUNKS_PATH=input_path,
+                DEFAULT_SEMANTIC_CHUNKS_PATH=output_path,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "pipeline.chunking.hierarchical_splitter.child_splitter.shared.estimate_token_count",
+                side_effect=lambda text: max(1, len(text.split())),
+            )
+        )
+        yield
 
 
 class FakeSemanticSplitter:
