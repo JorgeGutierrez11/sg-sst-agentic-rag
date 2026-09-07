@@ -12,7 +12,8 @@ from langchain_core.embeddings import Embeddings
 
 
 
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, DEFAULT_TOP_K
+from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, HYBRID_CANDIDATE_TOP_K, HYBRID_RRF_K, RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH, RERANKER_CANDIDATE_POOL_SIZE, RERANKER_FINAL_TOP_K, DEFAULT_PARENT_CHUNKS_PATH
+
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -32,8 +33,12 @@ class RuntimeDependencies:
     #answer_with_langgraph: Callable[[str, Any], Any]
     build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
     answer_with_langgraph: Callable[..., Any]
-    chroma_retriever: Callable[[Any], Retriever]
     open_existing_collection: Callable[[Any, str], Any]
+    open_existing_bm25_index: Callable[..., Any]
+    hybrid_retriever: Callable[..., Retriever]
+    get_reranker: Callable[..., Any]
+    load_parent_documents: Callable[..., Any]
+    
 
 
 @dataclass(frozen=True)
@@ -133,9 +138,24 @@ def build_runtime() -> RagRuntime:
             DEFAULT_CHROMA_PATH,
             DEFAULT_COLLECTION_NAME,
         )
+        
 
-        retriever = dependencies.chroma_retriever(
-            collection
+        bm25_index = dependencies.open_existing_bm25_index()
+
+        retriever = dependencies.hybrid_retriever(
+            collection,
+            bm25_index,
+            candidate_top_k=HYBRID_CANDIDATE_TOP_K,
+            rrf_k=HYBRID_RRF_K,
+        )
+
+        reranker = dependencies.get_reranker(
+            RERANKER_MODEL_NAME,
+            RERANKER_MAX_LENGTH,
+        )
+
+        parent_lookup = dependencies.load_parent_documents(
+            DEFAULT_PARENT_CHUNKS_PATH
         )
 
         # Memoria de corto plazo asociada al thread.
@@ -166,9 +186,13 @@ def build_runtime() -> RagRuntime:
         graph = dependencies.build_langgraph_rag(
             llm,
             retriever,
-            DEFAULT_TOP_K,
+            RERANKER_CANDIDATE_POOL_SIZE,
             checkpointer=checkpointer,
             store=memory_store,
+            reranker=reranker,
+            reranker_candidate_pool_size=RERANKER_CANDIDATE_POOL_SIZE,
+            reranker_final_top_k=RERANKER_FINAL_TOP_K,
+            parent_lookup=parent_lookup
         )
 
         # Guardar diagrama en disco
@@ -204,8 +228,11 @@ def load_dependencies() -> RuntimeDependencies:
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
-        from agents.consulta_normativa.manual_implementation.rag_base import chroma_retriever
         from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (open_existing_index as open_existing_bm25_index)
+        from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
+        from agents.consulta_normativa.langchain_rag.retrieval.reranking import (get_reranker)
+        from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (load_parent_documents)
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
@@ -213,8 +240,11 @@ def load_dependencies() -> RuntimeDependencies:
         build_deepseek_llm=build_deepseek_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
-        chroma_retriever=chroma_retriever,
         open_existing_collection=open_existing_collection,
+        open_existing_bm25_index=open_existing_bm25_index,
+        hybrid_retriever=hybrid_retriever,
+        get_reranker=get_reranker,
+        load_parent_documents=load_parent_documents,
     )
 
 
@@ -256,7 +286,111 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         }
     )
 
+    documents = snapshot.values.get(
+        "documents",
+        [],
+    )
 
+    reranking_trace = snapshot.values.get(
+        "reranking_trace",
+        {},
+    )
+
+    reranker_selected_count = reranking_trace.get(
+        "selected_count",
+        0,
+    )
+
+    expanded_parent_count = sum(
+        1
+        for document in documents
+        if document.metadata.get("parent_expansion_applied")
+    )
+
+    missing_parent_fallback_count = sum(
+        1
+        for document in documents
+        if document.metadata.get("parent_expansion_fallback") == "missing_parent"
+    )
+
+    deduplicated_count = sum(
+        max(
+            len(document.metadata.get("expanded_from_child_ids", [])) - 1,
+            0,
+        )
+        for document in documents
+    )
+
+    print(
+        "\n-------------------------- R3 HYBRID + RERANKING + PARENT ---------------------------------------"
+    )
+
+    print(
+        f"Candidatos recibidos por reranker: "
+        f"{reranking_trace.get('candidate_count', 0)}"
+    )
+
+    print(
+        f"Documentos seleccionados por reranker: "
+        f"{reranker_selected_count}"
+    )
+
+    print(
+        f"Fallback reranker: "
+        f"{reranking_trace.get('fallback', None)}"
+    )
+
+    print(
+        f"Documentos finales después de Parent Expansion: "
+        f"{len(documents)}"
+    )
+
+    print(
+        f"Parents expandidos: "
+        f"{expanded_parent_count}"
+    )
+
+    print(
+        f"Child chunks deduplicados por compartir parent: "
+        f"{deduplicated_count}"
+    )
+
+    print(
+        f"Fallback por parent faltante: "
+        f"{missing_parent_fallback_count}"
+    )
+
+    for index, document in enumerate(
+        documents,
+        start=1,
+    ):
+        metadata = document.metadata
+
+        print(f"\nDocumento {index}")
+        print(
+            f"Tipo: "
+            f"{metadata.get('document_type', '')}"
+        )
+        print(
+            f"Parent expansion aplicada: "
+            f"{metadata.get('parent_expansion_applied', False)}"
+        )
+        print(
+            f"Parent ID: "
+            f"{metadata.get('expanded_parent_id', '')}"
+        )
+        print(
+            f"Child IDs que llevaron a este parent: "
+            f"{metadata.get('expanded_from_child_ids', [])}"
+        )
+        print(
+            f"Fuentes retrieval: "
+            f"{metadata.get('_retrieval_sources', [])}"
+        )
+
+    print(
+        "-------------------------- END R3 HYBRID + RERANKING + PARENT -----------------------------------\n"
+    )
 
     business_context = snapshot.values.get(
         "business_context",

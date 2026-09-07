@@ -15,14 +15,24 @@ from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCT
 # importar nodo de perfil de negocio y nodo de historial de conversación
 from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
 from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
-# tecnica de memoria a largo plazo
-from agents.consulta_normativa.langchain_rag.business_context.techniques.retrieval_long_term_memory import (retrieval_long_term_memory_node,store_latest_conversation_memory_node,)
 
+from agents.consulta_normativa.langchain_rag.retrieval.reranking import rerank_node
+from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (expand_parent_documents)
 
 Retriever = Callable[[str, int], dict[str, Any]]
 
 # se agregó checkpointer: Any | None = None, para permitir la integración con un sistema de checkpointing y store: Any | None = None, para permitir la integración con un sistema de almacenamiento de memoria a largo plazo.
-def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP_K, checkpointer: Any | None = None,store: Any | None = None,) -> Any:
+def build_langgraph_rag(
+    llm: Any,
+    retriever: Retriever,
+    top_k: int = DEFAULT_TOP_K,
+    checkpointer: Any | None = None,
+    store: Any | None = None,
+    reranker: Any | None = None,
+    reranker_candidate_pool_size: int = 40,
+    reranker_final_top_k: int = DEFAULT_TOP_K,
+    parent_lookup: dict[str, Any] | None = None,
+) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
     try:
@@ -34,10 +44,24 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow = StateGraph(RagGraphState)
 
 
-    workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
-    workflow.add_node("retrieval_long_term_memory",retrieval_long_term_memory_node(),) # Agregar nodo de memoria a largo plazo
+    #workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
+
+    workflow.add_node(
+        "rerank",
+        rerank_node(
+            reranker,
+            reranker_candidate_pool_size,
+            reranker_final_top_k,
+        ),
+    )
+
+    workflow.add_node(
+        "expand_parent_documents",
+        expand_parent_documents_node(parent_lookup or {}),
+    )
+
     workflow.add_node("record_retrieval_trace",record_retrieval_trace_node)
 
 
@@ -51,20 +75,25 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     workflow.add_node("generate_answer", generate_answer_node(llm))
 
 
-    workflow.add_node("save_conversation_turn", save_conversation_turn_node) # Agregar nodo de historial de conversación
+    #workflow.add_node("save_conversation_turn", save_conversation_turn_node) # Agregar nodo de historial de conversación
 
-    workflow.add_node("store_long_term_memory",store_latest_conversation_memory_node,) # Agregar nodo de almacenamiento de memoria a largo plazo
+    
 
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    #workflow.set_entry_point("retrieve")
-    workflow.set_entry_point("business_profile")
-    workflow.add_edge("business_profile", "retrieval_long_term_memory") # Agregar arista desde el nodo de perfil de negocio al nodo de memoria a largo plazo
-    workflow.add_edge("retrieval_long_term_memory", "retrieve") # Agregar arista desde el nodo de memoria a largo plazo al nodo de recuperación
+    workflow.set_entry_point("retrieve")
+    #workflow.set_entry_point("business_profile")
+
 
     workflow.add_edge("retrieve", "normalize_documents")
-    workflow.add_edge("normalize_documents", "record_retrieval_trace")
+    workflow.add_edge("normalize_documents", "rerank")
+    workflow.add_edge("rerank", "expand_parent_documents")
+    workflow.add_edge(
+        "expand_parent_documents",
+        "record_retrieval_trace",
+    )
+
 
 
     workflow.add_conditional_edges(
@@ -74,7 +103,8 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
 
 
-    workflow.add_edge("fallback_answer","save_conversation_turn")
+    #workflow.add_edge("fallback_answer","save_conversation_turn")
+    workflow.add_edge("fallback_answer","format_result")
 
     workflow.add_edge("format_context", "build_messages")
 
@@ -82,18 +112,38 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
 
     workflow.add_edge("build_messages", "generate_answer")
 
-    # nuevo
+    # nuevo para conversation history
+    #workflow.add_edge(
+    #    "generate_answer",
+    #    "save_conversation_turn",
+    #)
+
     workflow.add_edge(
         "generate_answer",
-        "save_conversation_turn",
+        "format_result",
     )
 
 
-    workflow.add_edge("save_conversation_turn","store_long_term_memory") # nuevo
-    workflow.add_edge("store_long_term_memory", "format_result") # nuevo
-
     workflow.add_edge("format_result", END)
     return workflow.compile(checkpointer=checkpointer,store=store,) #se agregó checkpointer=checkpointer, y store=store, para permitir la integración con un sistema de checkpointing y almacenamiento de memoria a largo plazo.
+
+def expand_parent_documents_node(
+    parent_lookup: dict[str, Any],
+) -> Callable[[RagGraphState], RagGraphState]:
+    """Expand reranked child chunks to their parent documents."""
+
+    def run(state: RagGraphState) -> RagGraphState:
+        documents = state.get("documents", [])
+
+        return {
+            "documents": expand_parent_documents(
+                documents,
+                parent_lookup,
+            )
+        }
+
+    return run
+
 
 # se agregó thread_id: str | None = None,
 def answer_with_langgraph(question: str, graph: Any, thread_id: str | None = None,) -> LangChainRagResult:

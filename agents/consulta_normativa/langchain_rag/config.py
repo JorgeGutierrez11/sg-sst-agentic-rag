@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
 
 # Por que son iguales?
-RETRIEVAL_TOP_K = 5
+RETRIEVAL_TOP_K = 8
 DEFAULT_TOP_K = RETRIEVAL_TOP_K
 
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
@@ -28,7 +28,7 @@ RRF_K = 60                              # K representa el coeficiente de pondera
 MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K    # Número de documentos a recuperar después de la fusión RRF.
 
 # Hybrid Retrieval.
-HYBRID_CANDIDATE_TOP_K = 50
+HYBRID_CANDIDATE_TOP_K = 40
 HYBRID_RRF_K = RRF_K
 
 # Reranking with Cross-Encoder.
@@ -37,4 +37,4 @@ RERANKER_MAX_LENGTH = 512                          # Longitud máxima (tokens) d
 RERANKER_FINAL_TOP_K = DEFAULT_TOP_K               # Número de documentos a recuperar después del re-ranking.
 
 # Este cambia acorde la tecnica elegida para mejorar la consulta.
-RERANKER_CANDIDATE_POOL_SIZE = MULTI_QUERY_MAX_VARIANTS * MULTI_QUERY_TOP_K_PER_VARIANT   # Número de documentos candidatos a recuperar para el re-ranking.
+RERANKER_CANDIDATE_POOL_SIZE = 40   # Número de documentos candidatos a recuperar para el re-ranking.
