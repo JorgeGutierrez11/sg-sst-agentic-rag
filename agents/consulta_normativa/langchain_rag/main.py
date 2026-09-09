@@ -5,6 +5,7 @@ from uuid import uuid4 # nuevo import para generar un identificador único para 
 
 import argparse
 import sys
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -14,6 +15,9 @@ from langchain_core.embeddings import Embeddings
 
 from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, HYBRID_CANDIDATE_TOP_K, HYBRID_RRF_K, RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH, RERANKER_CANDIDATE_POOL_SIZE, RERANKER_FINAL_TOP_K, DEFAULT_PARENT_CHUNKS_PATH
 
+logging.getLogger(
+    "agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading"
+).setLevel(logging.WARNING)
 
 OPERATIONAL_ERROR_CODE = 2
 
@@ -286,6 +290,12 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         }
     )
 
+    print("\n-------------------------- QUERY EXPANSION ---------------------------------------")
+    print("Pregunta original:", snapshot.values.get("question"))
+    print("Consulta usada para retrieval:", snapshot.values.get("retrieval_query"))
+    print("Trace:", snapshot.values.get("query_expansion_trace"))
+    print("-------------------------- END QUERY EXPANSION -----------------------------------\n")
+
     documents = snapshot.values.get(
         "documents",
         [],
@@ -321,6 +331,11 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         for document in documents
     )
 
+    relevance_trace = snapshot.values.get(
+        "relevance_grading_trace",
+        {},
+    )
+
     print(
         "\n-------------------------- R3 HYBRID + RERANKING + PARENT ---------------------------------------"
     )
@@ -341,55 +356,98 @@ def run_once(runtime: RagRuntime, question: str) -> int:
     )
 
     print(
-        f"Documentos finales después de Parent Expansion: "
-        f"{len(documents)}"
+        f"Documentos entregados por R3 a Validation: "
+        f"{relevance_trace.get('input_count', 0)}"
     )
 
-    print(
-        f"Parents expandidos: "
-        f"{expanded_parent_count}"
-    )
 
-    print(
-        f"Child chunks deduplicados por compartir parent: "
-        f"{deduplicated_count}"
-    )
-
-    print(
-        f"Fallback por parent faltante: "
-        f"{missing_parent_fallback_count}"
-    )
-
-    for index, document in enumerate(
-        documents,
-        start=1,
-    ):
-        metadata = document.metadata
-
-        print(f"\nDocumento {index}")
-        print(
-            f"Tipo: "
-            f"{metadata.get('document_type', '')}"
-        )
-        print(
-            f"Parent expansion aplicada: "
-            f"{metadata.get('parent_expansion_applied', False)}"
-        )
-        print(
-            f"Parent ID: "
-            f"{metadata.get('expanded_parent_id', '')}"
-        )
-        print(
-            f"Child IDs que llevaron a este parent: "
-            f"{metadata.get('expanded_from_child_ids', [])}"
-        )
-        print(
-            f"Fuentes retrieval: "
-            f"{metadata.get('_retrieval_sources', [])}"
-        )
 
     print(
         "-------------------------- END R3 HYBRID + RERANKING + PARENT -----------------------------------\n"
+    )
+
+
+    
+
+    relevance_documents = relevance_trace.get(
+        "documents",
+        [],
+    )
+
+    final_documents = snapshot.values.get(
+        "documents",
+        [],
+    )
+
+    print(
+        "\n-------------------------- RETRIEVAL RELEVANCE GRADING ---------------------------------------"
+    )
+
+    print(
+        f"Documentos recibidos desde R3: "
+        f"{relevance_trace.get('input_count', 0)}"
+    )
+
+    print(
+        f"Marcados relevantes por el grader: "
+        f"{relevance_trace.get('relevant_count', 0)}"
+    )
+
+    print(
+        f"Marcados irrelevantes por el grader: "
+        f"{relevance_trace.get('rejected_count', 0)}"
+    )
+
+    print(
+        f"Conservados por fallback: "
+        f"{relevance_trace.get('fallback_count', 0)}"
+    )
+
+    print(
+        f"Documentos finales después de Validation: "
+        f"{len(final_documents)}"
+    )
+
+    for document_trace in relevance_documents:
+        relevant = document_trace.get("relevant", False)
+        fallback = document_trace.get("fallback", False)
+
+        if fallback:
+            decision = "CONSERVADO POR FALLBACK"
+        elif relevant:
+            decision = "CONSERVADO"
+        else:
+            decision = "ELIMINADO"
+
+        print(
+            f"\nDocumento {document_trace.get('index', 0) + 1}"
+        )
+        print(
+            f"Decisión: {decision}"
+        )
+        print(
+            f"Fuente: {document_trace.get('source', '')}"
+        )
+        print(
+            f"Artículo: {document_trace.get('article', '')}"
+        )
+        print(
+            f"Chroma ID: {document_trace.get('chroma_id', '')}"
+        )
+        print(
+            f"Razón: {document_trace.get('reason', '')}"
+        )
+        print(
+            f"Fallback: {fallback}"
+        )
+
+        if document_trace.get("error"):
+            print(
+                f"Error: {document_trace.get('error')}"
+            )
+
+    print(
+        "-------------------------- END RETRIEVAL RELEVANCE GRADING -----------------------------------\n"
     )
 
     business_context = snapshot.values.get(
@@ -401,32 +459,13 @@ def run_once(runtime: RagRuntime, question: str) -> int:
         "current_context",
         "",
     )
+    
 
-    retrieved_memories = business_context.get(
-        "retrieved_memories",
-        [],
-    )
 
     print("\n-------------------------- CURRENT BUSINESS CONTEXT ---------------------------------------")
     print(current_context or "[vacío]")
     print("-------------------------- END CURRENT BUSINESS CONTEXT ---------------------------------------\n")
 
-    print(
-        "\n-------------------------- RETRIEVED MEMORIES ---------------------------------------"
-    )
-
-    if not retrieved_memories:
-        print("[ninguna]")
-    else:
-        for memory in retrieved_memories:
-            print(f"\nID: {memory['memory_id']}")
-            print(f"Score: {memory['score']}")
-            print(f"Usuario: {memory['user']}")
-            print(f"Agente: {memory['assistant']}")
-
-    print(
-        "-------------------------- END RETRIEVED MEMORIES -----------------------------------\n"
-    )
 
 
     return 0

@@ -16,8 +16,15 @@ from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCT
 from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
 from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
 
+# Query_understanding - query expansion
+from agents.consulta_normativa.langchain_rag.query_understanding.query_expansion import (query_expansion_node)
+# retrieval - R3
 from agents.consulta_normativa.langchain_rag.retrieval.reranking import rerank_node
 from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (expand_parent_documents)
+# business_context - long-term memory
+from agents.consulta_normativa.langchain_rag.business_context.techniques.retrieval_long_term_memory import (retrieval_long_term_memory_node,store_latest_conversation_memory_node)
+# validation - relevance grading
+from agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading import (retrieval_relevance_grading_node)
 
 Retriever = Callable[[str, int], dict[str, Any]]
 
@@ -44,7 +51,11 @@ def build_langgraph_rag(
     workflow = StateGraph(RagGraphState)
 
 
-    #workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
+    workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
+    workflow.add_node("retrieval_long_term_memory",retrieval_long_term_memory_node()) # Agregar node de long-term memory
+    workflow.add_node("save_conversation_turn",save_conversation_turn_node)
+    workflow.add_node("store_long_term_memory",store_latest_conversation_memory_node)
+    workflow.add_node("expand_query",query_expansion_node(llm)) # Agrega nodo de query expansion
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
 
@@ -60,6 +71,11 @@ def build_langgraph_rag(
     workflow.add_node(
         "expand_parent_documents",
         expand_parent_documents_node(parent_lookup or {}),
+    )
+    # Validation - Retrieval Relevance Grading
+    workflow.add_node(
+        "retrieval_relevance_grading",
+        retrieval_relevance_grading_node(llm),
     )
 
     workflow.add_node("record_retrieval_trace",record_retrieval_trace_node)
@@ -82,10 +98,11 @@ def build_langgraph_rag(
     workflow.add_node("format_result", format_result_node)
 
     # Construccion del grafo
-    workflow.set_entry_point("retrieve")
-    #workflow.set_entry_point("business_profile")
+    workflow.set_entry_point("business_profile")
 
-
+    workflow.add_edge("business_profile","retrieval_long_term_memory")
+    workflow.add_edge("retrieval_long_term_memory","expand_query")
+    workflow.add_edge("expand_query", "retrieve")
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "rerank")
     workflow.add_edge("rerank", "expand_parent_documents")
@@ -93,36 +110,28 @@ def build_langgraph_rag(
         "expand_parent_documents",
         "record_retrieval_trace",
     )
+    workflow.add_edge(
+        "record_retrieval_trace",
+        "retrieval_relevance_grading",
+    )
 
 
 
     workflow.add_conditional_edges(
-        "record_retrieval_trace",
+        "retrieval_relevance_grading",
         evidence_route,
         {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
 
 
 
-    #workflow.add_edge("fallback_answer","save_conversation_turn")
-    workflow.add_edge("fallback_answer","format_result")
-
     workflow.add_edge("format_context", "build_messages")
-
-
-
     workflow.add_edge("build_messages", "generate_answer")
+    workflow.add_edge("fallback_answer","save_conversation_turn")
+    workflow.add_edge("generate_answer","save_conversation_turn")
+    workflow.add_edge("save_conversation_turn","store_long_term_memory")
+    workflow.add_edge("store_long_term_memory","format_result")
 
-    # nuevo para conversation history
-    #workflow.add_edge(
-    #    "generate_answer",
-    #    "save_conversation_turn",
-    #)
-
-    workflow.add_edge(
-        "generate_answer",
-        "format_result",
-    )
-
+    
 
     workflow.add_edge("format_result", END)
     return workflow.compile(checkpointer=checkpointer,store=store,) #se agregó checkpointer=checkpointer, y store=store, para permitir la integración con un sistema de checkpointing y almacenamiento de memoria a largo plazo.
@@ -199,7 +208,7 @@ def format_context_node(state: RagGraphState) -> RagGraphState:
 
 
 def build_messages_node(state: RagGraphState) -> RagGraphState:
-    """Build LangChain chat messages equivalent to the manual prompt input."""
+    """Build messages with separated normative and business context."""
 
     try:
         # pyrefly: ignore [missing-import]
@@ -207,13 +216,29 @@ def build_messages_node(state: RagGraphState) -> RagGraphState:
     except ModuleNotFoundError as error:
         raise ModuleNotFoundError(f"langchain is not installed: {error}") from error
 
-    context = state["context"]
+    # Evidencia normativa recuperada por R3.
+    normative_context = state["context"]
+
+    # Contexto empresarial y conversacional.
+    business_context = state.get("business_context", {})
+    current_context = business_context.get("current_context", "")
+
     return {
         "messages": [
             SystemMessage(content=BASE_SYSTEM_INSTRUCTIONS),
-            HumanMessage(content=build_human_prompt(state["question"], context)),
+            HumanMessage(
+                content=build_human_prompt(
+                    state["question"],
+                    normative_context,
+                    current_context,
+                )
+            ),
         ],
-        "prompt": build_base_prompt(state["question"], context),
+        "prompt": build_base_prompt(
+            state["question"],
+            normative_context,
+            current_context,
+        ),
     }
 
 
