@@ -1,13 +1,13 @@
-# Resumen ARES: R3 Hybrid Retrieval
+# Resumen ARES: R3 hybrid Reranking Parent
 
-Se evaluó el archivo [r3_hybrid_retrieval.tsv](../../ares_runs/retrieval/r3_hybrid_retrieval.tsv) con el modelo `deepseek-v4-flash` sobre 80 ejemplos, usando 200 ejemplos anotados para PPI.
+Se evaluó el archivo [r3_hybrid_reranking_parent.tsv](../../ares_runs/retrieval/r3_hybrid_reranking_parent.tsv) con el modelo `deepseek-v4-flash` sobre 80 ejemplos, usando 200 ejemplos anotados para PPI.
 
 ## Síntesis ejecutiva
 
 | Indicador | Valor |
 |---|---:|
 | Modelo evaluador | `deepseek-v4-flash` |
-| Archivo evaluado | `evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv` |
+| Archivo evaluado | `evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv` |
 | Número de ejemplos | 80 |
 | Ejemplos anotados para PPI | 200 |
 | Promedio simple de ARES | 1.026 |
@@ -37,7 +37,7 @@ Se evaluó el archivo [r3_hybrid_retrieval.tsv](../../ares_runs/retrieval/r3_hyb
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ python evaluation/ares/config.py
 vLLM not imported.
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -70,7 +70,7 @@ Trials: 100%|██████████████████████�
 --------------------------------------------------
 Context_Relevance_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv
 Checkpoint:None
 ARES Prediction: [0.9550000000000142]
 ARES Confidence Interval: [[0.907, 1.003]]
@@ -81,7 +81,7 @@ Annotated Examples used for PPI: 200
 --------------------------------------------------
 
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -110,7 +110,7 @@ Trials: 100%|██████████████████████�
 --------------------------------------------------
 Answer_Faithfulness_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv
 Checkpoint:None
 ARES Prediction: [1.122499999999996]
 ARES Confidence Interval: [[1.066, 1.179]]
@@ -121,7 +121,7 @@ Annotated Examples used for PPI: 200
 --------------------------------------------------
 
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -150,7 +150,7 @@ Trials: 100%|██████████████████████�
 --------------------------------------------------
 Answer_Relevance_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv
 Checkpoint:None
 ARES Prediction: [1.0]
 ARES Confidence Interval: [[1.0, 1.0]]
@@ -160,7 +160,7 @@ ARES LLM Judge Accuracy on Ground Truth Labels: [1.0]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv', 'ARES_Prediction': 0.9550000000000142, 'ARES_Confidence_Interval': [0.907, 1.003], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.975, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv', 'ARES_Prediction': 1.122499999999996, 'ARES_Confidence_Interval': [1.066, 1.179], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_retrieval.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv', 'ARES_Prediction': 0.9550000000000142, 'ARES_Confidence_Interval': [0.907, 1.003], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.975, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv', 'ARES_Prediction': 1.122499999999996, 'ARES_Confidence_Interval': [1.066, 1.179], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r3_hybrid_reranking_parent.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
 ```
 

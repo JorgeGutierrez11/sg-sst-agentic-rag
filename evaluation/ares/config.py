@@ -6,7 +6,7 @@ load_dotenv()
 
 ROOT = Path(__file__).resolve().parents[2]
 GOLD_TSV = str(ROOT / "evaluation/datasets/conjunto_a_gold/conjunto_a_gold.tsv")
-EVALUATION_TSV = str(ROOT / "evaluation/results/ares_runs/business_context/full_conversation_memory.tsv")
+EVALUATION_TSV = str(ROOT / "evaluation/results/ares_runs/business_context/summarization_memory.tsv")
 
 ppi_config = {
     "evaluation_datasets": [EVALUATION_TSV],
