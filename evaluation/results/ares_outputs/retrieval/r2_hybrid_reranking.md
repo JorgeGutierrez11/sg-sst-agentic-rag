@@ -1,49 +1,43 @@
-# ARES - Hybrid Reranking
+# Resumen ARES: R2 Hybrid Reranking
 
-Resumen de la corrida de evaluación ARES ejecutada sobre el conjunto `hybrid_reranking.tsv`.
+Se evaluó el archivo [r2_hybrid_reranking.tsv](../../ares_runs/retrieval/r2_hybrid_reranking.tsv) con el modelo `deepseek-v4-flash` sobre 80 ejemplos, usando 200 ejemplos anotados para PPI.
 
-## Resumen Ejecutivo
+## Síntesis ejecutiva
 
-| Campo | Valor |
+| Indicador | Valor |
 |---|---:|
-| Modelo usado | `deepseek-v4-flash` |
-| Conjunto de evaluación | `evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv` |
-| Tamaño del conjunto | 80 ejemplos |
-| Checkpoints | Ninguno |
-| Etiquetas evaluadas | `Context_Relevance_Label`, `Answer_Faithfulness_Label`, `Answer_Relevance_Label` |
+| Modelo evaluador | `deepseek-v4-flash` |
+| Archivo evaluado | `evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv` |
+| Número de ejemplos | 80 |
 | Ejemplos anotados para PPI | 200 |
+| Promedio simple de ARES | 1.033 |
+| Promedio simple de accuracy del juez LLM | 0.963 |
 
 ## Resultados por etiqueta
 
-| Etiqueta | Predicción ARES | Intervalo de confianza | Performance real | Accuracy del juez LLM |
-|---|---:|---:|---:|---:|
-| Context_Relevance_Label | 0.8850 | [0.807, 0.963] | 1.0000 | 0.8750 |
-| Answer_Faithfulness_Label | 1.1425 | [1.075, 1.210] | 1.0000 | 0.9630 |
-| Answer_Relevance_Label | 0.9875 | [0.963, 1.012] | 1.0000 | 0.9880 |
-
-## Observaciones de la corrida
-
-| Tipo | Detalle | Impacto |
-|---|---|---|
-| Advertencia de etiquetas | ARES reportó etiquetas incorrectas `1` y `0`; recomienda usar `[[Yes]]` y `[[No]]` | Conviene normalizar el formato de etiquetas antes de futuras corridas |
-| PPI | Se registraron advertencias por media de slice vacío y grados de libertad insuficientes | Indica que la calibración PPI debería revisarse |
-| Cobertura | La ejecución completó 80/80 ejemplos y 1000/1000 trials | La corrida terminó de forma completa |
+| Métrica | Predicción ARES | IC ARES | Ground Truth | Accuracy juez LLM | Ejemplos |
+|---|---:|---:|---:|---:|---:|
+| `Context_Relevance_Label` | 0.9400 | [0.877, 1.003] | 1.0 | 0.925 | 80 |
+| `Answer_Faithfulness_Label` | 1.1700 | [1.104, 1.236] | 1.0 | 0.975 | 80 |
+| `Answer_Relevance_Label` | 0.9875 | [0.963, 1.012] | 1.0 | 0.988 | 80 |
 
 ## Lectura rápida
 
-| Etiqueta | Lectura |
+| Dimensión | Lectura |
 |---|---|
-| Context_Relevance_Label | Es la métrica más baja de las tres |
-| Answer_Faithfulness_Label | Presenta el valor promedio más alto, por encima de 1.0 |
-| Answer_Relevance_Label | Es el resultado más cercano a 1.0 y el más estable visualmente |
+| Relevancia de contexto | Alta, aunque con ligera subestimación frente al valor de referencia. |
+| Fidelidad de la respuesta | Es la métrica más alta del conjunto; el intervalo de confianza queda claramente por encima de 1.0. |
+| Relevancia de la respuesta | Mantiene un nivel alto y estable, cercano al valor ideal. |
+| Señal global | El reranking híbrido conserva buen desempeño general, con su mejor señal en fidelidad. |
 
-## SALIDA
+
+## Salida de referencia
 
 ```text
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ python evaluation/ares/config.py
 vLLM not imported.
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -53,11 +47,11 @@ Performing Model scoring!
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:97: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
   warnings.warn("Incorrect label '0' detected. Please use '[[No]]' instead.")
-  2%|██▍                                                                                             | 2/80 [00:10<06:35,  5.07s/it]/home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:94: UserWarning: Incorrect label '1' detected. Please use '[[Yes]]' instead.
+  2%|██▍                                                                                             | 2/80 [00:10<06:30,  5.01s/it]/home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:94: UserWarning: Incorrect label '1' detected. Please use '[[Yes]]' instead.
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:97: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
   warnings.warn("Incorrect label '0' detected. Please use '[[No]]' instead.")
-100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [15:34<00:00, 11.68s/it]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [15:04<00:00, 11.30s/it]
 Evaluating:   0%|                                                                                           | 0/200 [00:00<?, ?it/s]/home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:94: UserWarning: Incorrect label '1' detected. Please use '[[Yes]]' instead.
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:97: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
@@ -72,22 +66,22 @@ Trials:   0%|                                                                   
   arrmean = um.true_divide(arrmean, div, out=arrmean,
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/numpy/core/_methods.py:198: RuntimeWarning: invalid value encountered in scalar divide
   ret = ret.dtype.type(ret / rcount)
-Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:28<00:00, 34.52it/s]
+Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:25<00:00, 39.99it/s]
 --------------------------------------------------
 Context_Relevance_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv
 Checkpoint:None
-ARES Prediction: [0.8850000000000037]
-ARES Confidence Interval: [[0.807, 0.963]]
+ARES Prediction: [0.939999999999998]
+ARES Confidence Interval: [[0.877, 1.003]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
-ARES LLM Judge Accuracy on Ground Truth Labels: [0.875]
+ARES LLM Judge Accuracy on Ground Truth Labels: [0.925]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -97,7 +91,7 @@ Performing Model scoring!
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:194: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
   warnings.warn("Incorrect label '0' detected. Please use '[[No]]' instead.")
-100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [13:08<00:00,  9.85s/it]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [14:52<00:00, 11.15s/it]
 Evaluating:   0%|                                                                                           | 0/200 [00:00<?, ?it/s]/home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:191: UserWarning: Incorrect label '1' detected. Please use '[[Yes]]' instead.
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:194: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
@@ -112,22 +106,22 @@ Trials:   0%|                                                                   
   arrmean = um.true_divide(arrmean, div, out=arrmean,
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/numpy/core/_methods.py:198: RuntimeWarning: invalid value encountered in scalar divide
   ret = ret.dtype.type(ret / rcount)
-Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:24<00:00, 40.23it/s]
+Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:24<00:00, 40.85it/s]
 --------------------------------------------------
 Answer_Faithfulness_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv
 Checkpoint:None
-ARES Prediction: [1.1424999999999859]
-ARES Confidence Interval: [[1.075, 1.21]]
+ARES Prediction: [1.170000000000011]
+ARES Confidence Interval: [[1.104, 1.236]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
-ARES LLM Judge Accuracy on Ground Truth Labels: [0.963]
+ARES LLM Judge Accuracy on Ground Truth Labels: [0.975]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
 --------------------------------------------------------
-Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv']
+Evaluation Sets: ['/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv']
 Checkpoints: []
 Labels: ['Context_Relevance_Label', 'Answer_Faithfulness_Label', 'Answer_Relevance_Label']
 --------------------------------------------------------
@@ -137,7 +131,7 @@ Performing Model scoring!
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:291: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
   warnings.warn("Incorrect label '0' detected. Please use '[[No]]' instead.")
-100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [10:11<00:00,  7.64s/it]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████| 80/80 [07:41<00:00,  5.76s/it]
 Evaluating:   0%|                                                                                           | 0/200 [00:00<?, ?it/s]/home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:288: UserWarning: Incorrect label '1' detected. Please use '[[Yes]]' instead.
   warnings.warn("Incorrect label '1' detected. Please use '[[Yes]]' instead.")
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/ares/RAG_Automatic_Evaluation/Evaluation_Functions.py:291: UserWarning: Incorrect label '0' detected. Please use '[[No]]' instead.
@@ -152,11 +146,11 @@ Trials:   0%|                                                                   
   arrmean = um.true_divide(arrmean, div, out=arrmean,
 /home/pavlov/GitHub/sg-sst-agentic-rag/.venv/lib/python3.11/site-packages/numpy/core/_methods.py:198: RuntimeWarning: invalid value encountered in scalar divide
   ret = ret.dtype.type(ret / rcount)
-Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:26<00:00, 37.86it/s]
+Trials: 100%|███████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:25<00:00, 38.86it/s]
 --------------------------------------------------
 Answer_Relevance_Label Scoring
 ARES Ranking
-Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv
+Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv
 Checkpoint:None
 ARES Prediction: [0.9875000000000071]
 ARES Confidence Interval: [[0.963, 1.012]]
@@ -166,6 +160,6 @@ ARES LLM Judge Accuracy on Ground Truth Labels: [0.988]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv', 'ARES_Prediction': 0.8850000000000037, 'ARES_Confidence_Interval': [0.807, 0.963], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.875, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv', 'ARES_Prediction': 1.1424999999999859, 'ARES_Confidence_Interval': [1.075, 1.21], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/hybrid_reranking.tsv', 'ARES_Prediction': 0.9875000000000071, 'ARES_Confidence_Interval': [0.963, 1.012], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv', 'ARES_Prediction': 0.939999999999998, 'ARES_Confidence_Interval': [0.877, 1.003], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.925, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv', 'ARES_Prediction': 1.170000000000011, 'ARES_Confidence_Interval': [1.104, 1.236], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.975, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r2_hybrid_reranking.tsv', 'ARES_Prediction': 0.9875000000000071, 'ARES_Confidence_Interval': [0.963, 1.012], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}]
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
 ```

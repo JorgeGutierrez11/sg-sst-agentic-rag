@@ -24,14 +24,15 @@ La comparación usa el `accuracy del juez LLM` de las tres etiquetas de cada té
 
 | Técnica | Archivo | Context | Faithfulness | Relevance | Promedio |
 |---|---|---:|---:|---:|---:|
-| `hybrid_reranking` | [hybrid_reranking.md](retrieval/hybrid_reranking.md) | 0.875 | 0.963 | 0.988 | 0.942 |
-| `parent_document_retrieval` | [parent_document_retrieval.md](retrieval/parent_document_retrieval.md) | 0.900 | 0.963 | 0.975 | 0.946 |
-| `hybrid_retrieval` | [hybrid_retrieval.md](retrieval/hybrid_retrieval.md) | 0.863 | 0.975 | 0.912 | 0.917 |
+| `r1_hybrid_retrieval` | [r1_hybrid_retrieval.md](retrieval/r1_hybrid_retrieval.md) | 0.938 | 0.950 | 1.000 | 0.963 |
+| `r2_hybrid_reranking` | [r2_hybrid_reranking.md](retrieval/r2_hybrid_reranking.md) | 0.925 | 0.975 | 0.988 | 0.963 |
+| `r3_hybrid_reranking_parent` | [r3_hybrid_reranking_parent.md](retrieval/r3_hybrid_reranking_parent.md) | 0.975 | 0.988 | 1.000 | 0.988 |
 
 ### Mejor técnica del directorio
 
 | Directorio | Técnica ganadora | Promedio |
 |---|---|---:|
-| `retrieval` | `parent_document_retrieval` | 0.946 |
+| `retrieval` | `r3_hybrid_reranking_parent` | 0.988 |
+
 
 
