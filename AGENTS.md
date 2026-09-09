@@ -1,60 +1,81 @@
 # OpenCode Instructions
 
-This repo is a thesis RAG system for SG-SST normative assistance and compliance diagnosis for Colombian risk-I MiPymes.
+This repository is a thesis RAG system for SG-SST normative assistance and compliance diagnosis for Colombian risk-I MiPymes. Run developer commands from the repository root.
 
-## Source of truth
+## Sources and setup
 
-- If methodology docs conflict, trust `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` over stale prose.
-- Keep legal scope anchored to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and Decreto 768/2022.
-- Current technical docs: `docs/architecture/`; operational runbooks: `docs/operations/`; experiment notes: `docs/experiments/`.
+- Treat `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` as the methodology source of truth; use `docs/architecture/` for technical contracts and `docs/operations/` for executable runbooks.
+- The legal corpus is limited to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and the risk classification in Decreto 768/2022.
+- `requirements.txt` is the only manifest. There is no lockfile, task runner, CI, pre-commit, formatter, lint, typecheck, codegen, or repository OpenCode configuration; do not invent project commands for them.
+- Install `requirements.txt` in the active environment. `chromadb` is required by vectorization and runtime retrieval but is not declared there, so verify/install it separately before real Chroma runs.
+- DOCX ingestion and table conversion require the Pandoc system binary in `PATH`; `pypandoc` alone is insufficient.
 
-## Tooling and verification
+## Verification commands
 
-- Root manifest is only `requirements.txt`; no pyproject, lockfile, Makefile/task runner, CI workflow, formatter, lint, typecheck, pre-commit, or repo-local OpenCode config is present.
-- `chromadb` is imported lazily by vector/RAG code but is not listed in `requirements.txt`; install/verify it separately before real Chroma runs.
-- Broad pipeline suite: `python -m unittest discover -s pipeline/tests`.
-- Focused table tests: `python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents`.
-- Focused vector/RAG tests: `python -m unittest pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store agents.consulta_normativa.tests.test_cli agents.consulta_normativa.tests.test_rag_base agents.consulta_normativa.tests.test_langchain_rag_main agents.consulta_normativa.tests.test_langchain_rag_graph agents.consulta_normativa.tests.test_langchain_rag_query_rewrite agents.consulta_normativa.tests.test_langchain_rag_multi_query agents.consulta_normativa.tests.test_langchain_rag_fusion`.
-- Compile check for vector/RAG work: `python -m compileall pipeline/tables pipeline/vectorization agents/consulta_normativa agents/shared`.
-- If `.codegraph/` exists, use CodeGraph before broad filesystem searches for structural questions.
+```bash
+# Broad suites
+python -m unittest discover -s pipeline/tests
+python -m unittest discover -s agents/consulta_normativa/tests
 
-## Boundaries agents tend to cross
+# Tables
+python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents
 
-- `pipeline/` is offline corpus transformation only; keep runtime agent logic out of it.
-- `agents/` is online LLM/RAG logic. `agents/shared/chroma_retrieval.py` owns query-only Chroma helpers; collection creation/upsert belongs in `pipeline/vectorization/`.
-- `agents/consulta_normativa/` is Phase 4 Block A; represent the five consultation-agent stages with git tags, not duplicated `etapa_*` folders.
-- `agents/diagnostico_cumplimiento/` is Phase 4 Block B; expected output is requirement-by-requirement compliance plus executive critical gaps and priority actions.
-- `app/backend/` and `app/frontend/` are still placeholder `.gitkeep` scaffolds.
-- `data/raw/`, `data/interim/`, and `data/processed/` are local/regenerable; do not assume source DOCX or generated corpus files are versioned.
-- `evaluation/resultados_usuarios/` is confidential raw company data; anonymize identifiers and confirm consent before storing anything. Contents are ignored except README.
-- `docs/decisiones/` contains planning/decision records; do not add files there unless explicitly requested.
+# Indexing and current retrieval path
+python -m unittest pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store pipeline.tests.test_sparse_indexing_ingest pipeline.tests.test_sparse_indexing_bm25_store agents.consulta_normativa.tests.test_chroma_retrieval agents.consulta_normativa.tests.test_bm25_retrieval agents.consulta_normativa.tests.test_hybrid_retrieval agents.consulta_normativa.tests.test_langchain_rag_reranking agents.consulta_normativa.tests.test_parent_document_retrieval agents.consulta_normativa.tests.test_retrieval_relevance_grading agents.consulta_normativa.tests.test_langchain_rag_graph agents.consulta_normativa.tests.test_langchain_rag_main
 
-## Methodology constraints to preserve
+# Syntax/import-independent compile check
+python -m compileall pipeline agents/consulta_normativa
+```
 
-- Phase 2 corpus flow: DOCX ingestion → Markdown cleaning → parent chunks → child chunks → table documents → vector-ready artifacts.
-- Phase 3 evaluation precedes agent development: Conjunto A calibrates ARES as expert gold standard; Conjunto B is for development optimization.
-- Consultation-agent stages are base RAG, query understanding, retrieval improvement, business context, and response validation/control.
-- Each consultation-agent stage should compare three candidate techniques using ARES context relevance, answer faithfulness, and answer relevance metrics with confidence intervals.
-- Final system evaluation combines sessions from at least five risk-I companies, expert SST validation, and calibrated ARES evaluation.
+Install the declared dependencies before treating import failures as regressions. The suites use `unittest`, not pytest.
 
-## Design rules to preserve
+## Package boundaries and data safety
 
-- Apply YAGNI/KISS; do not add wrappers, DTOs, interfaces, or placeholders for hypothetical future phases.
-- Prefer local cohesion and workflow/domain grouping over dogmatic layering.
-- Preserve existing code comments, including informal Spanish notes, unless directly changing that code or explicitly asked to remove them.
-- Metadata extraction is deterministic: optional manifest + regex over cleaned Markdown + pipeline-calculated offsets/token counts. Do not use an LLM as primary metadata extractor.
-- Table references use logical metadata (`source_stem`, `table_index`, `table_key`); do not persist physical HTML/Markdown paths in chunks or Chroma metadata.
+- `pipeline/` is offline corpus transformation and index construction; keep online agent behavior out of it.
+- `agents/consulta_normativa/langchain_rag/` is the current online implementation. Its `retrieval/` package owns query-only Chroma/BM25 helpers; collection creation/upsert belongs in `pipeline/vectorization/`, and BM25 construction belongs in `pipeline/sparse_indexing/`.
+- `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline. `agents/diagnostico_cumplimiento/` and both `app/` sides are still `.gitkeep` scaffolds; do not add speculative APIs, DTOs, or frontend layers.
+- `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
+- `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.
+- Do not add records under `docs/decisiones/` unless explicitly requested. Preserve existing comments, including informal Spanish comments, unless the edited behavior requires changing them.
+- If `.codegraph/` exists, use CodeGraph before broad filesystem searches for architecture, call-flow, or impact questions.
 
-## Real entrypoints and gotchas
+## Corpus and index entrypoints
 
-- DOCX ingestion: `python pipeline/ingestion/docx_to_markdown.py` reads `data/raw/*.docx`, writes `data/interim/*.md` plus extracted HTML tables, and requires system Pandoc plus `pypandoc`.
-- Markdown cleaning: `python pipeline/cleaning/markdown_cleaner.py` reads `data/interim/*.md` and writes `data/processed/*.md`.
-- Chunking: `python -m pipeline.chunking.main build-parents`, then `build-sliding-window` baseline, then recommended `build-regex-constrained-semantic`; avoid pure `semantic_chunking` as final SG-SST output.
-- Tables: prefer `python -m pipeline.tables.main audit-table-references|build-table-markdown|build-table-documents`; `pipeline.chunking.main` exposes table commands only for compatibility.
-- Vectorization: `python -m pipeline.vectorization.main --batch-size 8` indexes `regex_constrained_semantic/chunks.jsonl` and `table_documents.jsonl` into Chroma collection `sg_sst_base_rag` under `data/processed/chroma`.
-- Vector ingestion uses upsert and does not delete stale Chroma records; remove/move `data/processed/chroma` for a clean rebuild.
-- Current consultation CLI: set `DEEPSEEK_API_KEY`, ensure `data/processed/chroma` exists, then run `python -m agents.consulta_normativa.langchain_rag.main`; it opens an existing collection and must not create an empty one.
-- `langchain_rag/main.py` currently wires the Multi-Query + RRF graph (`build_langgraph_rag_multiquery_rrf`), not the older base graph.
-- The LangGraph CLI currently writes `data/images/base_rag_graph.png` during runtime setup; missing `data/images/` can fail initialization.
-- Default embedding model is `Qwen/Qwen3-Embedding-0.6B`; default LangGraph generator is DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
-- Optional table preview: `python -m pipeline.tables.table_jsonl_to_html`; the implemented output directory is intentionally `data/processed/tables_htlm`.
+```bash
+python pipeline/ingestion/docx_to_markdown.py
+python pipeline/cleaning/markdown_cleaner.py
+python -m pipeline.chunking.main build-parents
+python -m pipeline.chunking.main build-sliding-window
+python -m pipeline.chunking.main build-regex-constrained-semantic
+python -m pipeline.tables.main audit-table-references
+python -m pipeline.tables.main build-table-markdown
+python -m pipeline.tables.main build-table-documents
+python -m pipeline.vectorization.main --batch-size 8
+python -m pipeline.sparse_indexing.main
+```
+
+- The canonical flow is `data/raw/*.docx` → cleaned Markdown → parent chunks → regex-constrained semantic child chunks → table documents → Chroma and BM25. Sliding window is a baseline; do not substitute pure semantic chunking for the canonical SG-SST child output.
+- Chunking subcommands use code-defined paths and do not accept operational path flags. Prefer `pipeline.tables.main` for table commands even though `pipeline.chunking.main` exposes compatibility aliases.
+- Vectorization reads `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` and `data/processed/table_documents.jsonl`, then upserts collection `sg_sst_base_rag` under `data/processed/chroma`; upsert does not delete stale records, so move/remove the existing index for a deliberate clean rebuild.
+- BM25 indexes the same JSONL inputs under `data/processed/bm25`. Optional table preview is `python -m pipeline.tables.table_jsonl_to_html`; its implemented output name is intentionally `data/processed/tables_htlm`.
+- Metadata extraction must remain deterministic (optional manifest, regex over cleaned Markdown, and pipeline-calculated offsets/token counts). Table references use `source_stem`, `table_index`, and `table_key`; never persist physical HTML/Markdown paths in chunks or index metadata.
+
+## Current consultation runtime
+
+```bash
+export DEEPSEEK_API_KEY="..."
+python -m agents.consulta_normativa.langchain_rag.main
+# Or answer once:
+python -m agents.consulta_normativa.langchain_rag.main "<question>"
+```
+
+- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
+- The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
+- Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `BAAI/bge-reranker-v2-m3`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
+
+## Methodology constraints
+
+- Phase 3 precedes agent development: Conjunto A is expert-annotated gold data for ARES calibration; Conjunto B is for development optimization.
+- Represent the five consultation stages with git tags, not duplicated `etapa_*` folders. At each stage compare three candidate techniques using ARES context relevance, answer faithfulness, and answer relevance with confidence intervals.
+- The future diagnosis agent must report compliance per normative requirement plus an executive summary of critical gaps and priority actions.
+- Final evaluation combines sessions from at least five risk-I companies, expert SST validation, and calibrated ARES evaluation.
