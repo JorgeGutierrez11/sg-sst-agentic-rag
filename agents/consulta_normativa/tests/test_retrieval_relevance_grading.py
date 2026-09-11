@@ -28,13 +28,22 @@ class FakeGrader:
 class FakeLLM:
     """LLM fake for structured relevance grading."""
 
-    def __init__(self, results: list[object], configuration_error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        results: list[object],
+        configuration_error: Exception | None = None,
+    ) -> None:
         self.results = results
         self.configuration_error = configuration_error
 
-    def with_structured_output(self, schema: object) -> object:
+    def with_structured_output(
+        self,
+        schema: object,
+        **kwargs: object,
+    ) -> object:
         if self.configuration_error is not None:
             raise self.configuration_error
+
         return FakeGrader(self.results)
 
 

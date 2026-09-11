@@ -19,7 +19,7 @@ class ParentChildConsistencyReport:
     total_child_chunks: int
     children_with_parent_id: int
 
-    
+
     children_with_missing_parent: int # Es muy poco probable que un chunk sin padre exista
 
     @property
@@ -52,14 +52,14 @@ def build_parent_lookup(records: list[Any], parents_path: Path | None = None) ->
         text = required_text(parent_record, "text", source, index)
 
         lookup[chunk_id] = RetrievedDocument(
-            document=text, 
+            document=text,
             metadata=parent_metadata(parent_record, chunk_id)
         )
     return lookup
 
 # Core
 def expand_parent_documents(
-    documents: list[RetrievedDocument], 
+    documents: list[RetrievedDocument],
     parent_lookup: dict[str, RetrievedDocument],
 ) -> list[RetrievedDocument]:
     """Replace final child chunks with full parents while preserving ranking order."""
@@ -172,7 +172,7 @@ def expanded_parent_document(
 
     if retrieval_sources:
         metadata["_retrieval_sources"] = retrieval_sources
-    
+
     return RetrievedDocument(document=parent.document, metadata=metadata)
 
 

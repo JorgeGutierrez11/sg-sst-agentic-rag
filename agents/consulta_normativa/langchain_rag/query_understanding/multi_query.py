@@ -58,9 +58,9 @@ NORMALIZACIÓN TERMINOLÓGICA
   "COPASST" u otros términos técnicos únicamente cuando sean equivalentes claros
   de conceptos presentes en la consulta.
 - No agregues terminología simplemente porque pertenezca al dominio SG-SST.
-- Cuando el usuario mencione un tipo de negocio mediante una denominación coloquial, 
-  genera variantes utilizando vocabulario categorial propio de la clasificación de 
-  actividades económicas, como “actividad económica”, “comercio al por menor”, 
+- Cuando el usuario mencione un tipo de negocio mediante una denominación coloquial,
+  genera variantes utilizando vocabulario categorial propio de la clasificación de
+  actividades económicas, como “actividad económica”, “comercio al por menor”,
   “establecimiento especializado”, “elaboración” o “fabricación”, sin asumir procesos
   productivos que el usuario no haya especificado.
 

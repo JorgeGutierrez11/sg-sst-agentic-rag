@@ -1,0 +1,322 @@
+[
+  {
+    "ID": "B001",
+    "Query": "¿A quién aplica el Decreto 768 de 2022?"
+  },
+  {
+    "ID": "B002",
+    "Query": "Tengo dos sedes que realizan actividades económicas diferentes. ¿Pueden tener clases de riesgo distintas?"
+  },
+  {
+    "ID": "B003",
+    "Query": "Mi actividad económica no aparece en la tabla de clasificación de riesgos. ¿Qué debo hacer en ese caso?"
+  },
+  {
+    "ID": "B004",
+    "Query": "Tras una actualización de la tabla de clasificación, cambió la clase de riesgo de mi empresa. ¿Debo empezar a cotizar con la nueva clase de riesgo de inmediato?"
+  },
+  {
+    "ID": "B005",
+    "Query": "¿Qué es la Seguridad y Salud en el Trabajo (SST)?"
+  },
+  {
+    "ID": "B006",
+    "Query": "¿Qué es el Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST)?"
+  },
+  {
+    "ID": "B007",
+    "Query": "Ya redacté la política de SST de mi empresa, pero todavía no he definido sus objetivos. ¿Qué objetivos debe incluir?"
+  },
+  {
+    "ID": "B008",
+    "Query": "Soy una MiPyme y quiero saber qué apoyo puedo exigirle a mi ARL para implementar el SG-SST. ¿Qué obligaciones tiene la ARL frente a mi empresa?"
+  },
+  {
+    "ID": "B009",
+    "Query": "Quiero involucrar a mis trabajadores en el SG-SST. ¿Qué responsabilidades tienen ellos frente al sistema?"
+  },
+  {
+    "ID": "B010",
+    "Query": "¿Cómo debo conservar los documentos y registros de mi SG-SST?"
+  },
+  {
+    "ID": "B011",
+    "Query": "Nunca he informado a mis trabajadores sobre el SG-SST. ¿Qué información debo comunicarles?"
+  },
+  {
+    "ID": "B012",
+    "Query": "Voy a implementar el SG-SST por primera vez. ¿En qué consiste la evaluación inicial?"
+  },
+  {
+    "ID": "B013",
+    "Query": "Ya realicé la evaluación inicial de mi SG-SST. ¿Cómo debo planificar el sistema a partir de sus resultados?"
+  },
+  {
+    "ID": "B014",
+    "Query": "Quiero medir el avance de mi SG-SST. ¿Qué indicadores debo definir para evaluarlo?"
+  },
+  {
+    "ID": "B015",
+    "Query": "Identifiqué un riesgo mecánico en un puesto de trabajo. ¿Qué tipo de medidas debo priorizar frente a ese peligro?"
+  },
+  {
+    "ID": "B016",
+    "Query": "Mi empresa está ubicada en una zona con riesgo de sismos o incendios. ¿Debo tener un plan de prevención y respuesta ante emergencias?"
+  },
+  {
+    "ID": "B017",
+    "Query": "Mi empresa lleva un año con el SG-SST implementado. ¿Debo realizar una auditoría anual?"
+  },
+  {
+    "ID": "B018",
+    "Query": "Delegué la gestión del SG-SST en un empleado. ¿Quién debe revisar el sistema y con qué frecuencia?"
+  },
+  {
+    "ID": "B019",
+    "Query": "¿Qué debo hacer para mejorar continuamente mi SG-SST?"
+  },
+  {
+    "ID": "B020",
+    "Query": "Acabo de nombrar a una persona responsable del SG-SST. ¿Debe realizar algún curso obligatorio?"
+  },
+  {
+    "ID": "B021",
+    "Query": "Mi empresa es de riesgo I y creció de 8 a 15 trabajadores. ¿Qué estándares mínimos debo cumplir ahora?"
+  },
+  {
+    "ID": "B022",
+    "Query": "Mi empresa tiene 20 trabajadores y todavía no tiene una persona asignada al SG-SST. ¿Quién puede diseñar el sistema?"
+  },
+  {
+    "ID": "B023",
+    "Query": "Mi empresa tiene 30 trabajadores y busca apoyo externo para implementar el SG-SST. ¿Qué apoyo puede recibir?"
+  },
+  {
+    "ID": "B024",
+    "Query": "Voy a contratar un proveedor externo. ¿Puedo exigirle que cumpla los estándares mínimos de SST?"
+  },
+  {
+    "ID": "B025",
+    "Query": "Mi empresa alcanzó los 80 trabajadores. ¿Qué estándares mínimos debe cumplir ahora?"
+  },
+  {
+    "ID": "B026",
+    "Query": "¿Los estándares mínimos del SG-SST cambian según el número de trabajadores de la empresa?"
+  },
+  {
+    "ID": "B027",
+    "Query": "Mi empresa ya diseñó su SG-SST con base en los estándares mínimos. ¿Qué debe liderar el empleador frente a su cumplimiento?"
+  },
+  {
+    "ID": "B028",
+    "Query": "Mi empresa tiene un buen desempeño en SST. ¿Puede obtener algún reconocimiento oficial por ese desempeño?"
+  },
+  {
+    "ID": "B029",
+    "Query": "Además de trabajadores de planta, mi empresa tiene trabajadores independientes y trabajadores en misión. ¿Debo incluirlos en los indicadores de SST?"
+  },
+  {
+    "ID": "B030",
+    "Query": "Mi empresa afilia a sus trabajadores a riesgos laborales por medio de una agremiación. ¿Es válida esa forma de afiliación?"
+  },
+  {
+    "ID": "B031",
+    "Query": "Mi empresa está implementando el SG-SST por fases. ¿En qué consisten las fases de adecuación y transición?"
+  },
+  {
+    "ID": "B032",
+    "Query": "Ya realicé la autoevaluación de los estándares mínimos de mi empresa. ¿Cómo se califican esos estándares?"
+  },
+  {
+    "ID": "B033",
+    "Query": "La autoevaluación de estándares mínimos de mi empresa obtuvo un resultado no satisfactorio. ¿Qué debo hacer?"
+  },
+  {
+    "ID": "B034",
+    "Query": "¿Qué indicadores mínimos de SST debe registrar mi empresa cada año?"
+  },
+  {
+    "ID": "B035",
+    "Query": "En una cooperativa de trabajo asociado ocurrió un accidente de un trabajador cooperado. ¿La Resolución 1401 de 2007 aplica a este caso?"
+  },
+  {
+    "ID": "B036",
+    "Query": "Una máquina falló durante el trabajo, pero nadie resultó lesionado y no hubo daños. ¿Ese hecho se considera un incidente de trabajo?"
+  },
+  {
+    "ID": "B037",
+    "Query": "Mi empresa aún no ha conformado el equipo investigador de accidentes. ¿Qué debemos hacer respecto a ese equipo antes de que ocurra un accidente?"
+  },
+  {
+    "ID": "B038",
+    "Query": "Mi empresa no tiene un formato definido para investigar accidentes de trabajo. ¿Debemos utilizar algún formato específico?"
+  },
+  {
+    "ID": "B039",
+    "Query": "Después de un accidente de trabajo, la ARL recomendó medidas correctivas. ¿Mi empresa está obligada a implementarlas?"
+  },
+  {
+    "ID": "B040",
+    "Query": "Mi empresa es pequeña y no tiene una metodología propia para investigar accidentes. ¿La ARL debe proporcionarnos una metodología?"
+  },
+  {
+    "ID": "B041",
+    "Query": "Mi empresa quiere utilizar una metodología propia para investigar accidentes de trabajo. ¿Puede hacerlo?"
+  },
+  {
+    "ID": "B042",
+    "Query": "Un trabajador en misión de una empresa de servicios temporales sufrió un accidente mientras trabajaba en la empresa usuaria. ¿Quién es responsable de investigar el accidente?"
+  },
+  {
+    "ID": "B043",
+    "Query": "Mi empresa está terminando el informe de investigación de un accidente de trabajo. ¿Qué información debe contener ese informe?"
+  },
+  {
+    "ID": "B044",
+    "Query": "Ya realizamos la investigación de un accidente de trabajo. ¿Qué causas debemos identificar en el informe?"
+  },
+  {
+    "ID": "B045",
+    "Query": "Estamos documentando la investigación de un accidente de trabajo. ¿Qué datos sobre la propia investigación, como lugar, fecha e investigadores, deben registrarse en el informe?"
+  },
+  {
+    "ID": "B046",
+    "Query": "Mi empresa no investigó un accidente grave ocurrido en sus instalaciones. ¿Qué consecuencias puede tener ese incumplimiento?"
+  },
+  {
+    "ID": "B047",
+    "Query": "Un trabajador está recibiendo comentarios ofensivos reiterados por parte de un compañero. ¿Qué busca proteger la Ley 1010 de 2006 frente a este tipo de situaciones?"
+  },
+  {
+    "ID": "B048",
+    "Query": "Un jefe cometió acoso laboral, pero después corrigió su conducta y se disculpó. Si el acoso ya está probado, ¿existen circunstancias atenuantes?"
+  },
+  {
+    "ID": "B049",
+    "Query": "Un directivo de alto cargo acosó a un subordinado. ¿Su posición jerárquica puede agravar la sanción?"
+  },
+  {
+    "ID": "B050",
+    "Query": "Un trabajador está siendo acosado por un compañero que no es su jefe. ¿Ese compañero puede ser sujeto activo de acoso laboral?"
+  },
+  {
+    "ID": "B051",
+    "Query": "Un jefe asigna de forma reiterada cargas de trabajo excesivas a un trabajador buscando que renuncie. ¿Esa conducta corresponde a alguna modalidad específica de acoso laboral?"
+  },
+  {
+    "ID": "B052",
+    "Query": "Un compañero oculta documentos que otro trabajador necesita para cumplir sus funciones. ¿Esa conducta puede constituir una modalidad de acoso laboral?"
+  },
+  {
+    "ID": "B053",
+    "Query": "Denuncié un caso de acoso laboral y temo represalias de mi jefe. ¿Qué garantías tengo después de presentar la denuncia?"
+  },
+  {
+    "ID": "B054",
+    "Query": "Hay un caso de acoso laboral ya acreditado y se va a imponer una sanción. ¿Qué procedimiento debe seguirse?"
+  },
+  {
+    "ID": "B055",
+    "Query": "Presenté una queja de acoso laboral que finalmente resultó infundada. ¿Qué consecuencias puede tener para mí?"
+  },
+  {
+    "ID": "B056",
+    "Query": "Quiero denunciar un hecho de acoso laboral ocurrido hace dos años. ¿Cuánto tiempo tengo para presentar la denuncia?"
+  },
+  {
+    "ID": "B057",
+    "Query": "Mi empresa tiene trabajadores vinculados mediante contratos de prestación de servicios. ¿Quiénes están obligados a afiliarse al Sistema General de Riesgos Laborales?"
+  },
+  {
+    "ID": "B058",
+    "Query": "A un trabajador le diagnosticaron una enfermedad laboral. ¿Cómo se calcula el ingreso base para pagar las prestaciones correspondientes a esa enfermedad?"
+  },
+  {
+    "ID": "B059",
+    "Query": "Estoy incapacitado mientras se define si el origen de mi condición es laboral o común. ¿Quién debe pagarme la incapacidad durante ese período?"
+  },
+  {
+    "ID": "B060",
+    "Query": "Mi empresa va a contratar a una persona mediante un contrato de prestación de servicios. ¿También debemos cotizar riesgos laborales por ese contratista independiente?"
+  },
+  {
+    "ID": "B061",
+    "Query": "Mi empresa se atrasó en el pago de aportes a la ARL. ¿Ese atraso hace que mis trabajadores pierdan automáticamente la afiliación?"
+  },
+  {
+    "ID": "B062",
+    "Query": "¿Qué debe reportar una ARL sobre los resultados de sus actividades de promoción y prevención al Ministerio del Trabajo?"
+  },
+  {
+    "ID": "B063",
+    "Query": "Como empresa afiliada, ¿qué servicios mínimos de promoción y prevención debe prestarme mi ARL?"
+  },
+  {
+    "ID": "B064",
+    "Query": "Mi empresa incumplió normas del Sistema General de Riesgos Laborales. ¿Qué sanciones prevé la ley por ese incumplimiento?"
+  },
+  {
+    "ID": "B065",
+    "Query": "¿Las autoridades pueden realizar visitas a mi empresa para verificar el cumplimiento de las obligaciones en riesgos laborales?"
+  },
+  {
+    "ID": "B066",
+    "Query": "Mi empresa está clasificada como de alto riesgo. ¿Recibe una supervisión diferente a la de una empresa de riesgo I?"
+  },
+  {
+    "ID": "B067",
+    "Query": "Mi empresa tiene dos sucursales. ¿Puedo conformar un Comité Paritario distinto para cada sede?"
+  },
+  {
+    "ID": "B068",
+    "Query": "Mi empresa va a conformar por primera vez el Comité Paritario. ¿Cómo se eligen sus representantes?"
+  },
+  {
+    "ID": "B069",
+    "Query": "En una reunión del Comité Paritario solo está presente la mitad de sus miembros. ¿Con cuántos miembros puede sesionar válidamente?"
+  },
+  {
+    "ID": "B070",
+    "Query": "Acabamos de conformar el Comité Paritario y todavía no tiene presidente. ¿Quién debe designarlo?"
+  },
+  {
+    "ID": "B071",
+    "Query": "Un trabajador quiere llevar un asunto disciplinario al Comité Paritario. ¿El Comité puede resolver asuntos disciplinarios o contractuales de los trabajadores?"
+  },
+  {
+    "ID": "B072",
+    "Query": "Nuestro Comité Paritario ya está conformado. ¿Cuáles son sus funciones?"
+  },
+  {
+    "ID": "B073",
+    "Query": "Mi empresa ya tiene conformado el Comité Paritario. ¿Qué obligaciones tiene el empleador frente al Comité?"
+  },
+  {
+    "ID": "B074",
+    "Query": "Soy trabajador y miembro del Comité Paritario. ¿Qué obligaciones tienen los trabajadores frente al Comité?"
+  },
+  {
+    "ID": "B075",
+    "Query": "¿Qué tipos de evaluaciones médicas ocupacionales debe realizar mi empresa?"
+  },
+  {
+    "ID": "B076",
+    "Query": "Un trabajador lleva tres años en el mismo puesto y no ha cambiado de cargo. ¿Debo realizarle evaluaciones médicas ocupacionales periódicas?"
+  },
+  {
+    "ID": "B077",
+    "Query": "Mi empresa va a contratar el servicio de evaluaciones médicas ocupacionales. ¿Quién está autorizado para realizarlas?"
+  },
+  {
+    "ID": "B078",
+    "Query": "Un trabajador está expuesto a ruido o sustancias químicas durante su labor. ¿Debo realizarle evaluaciones médicas específicas según esos riesgos?"
+  },
+  {
+    "ID": "B079",
+    "Query": "Un trabajador tiene varios exámenes ocupacionales realizados durante su vida laboral. ¿Qué es la historia clínica ocupacional?"
+  },
+  {
+    "ID": "B080",
+    "Query": "Como empleador, quiero revisar la historia clínica ocupacional de uno de mis trabajadores. ¿Puedo acceder a ella?"
+  }
+]

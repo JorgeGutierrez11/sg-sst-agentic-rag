@@ -20,7 +20,7 @@ def retrieve_variant_node(retriever: Retriever, top_k: int) -> Callable[[dict[st
         return {"retrieved_lists": [recovered_documents(raw_results)]}
 
     return run
-    
+
 def rrf_fuse_node(rrf_k: int, top_k: int) -> Callable[[RagGraphState], RagGraphState]:
     """Fuse retrieved lists and write final normalized documents."""
 

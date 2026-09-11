@@ -98,9 +98,9 @@ def metadata_context(metadata: dict[str, Any]) -> str:
             ],
         ),
         (
-            "Tablas", 
+            "Tablas",
             [
-                ("Contiene tablas", "has_tables"), 
+                ("Contiene tablas", "has_tables"),
                 ("Claves de tabla", "table_keys")
             ]
         ),

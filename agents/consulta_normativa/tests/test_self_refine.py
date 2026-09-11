@@ -51,7 +51,11 @@ class FakeLLM:
 
         self.grader = FakeGrader(feedback_result)
 
-    def with_structured_output(self, schema):
+    def with_structured_output(
+        self,
+        schema,
+        **kwargs,
+    ):
         self.structured_output_call_count += 1
         return self.grader
 
@@ -65,9 +69,11 @@ class FakeLLM:
 
 
 class BrokenStructuredOutputLLM:
-    """Fake LLM that fails while configuring structured feedback."""
-
-    def with_structured_output(self, schema):
+    def with_structured_output(
+        self,
+        schema,
+        **kwargs,
+    ):
         raise RuntimeError("structured output unavailable")
 
 

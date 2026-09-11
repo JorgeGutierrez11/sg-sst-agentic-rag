@@ -90,6 +90,23 @@ REGLAS IMPORTANTES
 - En PARTIAL e INSUFFICIENT, identifica de forma concreta qué información falta.
 - En SUFFICIENT, missing_information debe quedar vacío.
 - Devuelve reason y missing_information siempre en español.
+
+FORMATO DE SALIDA
+
+Devuelve exclusivamente un objeto JSON válido con esta estructura:
+
+{
+    "level": "sufficient",
+    "reason": "Explicación breve de la decisión.",
+    "missing_information": []
+}
+
+El campo "level" solo puede contener:
+- "sufficient"
+- "partial"
+- "insufficient"
+
+No agregues texto, Markdown ni explicaciones fuera del JSON.
 """.strip()
 
 
