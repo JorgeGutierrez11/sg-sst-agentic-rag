@@ -1,10 +1,13 @@
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
+from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from agents.consulta_normativa.api import main as api_main
 from agents.consulta_normativa.api.dependencies import get_query_service
 from agents.consulta_normativa.api.main import create_app
 from agents.consulta_normativa.api.routes import router
@@ -23,39 +26,75 @@ class ApiSchemaTests(unittest.TestCase):
         self.assertEqual(request.question, "¿Qué es SG-SST?")
 
     def test_query_response_shape(self) -> None:
-        response = QueryResponse(answer="Respuesta", references=["Referencia"], conversation_id="abc")
+        response = QueryResponse(
+            answer="Respuesta",
+            references=["Referencia"],
+            chunks=["Fragmento"],
+            conversation_id="abc",
+        )
 
         self.assertEqual(response.answer, "Respuesta")
         self.assertEqual(response.references, ["Referencia"])
+        self.assertEqual(response.chunks, ["Fragmento"])
         self.assertEqual(response.conversation_id, "abc")
 
 
 class FakeRuntime:
     def __init__(self) -> None:
         self.graph = object()
-        self.questions: list[str] = []
+        self.invocations: list[tuple[str, str]] = []
 
-    def answer_with_langgraph(self, question: str, graph: object) -> object:
-        self.questions.append(question)
-        return SimpleNamespace(answer="Respuesta", references=["Ref"], context="ctx", prompt="prompt")
+    def answer_with_langgraph(self, question: str, graph: object, *, thread_id: str) -> object:
+        self.invocations.append((question, thread_id))
+        return SimpleNamespace(
+            answer="Respuesta",
+            references=["Ref"],
+            chunks=["Fragmento"],
+            context="ctx",
+            prompt="prompt",
+        )
 
 
 class QueryServiceTests(unittest.TestCase):
     def test_ask_returns_response_with_given_conversation_id(self) -> None:
-        service = QueryService(FakeRuntime())
+        runtime = FakeRuntime()
+        service = QueryService(runtime)
 
         response = service.ask("¿Qué es el SG-SST?", conversation_id="abc")
 
         self.assertEqual(response.answer, "Respuesta")
         self.assertEqual(response.references, ["Ref"])
+        self.assertEqual(response.chunks, ["Fragmento"])
         self.assertEqual(response.conversation_id, "abc")
+        self.assertEqual(runtime.invocations, [("¿Qué es el SG-SST?", "abc")])
 
     def test_ask_generates_conversation_id_when_missing(self) -> None:
-        service = QueryService(FakeRuntime())
+        runtime = FakeRuntime()
+        service = QueryService(runtime)
 
         response = service.ask("¿Qué es el SG-SST?")
 
-        self.assertTrue(response.conversation_id)
+        UUID(response.conversation_id)
+        self.assertEqual(runtime.invocations, [("¿Qué es el SG-SST?", response.conversation_id)])
+
+    def test_conversation_ids_preserve_continuity_and_isolation(self) -> None:
+        runtime = FakeRuntime()
+        service = QueryService(runtime)
+
+        first = service.ask("Primera pregunta", conversation_id="conversation-a")
+        follow_up = service.ask("Pregunta de seguimiento", conversation_id=first.conversation_id)
+        separate = service.ask("Otra empresa", conversation_id="conversation-b")
+
+        self.assertEqual(follow_up.conversation_id, "conversation-a")
+        self.assertEqual(separate.conversation_id, "conversation-b")
+        self.assertEqual(
+            runtime.invocations,
+            [
+                ("Primera pregunta", "conversation-a"),
+                ("Pregunta de seguimiento", "conversation-a"),
+                ("Otra empresa", "conversation-b"),
+            ],
+        )
 
 
 class ApiDependencyTests(unittest.TestCase):
@@ -103,6 +142,7 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["answer"], "Respuesta")
         self.assertEqual(response.json()["references"], ["Ref"])
+        self.assertEqual(response.json()["chunks"], ["Fragmento"])
         self.assertEqual(response.json()["conversation_id"], "abc")
 
     def test_query_rejects_blank_question(self) -> None:
@@ -129,6 +169,16 @@ class ApiRouteTests(unittest.TestCase):
 
 
 class ApiAppTests(unittest.TestCase):
+    def test_default_lifespan_suppresses_graph_image_generation(self) -> None:
+        with patch.object(api_main, "build_runtime", return_value=FakeRuntime()) as build_runtime:
+            app = create_app()
+
+            with TestClient(app) as client:
+                response = client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        build_runtime.assert_called_once_with(write_graph_image=False)
+
     def test_app_lifespan_builds_query_service_once(self) -> None:
         calls = []
 

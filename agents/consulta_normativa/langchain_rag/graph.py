@@ -1,6 +1,5 @@
 """LangGraph RAG flow for normative consultation."""
 
-from agents.consulta_normativa.api import dependencies
 from collections.abc import Callable
 from typing import Any
 

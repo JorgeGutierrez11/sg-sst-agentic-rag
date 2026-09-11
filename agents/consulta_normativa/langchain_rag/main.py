@@ -121,8 +121,12 @@ def main(argv: list[str] | None = None) -> int:
     return run_interactive_loop(runtime)
 
 
-def build_runtime() -> RagRuntime:
-    """Build the Chroma retriever and DeepSeek-backed LLM for the session."""
+def build_runtime(write_graph_image: bool = True) -> RagRuntime:
+    """Build the Chroma retriever and DeepSeek-backed LLM for the session.
+
+    Args:
+        write_graph_image: Whether to write the graph diagram used by the CLI.
+    """
 
     dependencies = load_dependencies()
 
@@ -199,19 +203,19 @@ def build_runtime() -> RagRuntime:
             parent_lookup=parent_lookup
         )
 
-        # Guardar diagrama en disco
-        png_bytes = graph.get_graph().draw_mermaid_png()
+        if write_graph_image:
+            png_bytes = graph.get_graph().draw_mermaid_png()
 
-        with open(
-            "data/images/base_rag_graph.png",
-            "wb",
-        ) as f:
-            f.write(png_bytes)
+            with open(
+                "data/images/base_rag_graph.png",
+                "wb",
+            ) as graph_image:
+                graph_image.write(png_bytes)
 
-        print(
-            "Grafo guardado exitosamente "
-            "como 'base_rag_graph.png'"
-        )
+            print(
+                "Grafo guardado exitosamente "
+                "como 'base_rag_graph.png'"
+            )
 
     except Exception as error:
         raise OperationalError(

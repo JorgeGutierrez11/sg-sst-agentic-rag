@@ -4,7 +4,7 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 
 ## Sources and setup
 
-- Treat `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` as the methodology source of truth; use `docs/architecture/` for technical contracts and `docs/operations/` for executable runbooks.
+- Treat `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` as the methodology source of truth. Use `docs/architecture/` for intended technical contracts and `docs/operations/` for runbooks, but verify current runtime wiring against executable code because some retrieval documentation lags the implementation.
 - The legal corpus is limited to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and the risk classification in Decreto 768/2022.
 - `requirements.txt` is the only manifest. There is no lockfile, task runner, CI, pre-commit, formatter, lint, typecheck, codegen, or repository OpenCode configuration; do not invent project commands for them.
 - Install `requirements.txt` in the active environment. `chromadb` is required by vectorization and runtime retrieval but is not declared there, so verify/install it separately before real Chroma runs.
@@ -20,9 +20,6 @@ python -m unittest discover -s agents/consulta_normativa/tests
 # Tables
 python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents
 
-# Indexing and current retrieval path
-python -m unittest pipeline.tests.test_vectorization_documents pipeline.tests.test_vectorization_chroma_store pipeline.tests.test_sparse_indexing_ingest pipeline.tests.test_sparse_indexing_bm25_store agents.consulta_normativa.tests.test_chroma_retrieval agents.consulta_normativa.tests.test_bm25_retrieval agents.consulta_normativa.tests.test_hybrid_retrieval agents.consulta_normativa.tests.test_langchain_rag_reranking agents.consulta_normativa.tests.test_parent_document_retrieval agents.consulta_normativa.tests.test_retrieval_relevance_grading agents.consulta_normativa.tests.test_langchain_rag_graph agents.consulta_normativa.tests.test_langchain_rag_main
-
 # Syntax/import-independent compile check
 python -m compileall pipeline agents/consulta_normativa
 ```
@@ -33,7 +30,8 @@ Install the declared dependencies before treating import failures as regressions
 
 - `pipeline/` is offline corpus transformation and index construction; keep online agent behavior out of it.
 - `agents/consulta_normativa/langchain_rag/` is the current online implementation. Its `retrieval/` package owns query-only Chroma/BM25 helpers; collection creation/upsert belongs in `pipeline/vectorization/`, and BM25 construction belongs in `pipeline/sparse_indexing/`.
-- `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline. `agents/diagnostico_cumplimiento/` and both `app/` sides are still `.gitkeep` scaffolds; do not add speculative APIs, DTOs, or frontend layers.
+- `agents/consulta_normativa/api/` is the FastAPI adapter for the current runtime. `app/backend/`, `app/frontend/`, and `agents/diagnostico_cumplimiento/` remain `.gitkeep` scaffolds; do not add speculative layers there.
+- `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline.
 - `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
 - `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.
 - Do not add records under `docs/decisiones/` unless explicitly requested. Preserve existing comments, including informal Spanish comments, unless the edited behavior requires changing them.
@@ -69,7 +67,8 @@ python -m agents.consulta_normativa.langchain_rag.main
 python -m agents.consulta_normativa.langchain_rag.main "<question>"
 ```
 
-- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
+- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
+- The FastAPI adapter's default lifespan calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
 - The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
 - Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `BAAI/bge-reranker-v2-m3`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
 

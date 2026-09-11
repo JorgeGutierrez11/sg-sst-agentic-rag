@@ -11,10 +11,15 @@ class QueryService:
         self.runtime = runtime
 
     def ask(self, question: str, conversation_id: str | None = None) -> QueryResponse:
-        result = self.runtime.answer_with_langgraph(question, self.runtime.graph)
+        resolved_conversation_id = conversation_id or str(uuid4())
+        result = self.runtime.answer_with_langgraph(
+            question,
+            self.runtime.graph,
+            thread_id=resolved_conversation_id,
+        )
         return QueryResponse(
             answer=result.answer,
             references=list(result.references),
             chunks=list(result.chunks),
-            conversation_id=conversation_id or str(uuid4()),
+            conversation_id=resolved_conversation_id,
         )

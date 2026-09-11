@@ -1,32 +1,24 @@
-"""Tests for the experimental LangGraph RAG flow."""
+"""Tests for the final validation-branch LangGraph RAG flow."""
 
 import sys
 import types
 import unittest
 from unittest.mock import patch
 
-from agents.consulta_normativa.langchain_rag.core.instrumentation import record_retrieval_trace_node
-from agents.consulta_normativa.langchain_rag.core.routes import evidence_route, sufficient_context_route
-from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
+from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.graph import (
     answer_with_langgraph,
     build_langgraph_rag,
     build_messages_node,
     fallback_answer,
     fallback_answer_node,
-    insufficient_context_answer_node,
+    format_result_node,
 )
-from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
-from agents.consulta_normativa.manual_implementation.prompts import build_base_prompt as build_manual_prompt
-from agents.consulta_normativa.manual_implementation.rag_base import (
-    build_context as build_manual_context,
-    build_references as build_manual_references,
-    recovered_documents as recovered_manual_documents,
-)
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 
 
 class FakeStateGraph:
-    """Tiny LangGraph replacement that preserves node and edge behavior for tests."""
+    """Small StateGraph replacement for inspecting the compiled topology."""
 
     latest: "FakeStateGraph | None" = None
 
@@ -36,6 +28,7 @@ class FakeStateGraph:
         self.edges: dict[str, str] = {}
         self.conditional: dict[str, tuple[object, object]] = {}
         self.entry_point = ""
+        self.compile_kwargs: dict[str, object] = {}
 
     def add_node(self, name: str, node: object) -> None:
         self.nodes[name] = node
@@ -49,514 +42,164 @@ class FakeStateGraph:
     def add_conditional_edges(self, start: str, router: object, routes: object) -> None:
         self.conditional[start] = (router, routes)
 
-    def compile(self) -> object:
-        nodes = self.nodes
-        edges = self.edges
-        conditional = self.conditional
-        entry_point = self.entry_point
-
-        class CompiledGraph:
-            def invoke(self, state: dict[str, object]) -> dict[str, object]:
-                name = entry_point
-                visited_nodes = state.setdefault("__visited_nodes", [])
-                while name != "__end__":
-                    visited_nodes.append(name)
-                    state.update(nodes[name](state))
-                    if name in conditional:
-                        router, routes = conditional[name]
-                        route = router(state)
-                        if isinstance(route, list):
-                            state = run_sends(nodes, edges, state, route)
-                            name = edges[route[0].node] if route else "__end__"
-                        elif isinstance(routes, dict):
-                            name = routes[route]
-                        else:
-                            name = route
-                    else:
-                        name = edges[name]
-                return state
-
-        return CompiledGraph()
+    def compile(self, **kwargs: object) -> object:
+        self.compile_kwargs = kwargs
+        return types.SimpleNamespace(workflow=self)
 
 
-def run_sends(
-    nodes: dict[str, object],
-    edges: dict[str, str],
-    state: dict[str, object],
-    sends: list[object],
-) -> dict[str, object]:
-    """Run fake Send workers and concatenate reducer-style list writes."""
+class CapturingGraph:
+    """Graph fake that records invocation state and configuration."""
 
-    for send in sends:
-        update = nodes[send.node](send.arg)
-        for key, value in update.items():
-            if key == "retrieved_lists":
-                state[key] = [*state.get(key, []), *value]
-            else:
-                state[key] = value
-    return state
+    def __init__(self) -> None:
+        self.calls: list[tuple[dict[str, object], dict[str, object] | None]] = []
+        self.result = LangChainRagResult(
+            answer="Respuesta",
+            references=["Referencia"],
+            chunks=["Fragmento"],
+            context="Contexto",
+            prompt="Prompt",
+        )
+
+    def invoke(
+        self,
+        state: dict[str, object],
+        config: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        self.calls.append((state, config))
+        return {"result": self.result}
 
 
 class LangGraphRagTest(unittest.TestCase):
-    """Verify graph orchestration without real LangGraph, Groq, or Chroma calls."""
+    """Verify the final graph and invocation contracts without external services."""
 
-    def test_build_langgraph_rag_routes_evidence_through_messages_and_llm(self) -> None:
+    def test_build_langgraph_rag_preserves_validation_branch_topology(self) -> None:
+        checkpointer = object()
+        store = object()
         fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
 
         with patch.dict(
             sys.modules,
             {
                 "langgraph": types.SimpleNamespace(),
                 "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
             },
         ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-            result = answer_with_langgraph("¿Qué exige la norma?", graph)
+            compiled = build_langgraph_rag(
+                FakeLlm(),
+                lambda question, top_k: {},
+                checkpointer=checkpointer,
+                store=store,
+            )
 
-        self.assertEqual(result.answer, "Generated from fake LLM.")
-        self.assertIn("Contenido:\nContexto normativo", result.context)
-        self.assertEqual(result.references, ["Resolución 0312 de 2019, tabla 1 (table)"])
-        self.assertEqual(len(llm.messages), 1)
-        self.assertEqual(llm.answer_count, 1)
-        system_message, human_message = llm.messages[-1]
-        self.assertIn("Responde ÚNICAMENTE", system_message.content)
-        self.assertIn("Contexto recuperado:", human_message.content)
-        self.assertIn("¿Qué exige la norma?", human_message.content)
-        self.assertIsNotNone(FakeStateGraph.latest)
-        self.assertNotIn("retrieval_relevance_grading", FakeStateGraph.latest.nodes)
-        self.assertIn("sufficient_context_gate", FakeStateGraph.latest.nodes)
-        self.assertIn("insufficient_context_answer", FakeStateGraph.latest.nodes)
-        self.assertIn("self_refine", FakeStateGraph.latest.nodes)
-        self.assertEqual(FakeStateGraph.latest.edges["expand_parent_documents"], "record_retrieval_trace")
-        self.assertEqual(FakeStateGraph.latest.edges["format_context"], "sufficient_context_gate")
-        self.assertEqual(FakeStateGraph.latest.edges["generate_answer"], "self_refine")
-        self.assertEqual(FakeStateGraph.latest.edges["self_refine"], "format_result")
-        self.assertFalse(hasattr(result, "sufficient_context_trace"))
-
-    def test_build_langgraph_rag_routes_sufficient_context_through_self_refine(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
-
-        self.assertEqual(state["context_sufficiency"], "sufficient")
-        self.assertIn("sufficient_context_trace", state)
-        self.assertEqual(state["answer"], "Generated from fake LLM.")
+        workflow = compiled.workflow
+        self.assertEqual(workflow.entry_point, "business_profile")
         self.assertEqual(
-            state["__visited_nodes"],
-            [
+            set(workflow.nodes),
+            {
+                "business_profile",
+                "retrieval_long_term_memory",
+                "save_conversation_turn",
+                "store_long_term_memory",
+                "expand_query",
                 "retrieve",
                 "normalize_documents",
+                "rerank",
                 "expand_parent_documents",
+                "retrieval_relevance_grading",
                 "record_retrieval_trace",
+                "fallback_answer",
                 "format_context",
-                "sufficient_context_gate",
                 "build_messages",
                 "generate_answer",
-                "self_refine",
                 "format_result",
-            ],
-        )
-        self.assertEqual(llm.answer_count, 1)
-
-    def test_build_langgraph_rag_routes_partial_context_with_prompt_warning(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(
-            sufficient_context_grade={
-                "level": "partial",
-                "reason": "Falta el plazo solicitado.",
-                "missing_information": ["Plazo para realizar la investigación del accidente."],
-            }
-        )
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
             },
-        ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
-
-        self.assertEqual(state["context_sufficiency"], "partial")
-        self.assertEqual(llm.answer_count, 1)
-        self.assertIn("Nota de suficiencia", state["prompt"])
-        self.assertIn("respuesta parcial", state["prompt"])
-        self.assertIn("Plazo para realizar la investigación del accidente.", state["prompt"])
-        self.assertIn("generate_answer", state["__visited_nodes"])
-
-    def test_build_langgraph_rag_routes_insufficient_context_without_generation(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm(
-            sufficient_context_grade={
-                "level": "insufficient",
-                "reason": "No hay evidencia suficiente.",
-                "missing_information": ["Requisitos normativos aplicables."],
-            }
         )
+        self.assertEqual(workflow.edges["business_profile"], "retrieval_long_term_memory")
+        self.assertEqual(workflow.edges["expand_parent_documents"], "record_retrieval_trace")
+        self.assertEqual(workflow.edges["record_retrieval_trace"], "retrieval_relevance_grading")
+        self.assertEqual(workflow.edges["generate_answer"], "save_conversation_turn")
+        self.assertEqual(workflow.edges["store_long_term_memory"], "format_result")
+        router, routes = workflow.conditional["retrieval_relevance_grading"]
+        self.assertIs(router, evidence_route)
+        self.assertEqual(routes, {"with_evidence": "format_context", "without_evidence": "fallback_answer"})
+        self.assertEqual(workflow.compile_kwargs, {"checkpointer": checkpointer, "store": store})
+        self.assertNotIn("sufficient_context_gate", workflow.nodes)
+        self.assertNotIn("self_refine", workflow.nodes)
 
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
+    def test_answer_with_langgraph_uses_thread_id_as_langgraph_config(self) -> None:
+        graph = CapturingGraph()
 
-        self.assertEqual(state["context_sufficiency"], "insufficient")
-        self.assertEqual(llm.answer_count, 0)
-        self.assertNotIn("generate_answer", state["__visited_nodes"])
-        self.assertIn("La evidencia recuperada no es suficiente", state["answer"])
-        self.assertIn("- Requisitos normativos aplicables.", state["answer"])
-        self.assertEqual(state["__visited_nodes"][-1], "format_result")
-        self.assertIn("sufficient_context_trace", state)
-        self.assertFalse(hasattr(state["result"], "sufficient_context_trace"))
+        result = answer_with_langgraph("Pregunta", graph, thread_id="conversation-a")
 
-    def test_build_langgraph_rag_base_does_not_enable_reranking_by_default(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            self.assertEqual(top_k, 2)
-            return {
-                "documents": [["first document", "second document"]],
-                "metadatas": [[{"source_stem": "first"}, {"source_stem": "second"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, retriever, top_k=2)
-            state = graph.invoke({"question": "Pregunta original"})
-
-        self.assertNotIn("reranking_trace", state)
+        self.assertIs(result, graph.result)
         self.assertEqual(
-            [document.document for document in state["documents"]],
-            ["first document", "second document"],
-        )
-        self.assertNotIn("relevance_grading_trace", state)
-
-    def test_build_langgraph_rag_routes_no_evidence_to_manual_fallback_without_llm(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, lambda question, top_k: {"documents": [[]], "metadatas": [[]]}, top_k=1)
-            result = answer_with_langgraph("¿Qué exige la norma?", graph)
-
-        self.assertEqual(result.answer, "La evidencia recuperada es insuficiente para responder la pregunta.")
-        self.assertEqual(result.context, "No se recuperó contexto.")
-        self.assertEqual(result.references, [])
-        self.assertEqual(len(llm.messages), 0)
-
-    def test_build_langgraph_rag_context_uses_parent_text_after_child_retrieval(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-        parent_lookup = {
-            "parent-1": RetrievedDocument(
-                "Full parent context text",
-                {"document_id": "parent-1", "document_type": "parent_chunk", "source_stem": "Decreto 1072"},
-            )
-        }
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            return {
-                "ids": [["child-1"]],
-                "documents": [["Small child text"]],
-                "metadatas": [[{"document_type": "child_chunk", "parent_id": "parent-1", "source_stem": "Decreto 1072"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, retriever, top_k=1, parent_lookup=parent_lookup)
-            result = answer_with_langgraph("¿Qué exige la norma?", graph)
-
-        self.assertIn("Contenido:\nFull parent context text", result.context)
-        self.assertNotIn("Small child text", result.context)
-
-    def test_build_langgraph_rag_preserves_table_result_with_parent_lookup(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-        parent_lookup = {"parent-1": RetrievedDocument("Parent text", {"document_type": "parent_chunk"})}
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1, parent_lookup=parent_lookup)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
-
-        self.assertEqual(state["documents"][0].document, "Contexto normativo")
-        self.assertEqual(state["documents"][0].metadata["document_type"], "table")
-
-    def test_build_langgraph_rag_works_unchanged_without_parent_lookup(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-        retrieved_queries: list[str] = []
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            retrieved_queries.append(question)
-            return {
-                "ids": [["child-1"]],
-                "documents": [["Small child text"]],
-                "metadatas": [[{"document_type": "child_chunk", "parent_id": "parent-1", "source_stem": "Decreto 1072"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, retriever, top_k=1)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
-
-        self.assertIn("Contenido:\nSmall child text", state["context"])
-        self.assertEqual(retrieved_queries, ["¿Qué exige la norma?"])
-        self.assertNotIn("query_expansion_trace", state)
-
-    def test_build_langgraph_rag_does_not_filter_relevance_in_self_refine_iteration(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        llm = FakeLlm()
-
-        def retriever(question: str, top_k: int) -> dict[str, object]:
-            return {
-                "documents": [["Documento no relevante", "Documento relevante"]],
-                "metadatas": [[{"source_stem": "Fuente 1"}, {"source_stem": "Fuente 2"}]],
-            }
-
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, retriever, top_k=2)
-            state = graph.invoke({"question": "¿Qué exige la norma?"})
-
-        self.assertEqual([document.document for document in state["documents"]], ["Documento no relevante", "Documento relevante"])
-        self.assertIn("Documento no relevante", state["context"])
-        self.assertIn("Documento relevante", state["context"])
-        self.assertEqual(state["retrieval_traces"], [{"document_count": 2}])
-        self.assertNotIn("relevance_grading_trace", state)
-
-    def test_build_langgraph_rag_uses_refined_answer_in_public_result(self) -> None:
-        fake_graph_module = types.SimpleNamespace(StateGraph=FakeStateGraph, END="__end__")
-        expected_refined_answer = "Respuesta refinada con sustento en el contexto [1]."
-        llm = FakeLlm(
-            responses=["Respuesta inicial con un problema.", expected_refined_answer],
-            self_refine_feedback={
-                "needs_refinement": True,
-                "feedback": "Corrige la respuesta usando solo el fragmento [1].",
-                "issues": ["La respuesta inicial contiene una afirmación no respaldada."],
-            },
+            graph.calls,
+            [({"question": "Pregunta"}, {"configurable": {"thread_id": "conversation-a"}})],
         )
 
-        with patch.dict(
-            sys.modules,
-            {
-                "langgraph": types.SimpleNamespace(),
-                "langgraph.graph": fake_graph_module,
-                "langchain_core.messages": fake_message_module(),
-            },
-        ):
-            graph = build_langgraph_rag(llm, self.fake_retriever, top_k=1)
-            result = answer_with_langgraph("¿Qué exige la norma?", graph)
+    def test_answer_with_langgraph_keeps_unconfigured_compatibility(self) -> None:
+        graph = CapturingGraph()
 
-        self.assertEqual(result.answer, expected_refined_answer)
-        self.assertEqual(llm.answer_count, 2)
+        answer_with_langgraph("Pregunta", graph)
 
-    def test_context_references_and_generation_input_match_manual_for_fixture(self) -> None:
-        raw_results = self.fake_retriever("¿Qué exige la norma?", 1)
-        documents = recovered_documents(raw_results)
-        manual_documents = recovered_manual_documents(raw_results)
-        context = build_context(documents)
-        references = build_references(documents)
+        self.assertEqual(graph.calls, [({"question": "Pregunta"}, None)])
 
+    def test_build_messages_separates_business_and_normative_context(self) -> None:
         with patch.dict(sys.modules, {"langchain_core.messages": fake_message_module()}):
-            message_state = build_messages_node({"question": "¿Qué exige la norma?", "context": context})
+            update = build_messages_node(
+                {
+                    "question": "¿Qué exige la norma?",
+                    "context": "[1] Evidencia normativa",
+                    "business_context": {"current_context": "Empresa de riesgo I"},
+                }
+            )
 
-        self.assertEqual(context, build_manual_context(manual_documents))
-        self.assertEqual(references, build_manual_references(manual_documents))
-        self.assertEqual(message_state["prompt"], build_manual_prompt("¿Qué exige la norma?", context))
-        system_message, human_message = message_state["messages"]
-        self.assertEqual(f"{system_message.content}\n\n{human_message.content}", message_state["prompt"])
+        system_message, human_message = update["messages"]
+        self.assertIn("CONTEXTO NORMATIVO RECUPERADO", system_message.content)
+        self.assertIn("Empresa de riesgo I", human_message.content)
+        self.assertIn("[1] Evidencia normativa", human_message.content)
+        self.assertEqual(f"{system_message.content}\n\n{human_message.content}", update["prompt"])
 
-    def test_evidence_route_matches_manual_bool_documents_criterion(self) -> None:
-        self.assertEqual(evidence_route({"documents": []}), "without_evidence")
-        self.assertEqual(evidence_route({"documents": [object()]}), "with_evidence")
-
-    def test_sufficient_context_route_distinguishes_partial(self) -> None:
-        self.assertEqual(sufficient_context_route({"context_sufficiency": "insufficient"}), "insufficient")
-        self.assertEqual(sufficient_context_route({"context_sufficiency": "partial"}), "partial")
-        self.assertEqual(sufficient_context_route({"context_sufficiency": "sufficient"}), "answerable")
-
-    def test_retrieval_trace_does_not_change_selected_documents(self) -> None:
-        documents = [object()]
-
-        update = record_retrieval_trace_node({"documents": documents})
-
-        self.assertNotIn("documents", update)
-        self.assertEqual(update, {"retrieval_traces": [{"document_count": 1}]})
-
-    def test_fallback_answer_matches_manual_text_and_logic(self) -> None:
+    def test_fallback_answer_remains_deterministic(self) -> None:
         self.assertEqual(
             fallback_answer("No se recuperó contexto.", []),
             "La evidencia recuperada es insuficiente para responder la pregunta.",
         )
-        self.assertEqual(
-            fallback_answer("context", ["ref"]),
-            "Borrador fundamentado solo en el contexto recuperado:\ncontext\nReferencias:\nref",
-        )
-        self.assertEqual(
-            fallback_answer_node({"question": "Pregunta", "documents": []})["answer"],
-            "La evidencia recuperada es insuficiente para responder la pregunta.",
-        )
+        update = fallback_answer_node({"question": "Pregunta", "documents": []})
+        self.assertEqual(update["answer"], "La evidencia recuperada es insuficiente para responder la pregunta.")
 
-    def test_insufficient_context_answer_preserves_references_and_prompt(self) -> None:
-        update = insufficient_context_answer_node(
+    def test_format_result_exposes_retrieved_chunks_for_api(self) -> None:
+        update = format_result_node(
             {
-                "sufficient_context_trace": {"missing_information": ["Detalle normativo faltante."]},
-                "references": ["Referencia 1"],
-                "prompt": "Prompt previo",
+                "answer": "Respuesta",
+                "references": ["Referencia"],
+                "context": "Contexto",
+                "prompt": "Prompt",
+                "documents": [RetrievedDocument("Fragmento", {})],
             }
         )
 
-        self.assertIn("Detalle normativo faltante.", update["answer"])
-        self.assertEqual(update["references"], ["Referencia 1"])
-        self.assertEqual(update["prompt"], "Prompt previo")
-
-    def test_missing_langgraph_reports_missing_optional_dependency(self) -> None:
-        with patch.dict(sys.modules, {"langgraph": None, "langgraph.graph": None}):
-            with self.assertRaises(ModuleNotFoundError) as context:
-                build_langgraph_rag(lambda prompt: "answer", self.fake_retriever)
-
-        self.assertIn("langgraph is not installed", str(context.exception))
-
-    def test_answer_with_langgraph_rejects_missing_result(self) -> None:
-        class BadGraph:
-            def invoke(self, state: dict[str, object]) -> dict[str, object]:
-                return state
-
-        with self.assertRaises(ValueError):
-            answer_with_langgraph("Pregunta", BadGraph())
-
-    def fake_retriever(self, question: str, top_k: int) -> dict[str, object]:
-        self.assertEqual(top_k, 1)
-        return {
-            "documents": [["Contexto normativo"]],
-            "metadatas": [[{"source_stem": "Resolución 0312 de 2019", "document_type": "table", "table_index": 0}]],
-        }
+        self.assertEqual(update["result"].chunks, ["Fragmento"])
 
 
 class FakeLlm:
-    """Small LangChain-like fake that records message input."""
-
-    def __init__(
-        self,
-        responses: list[str] | None = None,
-        expansion_terms: list[str] | None = None,
-        relevance_grades: list[object] | None = None,
-        self_refine_feedback: object | None = None,
-        sufficient_context_grade: object | None = None,
-    ) -> None:
-        self.messages: list[list[object]] = []
-        self.grade_messages: list[list[object]] = []
-        self.responses = responses or ["Generated from fake LLM."]
-        self.expansion_terms = expansion_terms or []
-        self.relevance_grades = iter(relevance_grades or [])
-        self.self_refine_feedback = self_refine_feedback or {
-            "needs_refinement": False,
-            "feedback": "La respuesta está respaldada por el contexto.",
-            "issues": [],
-        }
-        self.sufficient_context_grade = sufficient_context_grade or {
-            "level": "sufficient",
-            "reason": "El contexto permite responder la pregunta.",
-            "missing_information": [],
-        }
-        self.answer_count = 0
+    """Minimal LLM fake used while graph nodes are assembled."""
 
     def with_structured_output(self, schema: object, method: str | None = None) -> object:
-        llm = self
-
-        class StructuredLlm:
-            def invoke(self, messages: list[object]) -> object:
-                llm.grade_messages.append(messages)
-                if getattr(schema, "__name__", "") == "RelevanceGrade":
-                    return next(
-                        llm.relevance_grades,
-                        {"relevant": True, "reason": "El documento contiene evidencia normativa directa."},
-                    )
-                if getattr(schema, "__name__", "") == "SelfRefineFeedback":
-                    return llm.self_refine_feedback
-                if getattr(schema, "__name__", "") == "SufficientContextGrade":
-                    return llm.sufficient_context_grade
-                return types.SimpleNamespace(expansion_terms=llm.expansion_terms)
-
-        return StructuredLlm()
+        return self
 
     def invoke(self, messages: list[object]) -> object:
-        self.messages.append(messages)
-        response = self.responses[min(self.answer_count, len(self.responses) - 1)]
-        self.answer_count += 1
-        return types.SimpleNamespace(content=response)
+        return types.SimpleNamespace(content="Respuesta")
 
 
 def fake_message_module() -> object:
-    """Return fake LangChain message classes for lazy-import tests."""
+    """Return fake LangChain message classes for message-building tests."""
 
-    class SystemMessage:
+    class Message:
         def __init__(self, content: str) -> None:
             self.content = content
 
-    class HumanMessage:
-        def __init__(self, content: str) -> None:
-            self.content = content
-
-    return types.SimpleNamespace(SystemMessage=SystemMessage, HumanMessage=HumanMessage)
+    return types.SimpleNamespace(SystemMessage=Message, HumanMessage=Message)
 
 
 if __name__ == "__main__":

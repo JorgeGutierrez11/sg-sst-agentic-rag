@@ -5,7 +5,8 @@ from __future__ import annotations
 import io
 import types
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from unittest.mock import mock_open, patch
 
 from agents.consulta_normativa.langchain_rag import main as cli
@@ -34,7 +35,7 @@ class LangChainRagMainTest(unittest.TestCase):
             exit_code = cli.main(["What does the employer need?"])
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(runtime.calls, ["What does the employer need?:graph"])
+        self.assertEqual(runtime.calls, ["What does the employer need?:graph:cli-test"])
         self.assertIn("Answer:\nGenerated answer.", stdout.getvalue())
         self.assertIn("References:\n- Decreto 1072", stdout.getvalue())
 
@@ -67,7 +68,7 @@ class LangChainRagMainTest(unittest.TestCase):
             exit_code = cli.run_interactive_loop(runtime)
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(runtime.calls, ["fail:graph", "recover:graph"])
+        self.assertEqual(runtime.calls, ["fail:graph:cli-test", "recover:graph:cli-test"])
         self.assertIn("Error during RAG execution", stderr.getvalue())
         self.assertIn("fake RAG failure", stderr.getvalue())
         self.assertNotIn("Traceback", stderr.getvalue())
@@ -120,23 +121,27 @@ class LangChainRagMainTest(unittest.TestCase):
 
     def test_build_runtime_uses_deepseek_llm_builder(self) -> None:
         calls: list[str] = []
+        graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
             build_deepseek_llm=lambda: calls.append("deepseek") or "llm",
-            build_langgraph_rag=lambda llm, retriever, **kwargs: FakeDrawableGraph(),
+            build_langgraph_rag=lambda llm, retriever, top_k, **kwargs: graph,
         )
 
-        with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
+        with self.runtime_support_patches(), patch.object(
+            cli, "load_dependencies", return_value=dependencies
+        ), patch("builtins.open", mock_open()):
             cli.build_runtime()
 
         self.assertEqual(calls, ["deepseek"])
+        self.assertTrue(graph.draw_mermaid_png_called)
 
     def test_build_runtime_can_skip_graph_image_output(self) -> None:
         graph = FakeDrawableGraph()
         dependencies = self.build_dependencies(
-            build_langgraph_rag=lambda llm, retriever, **kwargs: graph,
+            build_langgraph_rag=lambda llm, retriever, top_k, **kwargs: graph,
         )
 
-        with patch.object(cli, "load_dependencies", return_value=dependencies):
+        with self.runtime_support_patches(), patch.object(cli, "load_dependencies", return_value=dependencies):
             runtime = cli.build_runtime(write_graph_image=False)
 
         self.assertIs(runtime.graph, graph)
@@ -149,8 +154,8 @@ class LangChainRagMainTest(unittest.TestCase):
             calls.append(f"collection:{path}:{collection_name}")
             return "collection"
 
-        def fake_open_existing_index(path: object) -> str:
-            calls.append(f"index:{path}")
+        def fake_open_existing_index() -> str:
+            calls.append("index")
             return "index"
 
         def fake_hybrid_retriever(
@@ -164,29 +169,51 @@ class LangChainRagMainTest(unittest.TestCase):
             return "hybrid-retriever"
 
         graph = FakeDrawableGraph()
+
+        def fake_build_langgraph_rag(
+            llm: object,
+            retriever: object,
+            top_k: int,
+            **kwargs: object,
+        ) -> FakeDrawableGraph:
+            calls.append(
+                "graph:"
+                f"{llm}:{retriever}:{top_k}:"
+                f"{kwargs['reranker']}:{kwargs['reranker_candidate_pool_size']}:"
+                f"{kwargs['reranker_final_top_k']}:{kwargs['parent_lookup']}"
+            )
+            return graph
+
         dependencies = self.build_dependencies(
             build_deepseek_llm=lambda: "llm",
-            build_langgraph_rag=lambda llm, retriever, *, top_k, parent_lookup: calls.append(
-                f"graph:{llm}:{retriever}:{top_k}:{parent_lookup}"
-            )
-            or graph,
+            build_langgraph_rag=fake_build_langgraph_rag,
             load_parent_documents=lambda path: calls.append(f"parents:{path}") or {"parent-1": "parent"},
             open_existing_collection=fake_open_existing_collection,
-            open_existing_index=fake_open_existing_index,
+            open_existing_bm25_index=fake_open_existing_index,
             hybrid_retriever=fake_hybrid_retriever,
+            get_reranker=lambda model_name, max_length: calls.append(
+                f"reranker:{model_name}:{max_length}"
+            )
+            or "reranker",
         )
 
-        with patch.object(cli, "load_dependencies", return_value=dependencies), patch("builtins.open", mock_open()):
+        with self.runtime_support_patches(), patch.object(
+            cli, "load_dependencies", return_value=dependencies
+        ), patch("builtins.open", mock_open()):
             runtime = cli.build_runtime()
 
         self.assertEqual(
             calls,
             [
                 f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
-                f"index:{cli.DEFAULT_BM25_PATH}",
-                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
+                "index",
                 f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
-                f"graph:llm:hybrid-retriever:{cli.RETRIEVAL_TOP_K}:{{'parent-1': 'parent'}}",
+                f"reranker:{cli.RERANKER_MODEL_NAME}:{cli.RERANKER_MAX_LENGTH}",
+                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
+                "graph:llm:hybrid-retriever:"
+                f"{cli.RERANKER_CANDIDATE_POOL_SIZE}:reranker:"
+                f"{cli.RERANKER_CANDIDATE_POOL_SIZE}:{cli.RERANKER_FINAL_TOP_K}:"
+                "{'parent-1': 'parent'}",
             ],
         )
         self.assertIs(runtime.graph, graph)
@@ -194,8 +221,8 @@ class LangChainRagMainTest(unittest.TestCase):
     def build_runtime(self, fail_first: bool = False) -> object:
         calls: list[str] = []
 
-        def fake_answer_with_langgraph(question: str, graph: object) -> object:
-            calls.append(f"{question}:{graph}")
+        def fake_answer_with_langgraph(question: str, graph: object, *, thread_id: str) -> object:
+            calls.append(f"{question}:{graph}:{thread_id}")
             if fail_first and question == "fail":
                 raise RuntimeError("fake RAG failure")
             return types.SimpleNamespace(
@@ -206,7 +233,8 @@ class LangChainRagMainTest(unittest.TestCase):
 
         runtime = cli.RagRuntime(
             answer_with_langgraph=fake_answer_with_langgraph,
-            graph="graph",
+            graph=FakeRuntimeGraph(),
+            thread_id="cli-test",
         )
         return types.SimpleNamespace(**runtime.__dict__, calls=calls)
 
@@ -218,7 +246,8 @@ class LangChainRagMainTest(unittest.TestCase):
         hybrid_retriever: object | None = None,
         load_parent_documents: object | None = None,
         open_existing_collection: object | None = None,
-        open_existing_index: object | None = None,
+        open_existing_bm25_index: object | None = None,
+        get_reranker: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
             build_deepseek_llm=build_deepseek_llm or (lambda: object()),
@@ -227,8 +256,39 @@ class LangChainRagMainTest(unittest.TestCase):
             hybrid_retriever=hybrid_retriever or (lambda collection, sparse_index, **kwargs: lambda question, top_k: {}),
             load_parent_documents=load_parent_documents or (lambda path: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
-            open_existing_index=open_existing_index or (lambda path: object()),
+            open_existing_bm25_index=open_existing_bm25_index or (lambda: object()),
+            get_reranker=get_reranker or (lambda model_name, max_length: object()),
         )
+
+    @contextmanager
+    def runtime_support_patches(self) -> Iterator[None]:
+        """Replace runtime memory infrastructure without loading model weights."""
+
+        embedding_function = types.SimpleNamespace(
+            _model=object(),
+            normalize_embeddings=True,
+        )
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch(
+                    "chromadb.utils.embedding_functions.SentenceTransformerEmbeddingFunction",
+                    return_value=embedding_function,
+                )
+            )
+            stack.enter_context(patch("langgraph.checkpoint.memory.InMemorySaver", return_value=object()))
+            stack.enter_context(patch("langgraph.store.memory.InMemoryStore", return_value=object()))
+            yield
+
+
+class FakeRuntimeGraph:
+    """Compiled-graph fake exposing the state snapshot used by the CLI."""
+
+    def __str__(self) -> str:
+        return "graph"
+
+    def get_state(self, config: object) -> object:
+        return types.SimpleNamespace(values={})
+
 
 class FakeDrawableGraph:
     """Small compiled-graph fake with drawing support for runtime construction tests."""
