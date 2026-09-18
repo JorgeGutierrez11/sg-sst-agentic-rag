@@ -1,0 +1,43 @@
+{
+  "catalog_version": "test-v1",
+  "regulation": "Resolución 0312 de 2019",
+  "requirements": [
+    {
+      "id": "test_requirement",
+      "source": {
+        "regulation": "Resolución 0312 de 2019",
+        "article": "Artículo de prueba",
+        "official_url": "https://example.com"
+      },
+      "applicability": {
+        "risk_classes": [
+          "I"
+        ],
+        "worker_count_min": 1,
+        "worker_count_max": 10
+      },
+      "criterion": {
+        "name": "Criterio de prueba",
+        "official_text": "Texto normativo de prueba.",
+        "verification_method": "Método de verificación de prueba."
+      },
+      "conditions": [
+        {
+          "id": "exists",
+          "description": "El elemento existe.",
+          "required": true
+        }
+      ],
+      "questions": [
+        {
+          "id": "test_q1",
+          "condition_id": "exists",
+          "text": "¿Existe el elemento?",
+          "type": "boolean",
+          "options": null
+        }
+      ],
+      "official_weight": null
+    }
+  ]
+}

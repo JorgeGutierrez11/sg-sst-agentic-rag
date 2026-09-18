@@ -1,0 +1,54 @@
+agents/
+├── consulta_normativa/                  # Agente 1 - YA EXISTE
+│   └── ...
+│
+└── diagnostico_cumplimiento/            # Agente 2
+    ├── __init__.py
+    │
+    ├── domain/
+    │   ├── __init__.py
+    │   ├── enums.py
+    │   └── models.py
+    │
+    ├── catalog/
+    │   ├── __init__.py
+    │   ├── schemas.py
+    │   ├── loader.py
+    │   └── data/
+    │       └── resolucion_0312_riesgo_I_v1.json
+    │
+    ├── rules/
+    │   ├── __init__.py
+    │   ├── applicability.py
+    │   ├── evaluation.py
+    │   ├── scoring.py
+    │   └── classification.py
+    │
+    ├── questionnaire/
+    │   ├── __init__.py
+    │   ├── planner.py
+    │   └── answer_parser.py
+    │
+    ├── integrations/
+    │   ├── __init__.py
+    │   └── normative_retrieval.py
+    │
+    ├── graph/
+    │   ├── __init__.py
+    │   ├── state.py
+    │   ├── nodes.py
+    │   └── graph.py
+    │
+    ├── reporting/
+    │   ├── __init__.py
+    │   ├── report_models.py
+    │   ├── report_builder.py
+    │   └── pdf_generator.py
+    │
+    └── tests/
+        ├── test_catalog.py
+        ├── test_applicability.py
+        ├── test_evaluation.py
+        ├── test_scoring.py
+        ├── test_questionnaire.py
+        └── test_normative_retrieval.py
