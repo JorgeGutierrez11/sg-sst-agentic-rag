@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arquitectura actual del LangGraph RAG normativo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f5f5f5;
+      --paper-2: #ececec;
+      --white: #ffffff;
+      --ink: #2d3142;
+      --muted: #4f5d75;
+      --soft: #7a8399;
+      --rule: rgba(45, 49, 66, 0.12);
+      --accent: #eb6c36;
+      --accent-tint: rgba(235, 108, 54, 0.08);
+      --link: #2e5aa8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Geist", sans-serif;
+    }
+    main {
+      width: min(100%, 1480px);
+      margin: 0 auto;
+      padding: 48px 40px 32px;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--soft);
+      font: 500 8px/1.4 "Geist Mono", monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 1040px;
+      margin: 0;
+      font: 400 2.45rem/1.03 "Instrument Serif", serif;
+      letter-spacing: -0.02em;
+    }
+    .lede {
+      max-width: 940px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .panel { margin-top: 44px; }
+    .panel-heading {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 20px;
+      align-items: baseline;
+      margin-bottom: 12px;
+      border-top: 1px solid var(--rule);
+      padding-top: 16px;
+    }
+    .panel-number {
+      color: var(--accent);
+      font: 500 9px/1 "Geist Mono", monospace;
+      letter-spacing: 0.14em;
+    }
+    h2 {
+      margin: 0;
+      font: 400 1.5rem/1.1 "Instrument Serif", serif;
+    }
+    .svg-wrap { overflow-x: auto; padding-bottom: 4px; }
+    svg { display: block; width: 100%; min-width: 1120px; height: auto; }
+    .caption {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 860px);
+      gap: 20px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .caption strong {
+      color: var(--ink);
+      font: 500 8px/1.5 "Geist Mono", monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .state-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.45fr 0.9fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .card {
+      min-width: 0;
+      background: var(--white);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 18px;
+    }
+    .card.accent { border-color: rgba(235, 108, 54, 0.5); background: var(--accent-tint); }
+    .card h3 { margin: 5px 0 10px; font-size: 13px; font-weight: 600; }
+    .card p, .card li { color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .card ul { margin: 0; padding-left: 17px; }
+    code {
+      color: var(--ink);
+      font-family: "Geist Mono", monospace;
+      font-size: 0.92em;
+    }
+    .state-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .state-fields code {
+      display: inline-block;
+      padding: 4px 6px;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      background: var(--paper);
+      color: var(--muted);
+      font-size: 9px;
+    }
+    .note {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-left: 2px solid var(--accent);
+      background: var(--accent-tint);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: 44px;
+      border-top: 1px solid var(--rule);
+      padding-top: 16px;
+      color: var(--soft);
+      font: 400 9px/1.5 "Geist Mono", monospace;
+    }
+    @media (max-width: 900px) {
+      main { padding: 32px 20px 24px; }
+      .state-grid { grid-template-columns: 1fr; }
+      .panel-heading, .caption { grid-template-columns: 1fr; gap: 6px; }
+      footer { flex-direction: column; }
+    }
+    @media print {
+      main { width: 100%; padding: 20px; }
+      .svg-wrap { overflow: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Arquitectura · LangGraph RAG · comportamiento alcanzable</p>
+    <h1>Consulta normativa SG-SST: del turno conversacional a la respuesta fundamentada</h1>
+    <p class="lede">Este diagrama muestra cómo el grafo creado por <code>build_langgraph_rag</code> recibe una consulta, busca información normativa y entrega una respuesta. Los paneles dividen el recorrido para explicar con claridad qué ocurre en cada etapa.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="panel-1-heading">
+    <div class="panel-heading">
+      <span class="panel-number">01 · PREPARACIÓN</span>
+      <h2 id="panel-1-heading">Perfil, memoria conversacional y recuperación R3</h2>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 1360 500" role="img" aria-labelledby="langgraph-rag-prep-title langgraph-rag-prep-desc">
+        <title id="langgraph-rag-prep-title">Preparación y recuperación del LangGraph RAG</title>
+        <desc id="langgraph-rag-prep-desc">Muestra cómo la pregunta se combina con el perfil y la memoria de la conversación antes de buscar, ordenar y ampliar los documentos normativos más útiles.</desc>
+        <defs>
+          <marker id="prep-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="prep-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="prep-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="1360" height="500" fill="#f5f5f5"/>
+
+        <!-- Zones -->
+        <rect x="20" y="48" width="284" height="340" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="36" y="52" width="112" height="14" rx="2" fill="#f5f5f5"/><text x="92" y="62" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">CONVERSACIÓN</text>
+        <rect x="324" y="48" width="1016" height="340" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="340" y="52" width="96" height="14" rx="2" fill="#f5f5f5"/><text x="388" y="62" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">R3 / GRAPH</text>
+
+        <!-- Arrows behind nodes -->
+        <line x1="172" y1="150" x2="188" y2="150" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#prep-arrow-accent)"/>
+        <path d="M 272,150 H 296 Q 304,150 304,158 V 210 Q 304,218 312,218 H 332" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+        <line x1="468" y1="218" x2="492" y2="218" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+        <line x1="628" y1="218" x2="652" y2="218" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+        <line x1="788" y1="218" x2="812" y2="218" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+        <line x1="948" y1="218" x2="972" y2="218" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+        <line x1="1108" y1="218" x2="1132" y2="218" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#prep-arrow)"/>
+
+        <!-- Arrow labels with clear gap -->
+        <rect x="276" y="164" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="302" y="173" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">PROFILE</text>
+        <rect x="470" y="190" width="20" height="12" rx="2" fill="#f5f5f5"/><text x="480" y="199" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CTX</text>
+        <rect x="630" y="190" width="20" height="12" rx="2" fill="#f5f5f5"/><text x="640" y="199" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">Q+</text>
+        <rect x="790" y="190" width="20" height="12" rx="2" fill="#f5f5f5"/><text x="800" y="199" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">RAW</text>
+        <rect x="950" y="190" width="20" height="12" rx="2" fill="#f5f5f5"/><text x="960" y="199" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">DOC</text>
+        <rect x="1110" y="190" width="20" height="12" rx="2" fill="#f5f5f5"/><text x="1120" y="199" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">TOP</text>
+
+        <!-- Nodes -->
+        <g>
+          <rect x="36" y="104" width="136" height="92" rx="6" fill="#f5f5f5"/><rect x="36" y="104" width="136" height="92" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399"/>
+          <rect x="44" y="112" width="36" height="12" rx="2" fill="none" stroke="rgba(122,131,153,0.5)"/><text x="62" y="121" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">INPUT</text>
+          <text x="104" y="143" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Pregunta</text>
+          <text x="104" y="160" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">question: str</text>
+          <text x="104" y="176" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">thread_id → config</text>
+        </g>
+        <g>
+          <rect x="188" y="104" width="84" height="92" rx="6" fill="#f5f5f5"/><rect x="188" y="104" width="84" height="92" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="196" y="112" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="212" y="121" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="230" y="142" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Perfil</text>
+          <text x="230" y="158" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R q, ctx</text>
+          <text x="230" y="173" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W ctx.profile</text>
+        </g>
+        <g>
+          <rect x="332" y="164" width="136" height="108" rx="6" fill="#f5f5f5"/><rect x="332" y="164" width="136" height="108" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+          <rect x="340" y="172" width="44" height="12" rx="2" fill="none" stroke="rgba(235,108,54,0.55)"/><text x="362" y="181" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">MEMORY</text>
+          <text x="400" y="204" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Memoria relevante</text>
+          <text x="400" y="222" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R q, ctx, thread_id</text>
+          <text x="400" y="238" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R runtime.store</text>
+          <text x="400" y="254" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W ctx.memories/current</text>
+        </g>
+        <g>
+          <rect x="492" y="172" width="136" height="92" rx="6" fill="#f5f5f5"/><rect x="492" y="172" width="136" height="92" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="500" y="180" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="516" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="560" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Expandir consulta</text>
+          <text x="560" y="229" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R question</text>
+          <text x="560" y="245" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W retrieval_query + trace</text>
+        </g>
+        <g>
+          <rect x="652" y="172" width="136" height="92" rx="6" fill="#f5f5f5"/><rect x="652" y="172" width="136" height="92" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="660" y="180" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="676" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="720" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Recuperar híbrido</text>
+          <text x="720" y="229" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R retrieval_query | q</text>
+          <text x="720" y="245" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W raw_results</text>
+        </g>
+        <g>
+          <rect x="812" y="172" width="136" height="92" rx="6" fill="#f5f5f5"/><rect x="812" y="172" width="136" height="92" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="820" y="180" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="836" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="880" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Normalizar</text>
+          <text x="880" y="229" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R raw_results</text>
+          <text x="880" y="245" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W documents</text>
+        </g>
+        <g>
+          <rect x="972" y="172" width="136" height="92" rx="6" fill="#f5f5f5"/><rect x="972" y="172" width="136" height="92" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="980" y="180" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="996" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="1040" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Reranking</text>
+          <text x="1040" y="229" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R question, documents</text>
+          <text x="1040" y="245" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W documents + trace</text>
+        </g>
+        <g>
+          <rect x="1132" y="164" width="192" height="108" rx="6" fill="#f5f5f5"/><rect x="1132" y="164" width="192" height="108" rx="6" fill="#fff" stroke="#2d3142"/>
+          <rect x="1140" y="172" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="1156" y="181" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text>
+          <text x="1228" y="204" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Expandir documentos padre</text>
+          <text x="1228" y="222" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R documents + parent_lookup</text>
+          <text x="1228" y="238" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W documents; deduplica padres</text>
+          <text x="1228" y="254" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">fallback si falta parent_id</text>
+        </g>
+
+        <!-- Legend -->
+        <line x1="28" y1="424" x2="1332" y2="424" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="28" y="446" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEYENDA</text>
+        <rect x="132" y="436" width="12" height="12" rx="2" fill="#fff" stroke="#2d3142"/><text x="152" y="446" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">nodo interno</text>
+        <rect x="276" y="436" width="12" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36"/><text x="296" y="446" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">foco de memoria</text>
+        <line x1="448" y1="442" x2="480" y2="442" stroke="#4f5d75" marker-end="url(#prep-arrow)"/><text x="492" y="446" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">transición de estado</text>
+        <text x="720" y="446" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace">R = lee · W = escribe · ctx = business_context</text>
+      </svg>
+    </div>
+    <div class="caption"><strong>Qué ocurre</strong><span>Primero se actualiza el perfil y se recupera la memoria asociada al <code>thread_id</code> para formar <code>business_context.current_context</code>. Luego R3 conserva la pregunta original, reúne y ordena los resultados, y reemplaza los fragmentos por sus documentos padre antes de revisar la evidencia.</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="panel-2-heading">
+    <div class="panel-heading">
+      <span class="panel-number">02 · DECISIÓN</span>
+      <h2 id="panel-2-heading">Instrumentación, grading y bifurcación exacta de evidencia</h2>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 1360 540" role="img" aria-labelledby="langgraph-rag-branch-title langgraph-rag-branch-desc">
+        <title id="langgraph-rag-branch-title">Bifurcación de evidencia y generación</title>
+        <desc id="langgraph-rag-branch-desc">Muestra cómo se revisan los documentos encontrados: si hay evidencia se genera una respuesta con el LLM; si no la hay, se entrega una respuesta predeterminada. Ambos caminos continúan al mismo cierre.</desc>
+        <defs>
+          <marker id="branch-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="branch-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="branch-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="1360" height="540" fill="#f5f5f5"/>
+        <rect x="20" y="48" width="1320" height="376" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="36" y="52" width="132" height="14" rx="2" fill="#f5f5f5"/><text x="102" y="62" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">VALIDACIÓN + ANSWER</text>
+
+        <!-- Arrows -->
+        <line x1="184" y1="220" x2="216" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <line x1="376" y1="220" x2="408" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <line x1="568" y1="220" x2="600" y2="220" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#branch-arrow-accent)"/>
+        <path d="M 680,172 V 130 Q 680,122 688,122 H 728 Q 736,122 736,130 V 144" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <line x1="896" y1="192" x2="928" y2="192" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <line x1="1088" y1="192" x2="1120" y2="192" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#branch-arrow-link)"/>
+        <path d="M 680,268 V 316 Q 680,324 688,324 H 832" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <path d="M 1280,192 H 1304 Q 1312,192 1312,200 V 276 Q 1312,284 1304,284 H 1208 Q 1200,284 1200,292 V 324" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+        <line x1="992" y1="324" x2="1120" y2="324" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#branch-arrow)"/>
+
+        <!-- Labels -->
+        <rect x="378" y="192" width="28" height="12" rx="2" fill="#f5f5f5"/><text x="392" y="201" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">TRACE</text>
+        <rect x="688" y="94" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="724" y="103" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">WITH_EVIDENCE</text>
+        <rect x="688" y="288" width="88" height="12" rx="2" fill="#f5f5f5"/><text x="732" y="297" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">WITHOUT_EVIDENCE</text>
+        <rect x="1090" y="164" width="28" height="12" rx="2" fill="#f5f5f5"/><text x="1104" y="173" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">LLM</text>
+
+        <!-- Nodes -->
+        <g><rect x="40" y="172" width="144" height="96" rx="6" fill="#f5f5f5"/><rect x="40" y="172" width="144" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399"/><rect x="48" y="180" width="28" height="12" rx="2" fill="none" stroke="rgba(122,131,153,0.5)"/><text x="62" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">IN</text><text x="112" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Padres expandidos</text><text x="112" y="230" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">documents</text><text x="112" y="246" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">desde panel 01</text></g>
+        <g><rect x="216" y="172" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="216" y="172" width="160" height="96" rx="6" fill="#fff" stroke="#2d3142"/><rect x="224" y="180" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="240" y="189" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="296" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Registrar recuperación</text><text x="296" y="230" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R documents, traces</text><text x="296" y="246" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W retrieval_traces</text></g>
+        <g><rect x="408" y="164" width="160" height="112" rx="6" fill="#f5f5f5"/><rect x="408" y="164" width="160" height="112" rx="6" fill="#fff" stroke="#2d3142"/><rect x="416" y="172" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="432" y="181" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="488" y="205" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Grading de relevancia</text><text x="488" y="224" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R question, documents</text><text x="488" y="240" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W documents + trace</text><text x="488" y="256" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">fail-open; conserva 1 si todos fallan</text></g>
+        <g><rect x="600" y="172" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="600" y="172" width="160" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/><rect x="608" y="180" width="44" height="12" rx="2" fill="none" stroke="rgba(235,108,54,0.55)"/><text x="630" y="189" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">ROUTE</text><text x="680" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">evidence_route</text><text x="680" y="230" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R documents · W —</text><text x="680" y="246" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">bool(documents)</text></g>
+        <g><rect x="736" y="144" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="736" y="144" width="160" height="96" rx="6" fill="#fff" stroke="#2d3142"/><rect x="744" y="152" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="760" y="161" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="816" y="183" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Formatear contexto</text><text x="816" y="202" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R documents</text><text x="816" y="218" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W context, references</text></g>
+        <g><rect x="928" y="144" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="928" y="144" width="160" height="96" rx="6" fill="#fff" stroke="#2d3142"/><rect x="936" y="152" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="952" y="161" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="1008" y="183" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Construir mensajes</text><text x="1008" y="202" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R q, context, ctx.current</text><text x="1008" y="218" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W messages, prompt</text></g>
+        <g><rect x="1120" y="144" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="1120" y="144" width="160" height="96" rx="6" fill="#fff" stroke="#2e5aa8"/><rect x="1128" y="152" width="32" height="12" rx="2" fill="none" stroke="rgba(46,90,168,0.5)"/><text x="1144" y="161" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="1200" y="183" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Generar respuesta</text><text x="1200" y="202" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R messages</text><text x="1200" y="218" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W answer · LLM</text></g>
+        <g><rect x="832" y="276" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="832" y="276" width="160" height="96" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-dasharray="4,3"/><rect x="840" y="284" width="52" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.3)"/><text x="866" y="293" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">FALLBACK</text><text x="912" y="315" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Respuesta determinista</text><text x="912" y="334" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R question</text><text x="912" y="350" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W context, refs, prompt, answer</text></g>
+        <g><rect x="1120" y="276" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="1120" y="276" width="160" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399"/><rect x="1128" y="284" width="28" height="12" rx="2" fill="none" stroke="rgba(122,131,153,0.5)"/><text x="1142" y="293" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">JOIN</text><text x="1200" y="315" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Respuesta disponible</text><text x="1200" y="334" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">answer + prompt + context</text><text x="1200" y="350" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">continúa al panel 03</text></g>
+
+        <line x1="28" y1="456" x2="1332" y2="456" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="28" y="478" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEYENDA</text>
+        <rect x="132" y="468" width="12" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36"/><text x="152" y="478" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">decisión exacta: documents presente / vacío</text>
+        <line x1="448" y1="474" x2="480" y2="474" stroke="#2e5aa8" marker-end="url(#branch-arrow-link)"/><text x="492" y="478" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">invocación externa LLM</text>
+        <rect x="672" y="468" width="12" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-dasharray="4,3"/><text x="692" y="478" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">fallback sin LLM</text>
+      </svg>
+    </div>
+    <div class="caption"><strong>Cómo decide</strong><span><code>evidence_route</code> toma la ruta <code>with_evidence</code> cuando <code>state.get("documents")</code> tiene contenido; si está vacío, toma <code>without_evidence</code>. El grafo actual no aplica una revisión adicional de suficiencia ni Self-Refine.</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="panel-3-heading">
+    <div class="panel-heading">
+      <span class="panel-number">03 · CIERRE</span>
+      <h2 id="panel-3-heading">Actualización de memorias, resultado público y finalización</h2>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 1360 460" role="img" aria-labelledby="langgraph-rag-close-title langgraph-rag-close-desc">
+        <title id="langgraph-rag-close-title">Cierre del turno y persistencia en memoria</title>
+        <desc id="langgraph-rag-close-desc">Muestra cómo cualquier respuesta se guarda en el historial, se añade a la memoria de la conversación, se prepara para la entrega y finaliza. El estado de cada conversación se conserva solo mientras el proceso está activo.</desc>
+        <defs>
+          <marker id="close-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="close-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="close-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="1360" height="460" fill="#f5f5f5"/>
+        <rect x="20" y="48" width="920" height="288" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="36" y="52" width="96" height="14" rx="2" fill="#f5f5f5"/><text x="84" y="62" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">GRAPH CLOSE</text>
+        <rect x="964" y="48" width="376" height="288" rx="8" fill="rgba(235,108,54,0.04)" stroke="rgba(235,108,54,0.40)" stroke-width="0.8" stroke-dasharray="4,4"/>
+        <rect x="980" y="52" width="112" height="14" rx="2" fill="#f5f5f5"/><text x="1036" y="62" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">MEMORY BOUNDARY</text>
+
+        <!-- Arrows -->
+        <line x1="184" y1="192" x2="216" y2="192" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#close-arrow)"/>
+        <line x1="408" y1="192" x2="440" y2="192" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#close-arrow)"/>
+        <line x1="632" y1="192" x2="664" y2="192" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#close-arrow)"/>
+        <line x1="856" y1="192" x2="904" y2="192" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#close-arrow)"/>
+        <path d="M 536,136 V 104 Q 536,96 544,96 H 992 Q 1000,96 1000,104 V 136" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#close-arrow-accent)"/>
+        <path d="M 312,248 V 280 Q 312,288 320,288 H 1128 Q 1136,288 1136,280 V 248" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#close-arrow)"/>
+
+        <!-- Labels -->
+        <rect x="634" y="164" width="28" height="12" rx="2" fill="#f5f5f5"/><text x="648" y="173" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">RESULT</text>
+        <rect x="744" y="68" width="96" height="12" rx="2" fill="#f5f5f5"/><text x="792" y="77" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">PUT TURN-N / THREAD</text>
+        <rect x="656" y="296" width="96" height="12" rx="2" fill="#f5f5f5"/><text x="704" y="305" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CHECKPOINT / THREAD</text>
+
+        <!-- Nodes -->
+        <g><rect x="40" y="144" width="144" height="96" rx="6" fill="#f5f5f5"/><rect x="40" y="144" width="144" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399"/><rect x="48" y="152" width="28" height="12" rx="2" fill="none" stroke="rgba(122,131,153,0.5)"/><text x="62" y="161" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">JOIN</text><text x="112" y="183" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Éxito o fallback</text><text x="112" y="202" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">answer disponible</text><text x="112" y="218" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">desde panel 02</text></g>
+        <g><rect x="216" y="136" width="192" height="112" rx="6" fill="#f5f5f5"/><rect x="216" y="136" width="192" height="112" rx="6" fill="#fff" stroke="#2d3142"/><rect x="224" y="144" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="240" y="153" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="312" y="177" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Guardar turno</text><text x="312" y="196" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R q, answer, business_context</text><text x="312" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W business_context.history</text><text x="312" y="228" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">append user + assistant</text></g>
+        <g><rect x="440" y="136" width="192" height="112" rx="6" fill="#f5f5f5"/><rect x="440" y="136" width="192" height="112" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/><rect x="448" y="144" width="44" height="12" rx="2" fill="none" stroke="rgba(235,108,54,0.55)"/><text x="470" y="153" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">MEMORY</text><text x="536" y="177" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Indexar último turno</text><text x="536" y="196" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R ctx.history, thread_id, store</text><text x="536" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W Store externo; state = {}</text><text x="536" y="228" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">namespace business-context/thread</text></g>
+        <g><rect x="664" y="136" width="192" height="112" rx="6" fill="#f5f5f5"/><rect x="664" y="136" width="192" height="112" rx="6" fill="#fff" stroke="#2d3142"/><rect x="672" y="144" width="32" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.4)"/><text x="688" y="153" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">NODE</text><text x="760" y="177" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Construir resultado</text><text x="760" y="196" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R answer, refs, context, prompt</text><text x="760" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">R documents → chunks</text><text x="760" y="228" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W result: LangChainRagResult</text></g>
+        <g><rect x="904" y="160" width="52" height="64" rx="6" fill="#f5f5f5"/><rect x="904" y="160" width="52" height="64" rx="6" fill="#2d3142" stroke="#2d3142"/><text x="930" y="189" fill="#fff" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">END</text><text x="930" y="205" fill="#bfc0c0" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">result</text></g>
+        <g><rect x="984" y="136" width="160" height="112" rx="6" fill="#f5f5f5"/><rect x="984" y="136" width="160" height="112" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><rect x="992" y="144" width="40" height="12" rx="2" fill="none" stroke="rgba(79,93,117,0.5)"/><text x="1012" y="153" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">STORE</text><text x="1064" y="177" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">InMemoryStore</text><text x="1064" y="196" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">Qwen embeddings · 1024</text><text x="1064" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">indexa text=user</text><text x="1064" y="228" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">payload user + assistant</text></g>
+        <g><rect x="1168" y="136" width="152" height="112" rx="6" fill="#f5f5f5"/><rect x="1168" y="136" width="152" height="112" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><rect x="1176" y="144" width="40" height="12" rx="2" fill="none" stroke="rgba(79,93,117,0.5)"/><text x="1196" y="153" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">STATE</text><text x="1244" y="177" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">InMemorySaver</text><text x="1244" y="196" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">checkpoint por thread_id</text><text x="1244" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">estado entre turnos</text><text x="1244" y="228" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">solo durante el proceso</text></g>
+
+        <line x1="28" y1="368" x2="1332" y2="368" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="28" y="390" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEYENDA</text>
+        <rect x="132" y="380" width="12" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="152" y="390" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">estado / store en memoria</text>
+        <line x1="352" y1="386" x2="384" y2="386" stroke="#4f5d75" stroke-dasharray="4,3" marker-end="url(#close-arrow)"/><text x="396" y="390" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">checkpoint pasivo del grafo</text>
+        <text x="672" y="390" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace">thread_id estable = aislamiento lógico; no implica durabilidad en disco</text>
+      </svg>
+    </div>
+    <div class="caption"><strong>Cierre común</strong><span>Tanto la respuesta generada como el fallback siguen el mismo cierre: actualizan el historial en <code>business_context</code>, guardan el turno en la memoria semántica, construyen <code>LangChainRagResult</code> y llegan a <code>END</code>. El API usa <code>conversation_id</code> como <code>thread_id</code>, mientras el CLI crea uno por sesión.</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="panel-4-heading">
+    <div class="panel-heading">
+      <span class="panel-number">04 · BOUNDARIES</span>
+      <h2 id="panel-4-heading">Dependencias externas y ensamblaje del runtime</h2>
+    </div>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 1360 500" role="img" aria-labelledby="langgraph-rag-runtime-title langgraph-rag-runtime-desc">
+        <title id="langgraph-rag-runtime-title">Dependencias del runtime LangGraph RAG</title>
+        <desc id="langgraph-rag-runtime-desc">Muestra los servicios y recursos que apoyan al grafo: DeepSeek para tareas de lenguaje, Chroma y BM25 para buscar, CrossEncoder para ordenar resultados, documentos padre y dos memorias temporales.</desc>
+        <defs>
+          <marker id="runtime-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="runtime-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+          <marker id="runtime-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="1360" height="500" fill="#f5f5f5"/>
+        <rect x="20" y="48" width="1320" height="340" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="36" y="52" width="104" height="14" rx="2" fill="#f5f5f5"/><text x="88" y="62" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">BUILD_RUNTIME</text>
+
+        <!-- Arrows -->
+        <path d="M 680,172 V 128 Q 680,120 672,120 H 176 Q 168,120 168,128 V 148" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#runtime-arrow-link)"/>
+        <path d="M 600,220 H 552 Q 544,220 544,228 V 284" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#runtime-arrow-link)"/>
+        <line x1="464" y1="332" x2="408" y2="332" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#runtime-arrow)"/>
+        <line x1="288" y1="332" x2="232" y2="332" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#runtime-arrow)"/>
+        <path d="M 760,220 H 808 Q 816,220 816,212 V 180 Q 816,172 824,172 H 848" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#runtime-arrow)"/>
+        <path d="M 760,236 H 792 Q 800,236 800,244 V 316 Q 800,324 808,324 H 848" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#runtime-arrow)"/>
+        <path d="M 704,268 V 300 Q 704,308 712,308 H 1024 Q 1032,308 1032,300 V 268" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#runtime-arrow)"/>
+        <path d="M 720,172 V 112 Q 720,104 728,104 H 1176 Q 1184,104 1184,112 V 148" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#runtime-arrow-accent)"/>
+
+        <!-- Labels -->
+        <rect x="392" y="92" width="52" height="12" rx="2" fill="#f5f5f5"/><text x="418" y="101" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">3 USOS LLM</text>
+        <rect x="554" y="244" width="56" height="12" rx="2" fill="#f5f5f5"/><text x="582" y="253" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">QUERY RRF</text>
+        <rect x="762" y="144" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="798" y="153" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">PREDICT PAIRS</text>
+        <rect x="764" y="268" width="56" height="12" rx="2" fill="#f5f5f5"/><text x="792" y="277" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">LOOKUP ID</text>
+        <rect x="840" y="316" width="72" height="12" rx="2" fill="#f5f5f5"/><text x="876" y="325" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CHECKPOINT</text>
+        <rect x="936" y="76" width="88" height="12" rx="2" fill="#f5f5f5"/><text x="980" y="85" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">SEARCH + PUT</text>
+
+        <!-- Nodes -->
+        <g><rect x="600" y="172" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="600" y="172" width="160" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/><rect x="608" y="180" width="40" height="12" rx="2" fill="none" stroke="rgba(235,108,54,0.55)"/><text x="628" y="189" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">GRAPH</text><text x="680" y="211" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">LangGraph compilado</text><text x="680" y="230" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">RagGraphState</text><text x="680" y="246" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">checkpointer + store</text></g>
+        <g><rect x="88" y="148" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="88" y="148" width="160" height="96" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)"/><rect x="96" y="156" width="56" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.3)"/><text x="124" y="165" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">EXTERNAL</text><text x="168" y="187" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">DeepSeek LLM</text><text x="168" y="206" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">perfil + expansión + grading</text><text x="168" y="222" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">+ respuesta final</text></g>
+        <g><rect x="464" y="284" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="464" y="284" width="160" height="96" rx="6" fill="rgba(45,49,66,0.03)" stroke="#2e5aa8"/><rect x="472" y="292" width="48" height="12" rx="2" fill="none" stroke="rgba(46,90,168,0.5)"/><text x="496" y="301" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">HYBRID</text><text x="544" y="323" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Retriever RRF</text><text x="544" y="342" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">fusiona rankings</text><text x="544" y="358" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">anota fuentes</text></g>
+        <g><rect x="288" y="292" width="120" height="80" rx="6" fill="#f5f5f5"/><rect x="288" y="292" width="120" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="348" y="326" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chroma</text><text x="348" y="345" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">dense · Qwen</text></g>
+        <g><rect x="112" y="292" width="120" height="80" rx="6" fill="#f5f5f5"/><rect x="112" y="292" width="120" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="172" y="326" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">BM25S</text><text x="172" y="345" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">sparse · español</text></g>
+        <g><rect x="848" y="132" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="848" y="132" width="160" height="96" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)"/><text x="928" y="171" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">CrossEncoder</text><text x="928" y="190" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">bge-reranker-v2-m3</text><text x="928" y="206" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">fallback conserva orden</text></g>
+        <g><rect x="848" y="276" width="160" height="96" rx="6" fill="#f5f5f5"/><rect x="848" y="276" width="160" height="96" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="928" y="315" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Parent lookup</text><text x="928" y="334" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">parents.jsonl → dict</text><text x="928" y="350" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">solo lectura</text></g>
+        <g><rect x="1032" y="172" width="128" height="96" rx="6" fill="#f5f5f5"/><rect x="1032" y="172" width="128" height="96" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="1096" y="211" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">InMemorySaver</text><text x="1096" y="230" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">state / thread</text><text x="1096" y="246" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">volátil</text></g>
+        <g><rect x="1184" y="148" width="136" height="120" rx="6" fill="#f5f5f5"/><rect x="1184" y="148" width="136" height="120" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/><text x="1252" y="187" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">InMemoryStore</text><text x="1252" y="206" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">semantic memory</text><text x="1252" y="222" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">Qwen · 1024 dims</text><text x="1252" y="238" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">namespace/thread</text><text x="1252" y="254" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">volátil</text></g>
+
+        <line x1="28" y1="420" x2="1332" y2="420" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="28" y="442" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEYENDA</text>
+        <line x1="132" y1="438" x2="164" y2="438" stroke="#2e5aa8" marker-end="url(#runtime-arrow-link)"/><text x="176" y="442" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">servicio / consulta externa</text>
+        <rect x="392" y="432" width="12" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75"/><text x="412" y="442" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">índice, lookup o estado</text>
+        <rect x="616" y="432" width="12" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36"/><text x="636" y="442" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">foco de integración</text>
+      </svg>
+    </div>
+    <div class="caption"><strong>Preparación</strong><span><code>build_runtime</code> abre los índices existentes, carga el reranker y los documentos padre, crea <code>InMemorySaver</code> e <code>InMemoryStore</code>, y prepara el grafo para responder. No crea ni actualiza Chroma o BM25; durante la ejecución solo escribe en el estado y en la memoria temporal de la conversación.</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="state-heading">
+    <div class="panel-heading">
+      <span class="panel-number">STATE · I/O</span>
+      <h2 id="state-heading">Contrato global alcanzable de <code>RagGraphState</code></h2>
+    </div>
+    <div class="state-grid">
+      <article class="card accent">
+        <p class="eyebrow">Entrada y clave de ejecución</p>
+        <h3>Invocación del turno</h3>
+        <p>Cada turno comienza con <code>graph.invoke({"question": question}, {"configurable": {"thread_id": id}})</code>. El API identifica la conversación con <code>conversation_id</code>; el CLI conserva un UUID durante la sesión.</p>
+      </article>
+      <article class="card">
+        <p class="eyebrow">Campos leídos o escritos</p>
+        <h3>Estado activo</h3>
+        <div class="state-fields">
+          <code>question</code><code>business_context</code><code>retrieval_query</code><code>query_expansion_trace</code><code>raw_results</code><code>documents</code><code>reranking_trace</code><code>retrieval_traces</code><code>relevance_grading_trace</code><code>context</code><code>references</code><code>messages</code><code>prompt</code><code>answer</code><code>result</code>
+        </div>
+      </article>
+      <article class="card">
+        <p class="eyebrow">Salida pública</p>
+        <h3><code>LangChainRagResult</code></h3>
+        <ul>
+          <li><code>answer</code></li>
+          <li><code>references</code></li>
+          <li><code>context</code></li>
+          <li><code>prompt</code></li>
+          <li><code>chunks</code> desde <code>documents</code></li>
+        </ul>
+      </article>
+    </div>
+    <div class="note"><strong>No se usan en el recorrido actual:</strong> <code>query_rewrite_trace</code>, <code>query_variants</code>, <code>multi_query_trace</code>, <code>retrieved_lists</code>, <code>context_sufficiency</code>, <code>sufficient_context_trace</code> y <code>self_refine_trace</code> están definidos, pero <code>build_langgraph_rag</code> no conecta sus nodos o rutas. Por eso el recorrido actual avanza una sola vez, sin volver a etapas anteriores.</div>
+  </section>
+
+  <footer>
+    <span>Fuente: implementación ejecutable actual en agents/consulta_normativa/langchain_rag</span>
+    <span>Arquitectura · detalle de ingeniería · doc-wide · HTML</span>
+  </footer>
+</main>
+</body>
+</html>

@@ -13,7 +13,20 @@ from langchain_core.embeddings import Embeddings
 
 
 
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, HYBRID_CANDIDATE_TOP_K, HYBRID_RRF_K, RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH, RERANKER_CANDIDATE_POOL_SIZE, RERANKER_FINAL_TOP_K, DEFAULT_PARENT_CHUNKS_PATH
+from agents.consulta_normativa.langchain_rag.config import (
+    DEFAULT_CHROMA_PATH,
+    DEFAULT_COLLECTION_NAME,
+    DEFAULT_PARENT_CHUNKS_PATH,
+    HYBRID_RRF_K,
+    HYBRID_RRF_OUTPUT_TOP_K,
+    HYBRID_SOURCE_CANDIDATE_TOP_K,
+    RERANKER_BATCH_SIZE,
+    RERANKER_CANDIDATE_POOL_SIZE,
+    RERANKER_DEVICE,
+    RERANKER_FINAL_TOP_K,
+    RERANKER_MAX_LENGTH,
+    RERANKER_MODEL_NAME,
+)
 
 logging.getLogger(
     "agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading"
@@ -153,13 +166,14 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         retriever = dependencies.hybrid_retriever(
             collection,
             bm25_index,
-            candidate_top_k=HYBRID_CANDIDATE_TOP_K,
+            candidate_top_k=HYBRID_SOURCE_CANDIDATE_TOP_K,
             rrf_k=HYBRID_RRF_K,
         )
 
         reranker = dependencies.get_reranker(
-            RERANKER_MODEL_NAME,
-            RERANKER_MAX_LENGTH,
+            model_name=RERANKER_MODEL_NAME,
+            max_length=RERANKER_MAX_LENGTH,
+            device=RERANKER_DEVICE,
         )
 
         parent_lookup = dependencies.load_parent_documents(
@@ -192,15 +206,18 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         )
 
         graph = dependencies.build_langgraph_rag(
-            llm,
-            retriever,
-            RERANKER_CANDIDATE_POOL_SIZE,
+            llm=llm,
+            retriever=retriever,
+            top_k=HYBRID_RRF_OUTPUT_TOP_K,
             checkpointer=checkpointer,
             store=memory_store,
             reranker=reranker,
             reranker_candidate_pool_size=RERANKER_CANDIDATE_POOL_SIZE,
             reranker_final_top_k=RERANKER_FINAL_TOP_K,
-            parent_lookup=parent_lookup
+            reranker_batch_size=RERANKER_BATCH_SIZE,
+            reranker_device=RERANKER_DEVICE,
+            reranker_input_max_length=RERANKER_MAX_LENGTH,
+            parent_lookup=parent_lookup,
         )
 
         if write_graph_image:

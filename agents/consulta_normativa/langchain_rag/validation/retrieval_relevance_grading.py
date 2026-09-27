@@ -13,8 +13,14 @@ from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 logger = logging.getLogger(__name__)
 
 
-class RelevanceGrade(BaseModel):
-    """Structured relevance decision for one retrieved document."""
+class RelevanceDecision(BaseModel):
+    """Structured relevance decision for one indexed retrieved document."""
+
+    index: int = Field(
+        strict=True,
+        ge=0,
+        description="Zero-based index of the evaluated document.",
+    )
 
     relevant: bool = Field(
         description=(
@@ -31,12 +37,20 @@ class RelevanceGrade(BaseModel):
     )
 
 
+class RelevanceBatchGrade(BaseModel):
+    """Structured relevance decisions for a complete retrieved-document batch."""
+
+    decisions: list[RelevanceDecision] = Field(
+        description="One relevance decision for every received document index."
+    )
+
+
 RETRIEVAL_RELEVANCE_SYSTEM_PROMPT = """
 Eres un evaluador de relevancia documental para un sistema RAG de consulta normativa
 sobre el Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.
 
-Tu única tarea es determinar si UN documento recuperado aporta información útil para
-responder la pregunta original del usuario.
+Tu única tarea es determinar, para CADA documento recuperado, si aporta información
+útil para responder la pregunta original del usuario.
 
 DEFINICIÓN DE RELEVANCIA
 
@@ -77,13 +91,20 @@ FORMATO DE SALIDA
 Devuelve exclusivamente un objeto JSON válido con esta estructura:
 
 {
-    "relevant": true,
-    "reason": "Explicación breve de la decisión."
+    "decisions": [
+        {
+            "index": 0,
+            "relevant": true,
+            "reason": "Explicación breve de la decisión."
+        }
+    ]
 }
 
-El campo "relevant" debe ser booleano:
-- true si el documento es relevante;
-- false si el documento no es relevante.
+- Devuelve exactamente una decisión para cada índice recibido.
+- Usa los índices de base cero proporcionados, sin omitirlos ni repetirlos.
+- El campo "relevant" debe ser booleano: true si el documento es relevante y false
+  si no lo es.
+- Evalúa solamente la relevancia de cada documento.
 
 No agregues texto, Markdown ni explicaciones fuera del JSON.
 """.strip()
@@ -115,7 +136,7 @@ def retrieval_relevance_grading_node(
 
         try:
             grader = llm.with_structured_output(
-                RelevanceGrade,
+                RelevanceBatchGrade,
                 method="json_mode",
             )
         except Exception as error:
@@ -125,84 +146,56 @@ def retrieval_relevance_grading_node(
             )
             return relevance_grading_fallback(documents, error)
 
+        try:
+            decisions = grade_document_batch(
+                grader=grader,
+                question=question,
+                documents=documents,
+            )
+        except Exception as error:
+            logger.error("Batch relevance grading failed: %s", error)
+            return relevance_grading_fallback(
+                documents,
+                error,
+                reason="Documento conservado por política fail-open debido a un error del grader.",
+            )
+
+        decisions_by_index = {decision.index: decision for decision in decisions}
         relevant_documents: list[RetrievedDocument] = []
         document_traces: list[dict[str, Any]] = []
-        fallback_count = 0
-        grader_relevant_count = 0
 
         for index, document in enumerate(documents):
-            try:
-                grade = grade_document_relevance(
-                    grader=grader,
-                    question=question,
-                    document=document,
-                )
+            decision = decisions_by_index[index]
+            logger.info(
+                "Relevance grading | doc=%s | source=%s | article=%s | relevant=%s | reason=%s",
+                index + 1,
+                document.metadata.get("source_stem"),
+                document.metadata.get("article"),
+                decision.relevant,
+                decision.reason,
+            )
 
-                logger.info(
-                    "Relevance grading | doc=%s | source=%s | article=%s | relevant=%s | reason=%s",
-                    index + 1,
-                    document.metadata.get("source_stem"),
-                    document.metadata.get("article"),
-                    grade.relevant,
-                    grade.reason,
-                )
-
-                if grade.relevant:
-                    relevant_documents.append(document)
-                    grader_relevant_count += 1
-
-                document_traces.append(
-                    build_document_trace(
-                        index=index,
-                        document=document,
-                        relevant=grade.relevant,
-                        reason=grade.reason,
-                        fallback=False,
-                        error=None,
-                    )
-                )
-
-            except Exception as error:
-                # Fail-open: a grader failure must not silently discard
-                # potentially valid normative evidence.
-                logger.error(
-                    "Relevance grading failed for document %s: %s",
-                    index,
-                    error,
-                )
-
+            if decision.relevant:
                 relevant_documents.append(document)
-                fallback_count += 1
 
-                document_traces.append(
-                    build_document_trace(
-                        index=index,
-                        document=document,
-                        relevant=True,
-                        reason="Documento conservado por política fail-open debido a un error del grader.",
-                        fallback=True,
-                        error=type(error).__name__,
-                    )
+            document_traces.append(
+                build_document_trace(
+                    index=index,
+                    document=document,
+                    relevant=decision.relevant,
+                    reason=decision.reason,
+                    fallback=False,
+                    error=None,
                 )
-
-        if not relevant_documents and documents:
-            relevant_documents.append(
-                documents[0]
             )
 
-            fallback_count += 1
-
-            document_traces[0] = build_document_trace(
-                index=0,
-                document=documents[0],
-                relevant=False,
-                reason=(
-                    "Documento conservado como fallback conservador porque "
-                    "el grader rechazó todos los documentos recuperados."
-                ),
-                fallback=True,
-                error=None,
-            )
+        grader_relevant_count = len(relevant_documents)
+        logger.info(
+            "Batch relevance grading completed | input=%s | relevant=%s | rejected=%s",
+            len(documents),
+            grader_relevant_count,
+            len(documents) - grader_relevant_count,
+        )
 
         return {
             "documents": relevant_documents,
@@ -210,7 +203,7 @@ def retrieval_relevance_grading_node(
                 "input_count": len(documents),
                 "relevant_count": grader_relevant_count,
                 "rejected_count": len(documents) - grader_relevant_count,
-                "fallback_count": fallback_count,
+                "fallback_count": 0,
                 "documents": document_traces,
             },
         }
@@ -218,52 +211,80 @@ def retrieval_relevance_grading_node(
     return run
 
 
-def grade_document_relevance(
+def grade_document_batch(
     grader: Any,
     question: str,
-    document: RetrievedDocument,
-) -> RelevanceGrade:
-    """Grade one retrieved document against the original user question."""
+    documents: list[RetrievedDocument],
+) -> list[RelevanceDecision]:
+    """Grade and validate a complete retrieved-document batch."""
 
     response = grader.invoke(
         build_relevance_grading_messages(
             question=question,
-            document=document,
+            documents=documents,
         )
     )
+    batch_grade = RelevanceBatchGrade.model_validate(response)
+    validate_batch_decision_indices(batch_grade.decisions, len(documents))
+    return batch_grade.decisions
 
-    return RelevanceGrade.model_validate(response)
+
+def validate_batch_decision_indices(
+    decisions: list[RelevanceDecision],
+    document_count: int,
+) -> None:
+    """Require exactly one in-range decision for every input document."""
+
+    indices = [decision.index for decision in decisions]
+    expected_indices = set(range(document_count))
+    if len(indices) != document_count or set(indices) != expected_indices:
+        raise ValueError(
+            "Malformed relevance batch indices: "
+            f"expected {sorted(expected_indices)}, received {indices}"
+        )
 
 
 def build_relevance_grading_messages(
     question: str,
-    document: RetrievedDocument,
+    documents: list[RetrievedDocument],
 ) -> list[Any]:
-    """Build messages used to grade one retrieved document."""
+    """Build one prompt containing the complete indexed document batch."""
 
     # pyrefly: ignore [missing-import]
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    metadata = format_relevance_metadata(document.metadata)
-
-    metadata_section = (
-        f"\nInformación normativa del documento:\n{metadata}\n"
-        if metadata
-        else ""
+    document_sections = "\n\n".join(
+        format_indexed_document(index, document)
+        for index, document in enumerate(documents)
     )
 
     human_content = (
         f"Pregunta original del usuario:\n"
         f"{question}\n"
-        f"{metadata_section}\n"
-        f"Documento recuperado:\n"
-        f"{document.document}"
+        f"\nDocumentos recuperados con índice de base cero:\n"
+        f"{document_sections}\n\n"
+        f"Evalúa únicamente relevancia y devuelve decisiones para todos los índices. "
+        f"No agregues texto fuera del objeto JSON."
     )
 
     return [
         SystemMessage(content=RETRIEVAL_RELEVANCE_SYSTEM_PROMPT),
         HumanMessage(content=human_content),
     ]
+
+
+def format_indexed_document(index: int, document: RetrievedDocument) -> str:
+    """Format one indexed document with its relevance metadata and content."""
+
+    metadata = format_relevance_metadata(document.metadata)
+    metadata_section = metadata if metadata else "- Sin metadatos normativos disponibles"
+    return (
+        f"[DOCUMENTO {index}]\n"
+        f"Índice: {index}\n"
+        f"Metadatos:\n{metadata_section}\n"
+        f"Contenido:\n{document.document}\n"
+        f"[FIN DOCUMENTO {index}]"
+    )
 
 
 def format_relevance_metadata(metadata: dict[str, Any]) -> str:
@@ -315,15 +336,16 @@ def build_document_trace(
 def relevance_grading_fallback(
     documents: list[RetrievedDocument],
     error: Exception,
+    reason: str = "Documento conservado por política fail-open porque el grader no pudo configurarse.",
 ) -> RagGraphState:
-    """Preserve all documents when the relevance grader cannot be initialized."""
+    """Preserve all documents when relevance grading fails technically."""
 
     document_traces = [
         build_document_trace(
             index=index,
             document=document,
             relevant=True,
-            reason="Documento conservado por política fail-open porque el grader no pudo configurarse.",
+            reason=reason,
             fallback=True,
             error=type(error).__name__,
         )

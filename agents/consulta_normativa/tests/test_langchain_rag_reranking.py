@@ -176,20 +176,20 @@ class LangChainRagRerankingTest(unittest.TestCase):
 
     def test_get_reranker_imports_cross_encoder_lazily_and_caches_instance(self) -> None:
         get_reranker.cache_clear()
-        calls: list[tuple[str, int]] = []
+        calls: list[tuple[str, int, str]] = []
 
         class FakeCrossEncoder:
-            def __init__(self, model_name: str, max_length: int) -> None:
-                calls.append((model_name, max_length))
+            def __init__(self, model_name: str, max_length: int, device: str) -> None:
+                calls.append((model_name, max_length, device))
 
         fake_module = types.SimpleNamespace(CrossEncoder=FakeCrossEncoder)
 
         with patch.dict(sys.modules, {"sentence_transformers": fake_module}):
-            first = get_reranker("fake-model", 128)
-            second = get_reranker("fake-model", 128)
+            first = get_reranker("fake-model", 128, "cpu")
+            second = get_reranker("fake-model", 128, "cpu")
 
         self.assertIs(first, second)
-        self.assertEqual(calls, [("fake-model", 128)])
+        self.assertEqual(calls, [("fake-model", 128, "cpu")])
 
 
 class FakeReranker:
@@ -199,7 +199,13 @@ class FakeReranker:
         self.scores = scores
         self.pairs: list[tuple[str, str]] = []
 
-    def predict(self, pairs: list[tuple[str, str]]) -> list[float]:
+    def predict(
+        self,
+        pairs: list[tuple[str, str]],
+        *,
+        batch_size: int,
+        show_progress_bar: bool,
+    ) -> list[float]:
         self.pairs = pairs
         return self.scores
 
@@ -207,7 +213,13 @@ class FakeReranker:
 class FailingReranker:
     """Fake CrossEncoder-like reranker that fails during scoring."""
 
-    def predict(self, pairs: list[tuple[str, str]]) -> list[float]:
+    def predict(
+        self,
+        pairs: list[tuple[str, str]],
+        *,
+        batch_size: int,
+        show_progress_bar: bool,
+    ) -> list[float]:
         raise RuntimeError("predict failed")
 
 

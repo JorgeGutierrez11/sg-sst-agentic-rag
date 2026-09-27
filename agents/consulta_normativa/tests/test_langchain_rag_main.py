@@ -171,6 +171,7 @@ class LangChainRagMainTest(unittest.TestCase):
         graph = FakeDrawableGraph()
 
         def fake_build_langgraph_rag(
+            *,
             llm: object,
             retriever: object,
             top_k: int,
@@ -180,7 +181,9 @@ class LangChainRagMainTest(unittest.TestCase):
                 "graph:"
                 f"{llm}:{retriever}:{top_k}:"
                 f"{kwargs['reranker']}:{kwargs['reranker_candidate_pool_size']}:"
-                f"{kwargs['reranker_final_top_k']}:{kwargs['parent_lookup']}"
+                f"{kwargs['reranker_final_top_k']}:{kwargs['reranker_batch_size']}:"
+                f"{kwargs['reranker_device']}:{kwargs['reranker_input_max_length']}:"
+                f"{kwargs['parent_lookup']}"
             )
             return graph
 
@@ -191,8 +194,8 @@ class LangChainRagMainTest(unittest.TestCase):
             open_existing_collection=fake_open_existing_collection,
             open_existing_bm25_index=fake_open_existing_index,
             hybrid_retriever=fake_hybrid_retriever,
-            get_reranker=lambda model_name, max_length: calls.append(
-                f"reranker:{model_name}:{max_length}"
+            get_reranker=lambda model_name, max_length, device: calls.append(
+                f"reranker:{model_name}:{max_length}:{device}"
             )
             or "reranker",
         )
@@ -207,12 +210,13 @@ class LangChainRagMainTest(unittest.TestCase):
             [
                 f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
                 "index",
-                f"retriever:collection:index:{cli.HYBRID_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
-                f"reranker:{cli.RERANKER_MODEL_NAME}:{cli.RERANKER_MAX_LENGTH}",
+                f"retriever:collection:index:{cli.HYBRID_SOURCE_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
+                f"reranker:{cli.RERANKER_MODEL_NAME}:{cli.RERANKER_MAX_LENGTH}:{cli.RERANKER_DEVICE}",
                 f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
                 "graph:llm:hybrid-retriever:"
-                f"{cli.RERANKER_CANDIDATE_POOL_SIZE}:reranker:"
+                f"{cli.HYBRID_RRF_OUTPUT_TOP_K}:reranker:"
                 f"{cli.RERANKER_CANDIDATE_POOL_SIZE}:{cli.RERANKER_FINAL_TOP_K}:"
+                f"{cli.RERANKER_BATCH_SIZE}:{cli.RERANKER_DEVICE}:{cli.RERANKER_MAX_LENGTH}:"
                 "{'parent-1': 'parent'}",
             ],
         )
@@ -257,7 +261,7 @@ class LangChainRagMainTest(unittest.TestCase):
             load_parent_documents=load_parent_documents or (lambda path: {}),
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
             open_existing_bm25_index=open_existing_bm25_index or (lambda: object()),
-            get_reranker=get_reranker or (lambda model_name, max_length: object()),
+            get_reranker=get_reranker or (lambda model_name, max_length, device: object()),
         )
 
     @contextmanager

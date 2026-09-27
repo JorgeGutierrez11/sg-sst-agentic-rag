@@ -1,5 +1,7 @@
 """LangGraph RAG flow for normative consultation."""
 
+import json
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -10,7 +12,13 @@ from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
 from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
-from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCTIONS, build_base_prompt, build_human_prompt
+from agents.consulta_normativa.langchain_rag.prompts import (
+    BASE_SYSTEM_INSTRUCTIONS,
+    FALLBACK_PROMPT,
+    build_base_prompt,
+    build_fallback_diagnostic_message,
+    build_human_prompt,
+)
 
 # importar nodo de perfil de negocio y nodo de historial de conversación
 from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
@@ -27,6 +35,9 @@ from agents.consulta_normativa.langchain_rag.business_context.techniques.retriev
 from agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading import (retrieval_relevance_grading_node)
 
 Retriever = Callable[[str, int], dict[str, Any]]
+logger = logging.getLogger(__name__)
+
+DETERMINISTIC_NO_EVIDENCE_ANSWER = "La evidencia recuperada es insuficiente para responder la pregunta."
 
 # se agregó checkpointer: Any | None = None, para permitir la integración con un sistema de checkpointing y store: Any | None = None, para permitir la integración con un sistema de almacenamiento de memoria a largo plazo.
 def build_langgraph_rag(
@@ -38,6 +49,9 @@ def build_langgraph_rag(
     reranker: Any | None = None,
     reranker_candidate_pool_size: int = 40,
     reranker_final_top_k: int = DEFAULT_TOP_K,
+    reranker_batch_size: int = 32,
+    reranker_device: str = "cpu",
+    reranker_input_max_length: int = 512,
     parent_lookup: dict[str, Any] | None = None,
 ) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
@@ -65,6 +79,9 @@ def build_langgraph_rag(
             reranker,
             reranker_candidate_pool_size,
             reranker_final_top_k,
+            batch_size=reranker_batch_size,
+            device=reranker_device,
+            input_max_length=reranker_input_max_length,
         ),
     )
 
@@ -81,7 +98,7 @@ def build_langgraph_rag(
     workflow.add_node("record_retrieval_trace",record_retrieval_trace_node)
 
 
-    workflow.add_node("fallback_answer", fallback_answer_node)
+    workflow.add_node("fallback_answer", fallback_answer_node(llm))
     workflow.add_node("format_context", format_context_node)
 
 
@@ -185,16 +202,43 @@ def normalize_documents_node(state: RagGraphState) -> RagGraphState:
     return {"documents": recovered_documents(state.get("raw_results", {}))}
 
 
-def fallback_answer_node(state: RagGraphState) -> RagGraphState:
-    """Return the deterministic manual fallback without invoking the LLM."""
-    context = "No se recuperó contexto."
+def fallback_answer_node(llm: Any) -> Callable[[RagGraphState], RagGraphState]:
+    """Build a node that explains missing evidence with the configured LLM."""
 
-    return {
-        "context": context,
-        "references": [],
-        "prompt": build_base_prompt(state["question"], context),
-        "answer": fallback_answer(context, []),
-    }
+    def run(state: RagGraphState) -> RagGraphState:
+        context = "No se recuperó contexto."
+        prompt = ""
+
+        try:
+            diagnostic_message = build_fallback_diagnostic_prompt(state)
+            prompt = f"{FALLBACK_PROMPT}\n\n{diagnostic_message}"
+            # pyrefly: ignore [missing-import]
+            from langchain_core.messages import HumanMessage, SystemMessage
+
+            answer = invoke_llm_text(
+                llm,
+                [
+                    SystemMessage(content=FALLBACK_PROMPT),
+                    HumanMessage(content=diagnostic_message),
+                ],
+            )
+        except Exception as error:
+            logger.error(
+                "Fallback LLM generation failed; returning deterministic response | error=%s",
+                type(error).__name__,
+            )
+            if not prompt:
+                prompt = build_base_prompt(state.get("question", ""), context)
+            answer = fallback_answer(context, [])
+
+        return {
+            "context": context,
+            "references": [],
+            "prompt": prompt,
+            "answer": answer,
+        }
+
+    return run
 
 
 def format_context_node(state: RagGraphState) -> RagGraphState:
@@ -251,11 +295,57 @@ def generate_answer_node(llm: Any) -> Callable[[RagGraphState], RagGraphState]:
     return run
 
 
+def build_fallback_diagnostic_prompt(state: RagGraphState) -> str:
+    """Build the untrusted fallback diagnostics message from allowed state fields."""
+
+    trace = state.get("relevance_grading_trace", {})
+    trace = trace if isinstance(trace, dict) else {}
+
+    documents = trace.get("documents", [])
+    documents = documents if isinstance(documents, list) else []
+
+    graded_documents = [
+        {
+            "index": document.get("index"),
+            "relevant": document.get("relevant"),
+            "reason": document.get("reason", ""),
+            "fallback": document.get("fallback", False),
+            "error": document.get("error"),
+        }
+        for document in documents
+        if isinstance(document, dict)
+    ]
+
+    query_expansion_trace = state.get("query_expansion_trace", {})
+    query_expansion_trace = query_expansion_trace if isinstance(query_expansion_trace, dict) else {}
+    
+    business_context = state.get("business_context", {})
+    business_context = business_context if isinstance(business_context, dict) else {}
+    
+    return build_fallback_diagnostic_message(
+        question=str(state.get("question", "")),
+        relevant_count=str(trace.get("relevant_count", 0)),
+        rejected_count=str(trace.get("rejected_count", 0)),
+        rejection_reasons=json.dumps(
+            [document["reason"] for document in graded_documents],
+            ensure_ascii=False,
+            default=str,
+        ),
+        graded_documents=json.dumps(
+            graded_documents, 
+            ensure_ascii=False, 
+            default=str
+        ),
+        query_expansion_error=str(query_expansion_trace.get("error") or ""),
+        business_context=str(business_context.get("current_context") or ""),
+    )
+
+
 def fallback_answer(context: str, references: list[str]) -> str:
-    """Replicate the manual deterministic fallback answer exactly."""
+    """Return the deterministic response used only when fallback generation fails."""
 
     if context == "No se recuperó contexto.":
-        return "La evidencia recuperada es insuficiente para responder la pregunta."
+        return DETERMINISTIC_NO_EVIDENCE_ANSWER
     return "\n".join(["Borrador fundamentado solo en el contexto recuperado:", context, "Referencias:", *references])
 
 

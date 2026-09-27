@@ -28,13 +28,14 @@ RRF_K = 60                              # K representa el coeficiente de pondera
 MULTIQUERY_RRF_TOP_K = DEFAULT_TOP_K    # Número de documentos a recuperar después de la fusión RRF.
 
 # Hybrid Retrieval.
-HYBRID_CANDIDATE_TOP_K = 40
+HYBRID_SOURCE_CANDIDATE_TOP_K = 60
+HYBRID_RRF_OUTPUT_TOP_K = 16
 HYBRID_RRF_K = RRF_K
 
 # Reranking with Cross-Encoder.
-RERANKER_MODEL_NAME = "BAAI/bge-reranker-v2-m3"    # Modelo de re-ranking con Cross-Encoder.
-RERANKER_MAX_LENGTH = 512                          # Longitud máxima (tokens) de los documentos a procesar por el modelo.
-RERANKER_FINAL_TOP_K = DEFAULT_TOP_K               # Número de documentos a recuperar después del re-ranking.
-
-# Este cambia acorde la tecnica elegida para mejorar la consulta.
-RERANKER_CANDIDATE_POOL_SIZE = 40   # Número de documentos candidatos a recuperar para el re-ranking.
+RERANKER_MODEL_NAME = "SINAI/ALIA-MrBERT-es-legal-administrative-reranker"
+RERANKER_DEVICE = "cpu"
+RERANKER_MAX_LENGTH = 512
+RERANKER_BATCH_SIZE = 8
+RERANKER_CANDIDATE_POOL_SIZE = HYBRID_RRF_OUTPUT_TOP_K
+RERANKER_FINAL_TOP_K = DEFAULT_TOP_K
