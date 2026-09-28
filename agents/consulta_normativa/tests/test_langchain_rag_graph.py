@@ -1,6 +1,7 @@
 """Tests for the final validation-branch LangGraph RAG flow."""
 
 import sys
+import textwrap
 import types
 import unittest
 from unittest.mock import patch
@@ -215,8 +216,9 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertNotIn(reason_marker, system_message.content)
         self.assertNotIn(error_marker, system_message.content)
         self.assertNotIn(business_marker, system_message.content)
+        normalized_diagnostics = textwrap.dedent(human_message.content).strip()
         self.assertEqual(
-            human_message.content,
+            normalized_diagnostics,
             f"""QUESTION:
 {question_marker}
 
@@ -251,7 +253,7 @@ BUSINESS_CONTEXT:
         ]
         actual_labels = [
             line.removesuffix(":")
-            for line in human_message.content.splitlines()
+            for line in normalized_diagnostics.splitlines()
             if line.endswith(":")
         ]
         self.assertEqual(actual_labels, expected_labels)

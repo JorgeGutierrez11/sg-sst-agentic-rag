@@ -1,0 +1,1826 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1600 1800"
+  width="1600"
+  height="1800"
+  font-family="'Segoe UI', Arial, sans-serif"
+>
+  <defs>
+    <!-- =========================================================
+         BACKGROUND / FILLS
+    ========================================================== -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0e1a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+
+    <!-- Formatting / state -->
+    <linearGradient id="blueNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a52"/>
+      <stop offset="100%" stop-color="#0d2237"/>
+    </linearGradient>
+
+    <!-- LLM -->
+    <linearGradient id="purpleNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b1d6e"/>
+      <stop offset="100%" stop-color="#1e0d38"/>
+    </linearGradient>
+
+    <!-- Retrieval -->
+    <linearGradient id="greenNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#143d14"/>
+      <stop offset="100%" stop-color="#0a2010"/>
+    </linearGradient>
+
+    <!-- Memory -->
+    <linearGradient id="memoryNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a2416"/>
+      <stop offset="100%" stop-color="#21140c"/>
+    </linearGradient>
+
+    <!-- Decision / grading - brown -->
+    <linearGradient id="decisionNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a2f1a"/>
+      <stop offset="100%" stop-color="#26170d"/>
+    </linearGradient>
+
+    <!-- Fallback -->
+    <linearGradient id="fallbackNode" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a1638"/>
+      <stop offset="100%" stop-color="#280b20"/>
+    </linearGradient>
+
+    <!-- =========================================================
+         ARROWS
+    ========================================================== -->
+    <marker
+      id="arrowBlue"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4a9eff"/>
+    </marker>
+
+    <marker
+      id="arrowGreen"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4ade80"/>
+    </marker>
+
+    <marker
+      id="arrowPurple"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c084fc"/>
+    </marker>
+
+    <marker
+      id="arrowOrange"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#c58b54"/>
+    </marker>
+
+    <marker
+      id="arrowFallback"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6"/>
+    </marker>
+
+    <marker
+      id="arrowMemory"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d97706"/>
+    </marker>
+
+    <marker
+      id="arrowGray"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+
+    <filter id="shadow">
+      <feDropShadow
+        dx="0"
+        dy="2"
+        stdDeviation="3"
+        flood-color="#000000"
+        flood-opacity="0.55"
+      />
+    </filter>
+
+    <!-- =========================================================
+         STYLES
+    ========================================================== -->
+    <style>
+      .section-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+      }
+
+      .node-title {
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .node-text {
+        font-size: 9px;
+        fill: #94a3b8;
+      }
+
+      .node-meta {
+        font-size: 8.3px;
+        fill: #64748b;
+      }
+
+      .sidebar-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        fill: #7dd3fc;
+      }
+
+      .sidebar-heading {
+        font-size: 8.8px;
+        font-weight: 700;
+        fill: #64748b;
+      }
+
+      .sidebar-text {
+        font-size: 8.2px;
+        fill: #94a3b8;
+      }
+
+      .sidebar-muted {
+        font-size: 8.1px;
+        fill: #64748b;
+      }
+
+      .flow-blue {
+        fill: none;
+        stroke: #4a9eff;
+        stroke-width: 1.7;
+        marker-end: url(#arrowBlue);
+      }
+
+      .flow-green {
+        fill: none;
+        stroke: #4ade80;
+        stroke-width: 1.7;
+        marker-end: url(#arrowGreen);
+      }
+
+      .flow-purple {
+        fill: none;
+        stroke: #c084fc;
+        stroke-width: 1.6;
+        marker-end: url(#arrowPurple);
+      }
+
+      .flow-orange {
+        fill: none;
+        stroke: #c58b54;
+        stroke-width: 1.7;
+        marker-end: url(#arrowOrange);
+      }
+
+      .flow-fallback {
+        fill: none;
+        stroke: #f472b6;
+        stroke-width: 1.7;
+        marker-end: url(#arrowFallback);
+      }
+
+      .flow-memory {
+        fill: none;
+        stroke: #d97706;
+        stroke-width: 1.6;
+        marker-end: url(#arrowMemory);
+      }
+
+      .flow-gray {
+        fill: none;
+        stroke: #6b7280;
+        stroke-width: 1.4;
+        marker-end: url(#arrowGray);
+      }
+
+      .soft-border {
+        fill: #0d1117;
+        stroke: #1e3a5f;
+        stroke-width: 1;
+      }
+    </style>
+  </defs>
+
+  <!-- =========================================================
+       BACKGROUND
+  ========================================================== -->
+  <rect width="1600" height="1800" fill="url(#bg)"/>
+
+  <!-- =========================================================
+       HEADER
+  ========================================================== -->
+  <text
+    x="800"
+    y="37"
+    text-anchor="middle"
+    font-size="22"
+    font-weight="700"
+    fill="#e2e8f0"
+    letter-spacing="0.8"
+  >
+    SG-SST RAG — Complete Execution Graph
+  </text>
+
+  <text
+    x="800"
+    y="59"
+    text-anchor="middle"
+    font-size="11"
+    fill="#64748b"
+  >
+    Complete LangGraph execution · Hybrid retrieval · Relevance routing · Memory · Fallback
+  </text>
+
+  <line
+    x1="50"
+    y1="72"
+    x2="1550"
+    y2="72"
+    stroke="#1e3a5f"
+    stroke-width="1"
+  />
+
+  <!-- =========================================================
+       LEFT SIDEBAR
+  ========================================================== -->
+  <rect
+    x="35"
+    y="92"
+    width="285"
+    height="985"
+    rx="10"
+    class="soft-border"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="177"
+    y="116"
+    text-anchor="middle"
+    class="sidebar-title"
+  >
+    GRAPH REFERENCE
+  </text>
+
+  <line
+    x1="52"
+    y1="126"
+    x2="303"
+    y2="126"
+    stroke="#1e3a5f"
+  />
+
+  <!-- NODE TYPES -->
+  <text
+    x="177"
+    y="146"
+    text-anchor="middle"
+    class="sidebar-heading"
+  >
+    NODE TYPES
+  </text>
+
+  <rect
+    x="55"
+    y="159"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#purpleNode)"
+    stroke="#7c3aed"
+  />
+  <text x="78" y="169" class="sidebar-text">
+    LLM / model processing
+  </text>
+
+  <rect
+    x="55"
+    y="180"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+  />
+  <text x="78" y="190" class="sidebar-text">
+    Retrieval / evidence processing
+  </text>
+
+  <rect
+    x="55"
+    y="201"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#memoryNode)"
+    stroke="#d97706"
+  />
+  <text x="78" y="211" class="sidebar-text">
+    Conversation memory
+  </text>
+
+  <rect
+    x="55"
+    y="222"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#decisionNode)"
+    stroke="#a16207"
+  />
+  <text x="78" y="232" class="sidebar-text">
+    Validation / decision
+  </text>
+
+  <rect
+    x="55"
+    y="243"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#blueNode)"
+    stroke="#3b82f6"
+  />
+  <text x="78" y="253" class="sidebar-text">
+    State / formatting
+  </text>
+
+  <rect
+    x="55"
+    y="264"
+    width="13"
+    height="13"
+    rx="2"
+    fill="url(#fallbackNode)"
+    stroke="#db2777"
+  />
+  <text x="78" y="274" class="sidebar-text">
+    Fallback / no grounded answer
+  </text>
+
+  <line
+    x1="52"
+    y1="294"
+    x2="303"
+    y2="294"
+    stroke="#1e3a5f"
+  />
+
+  <!-- GRAPH STRUCTURE -->
+  <text
+    x="177"
+    y="315"
+    text-anchor="middle"
+    class="sidebar-heading"
+  >
+    GRAPH STRUCTURE
+  </text>
+
+  <text x="55" y="336" class="sidebar-text">Entry:</text>
+  <text x="55" y="352" class="sidebar-muted">
+    business_profile
+  </text>
+
+  <text x="55" y="377" class="sidebar-text">
+    Sequential pipeline:
+  </text>
+
+  <text x="60" y="395" class="sidebar-muted">1 · business_profile</text>
+  <text x="60" y="410" class="sidebar-muted">2 · retrieval_long_term_memory</text>
+  <text x="60" y="425" class="sidebar-muted">3 · expand_query</text>
+  <text x="60" y="440" class="sidebar-muted">4 · retrieve</text>
+  <text x="60" y="455" class="sidebar-muted">5 · normalize_documents</text>
+  <text x="60" y="470" class="sidebar-muted">6 · rerank</text>
+  <text x="60" y="485" class="sidebar-muted">7 · expand_parent_documents</text>
+  <text x="60" y="500" class="sidebar-muted">8 · record_retrieval_trace</text>
+  <text x="60" y="515" class="sidebar-muted">9 · retrieval_relevance_grading</text>
+
+  <text x="55" y="539" class="sidebar-text">
+    Conditional route:
+  </text>
+
+  <text x="60" y="557" font-size="8.2" fill="#4ade80">
+    Evidence → format_context
+  </text>
+
+  <text x="60" y="573" font-size="8.2" fill="#f472b6">
+    No evidence → fallback_answer
+  </text>
+
+  <text x="55" y="598" class="sidebar-text">
+    Common final path:
+  </text>
+
+  <text x="60" y="616" class="sidebar-muted">
+    save_conversation_turn
+  </text>
+
+  <text x="60" y="631" class="sidebar-muted">
+    → store_long_term_memory
+  </text>
+
+  <text x="60" y="646" class="sidebar-muted">
+    → format_result → END
+  </text>
+
+  <line
+    x1="52"
+    y1="666"
+    x2="303"
+    y2="666"
+    stroke="#1e3a5f"
+  />
+
+  <!-- KEY STATE -->
+  <text
+    x="177"
+    y="688"
+    text-anchor="middle"
+    class="sidebar-heading"
+  >
+    KEY STATE FIELDS
+  </text>
+
+  <text x="55" y="709" font-size="8.2" fill="#4a9eff">question</text>
+  <text x="137" y="709" class="sidebar-muted">user input</text>
+
+  <text x="55" y="726" font-size="8.2" fill="#4a9eff">business_context</text>
+  <text x="162" y="726" class="sidebar-muted">company + memory</text>
+
+  <text x="55" y="743" font-size="8.2" fill="#4a9eff">retrieval_query</text>
+  <text x="147" y="743" class="sidebar-muted">expanded query</text>
+
+  <text x="55" y="760" font-size="8.2" fill="#4a9eff">raw_results</text>
+  <text x="137" y="760" class="sidebar-muted">hybrid retrieval output</text>
+
+  <text x="55" y="777" font-size="8.2" fill="#4a9eff">documents</text>
+  <text x="128" y="777" class="sidebar-muted">validated documents</text>
+
+  <text x="55" y="794" font-size="8.2" fill="#4a9eff">context</text>
+  <text x="115" y="794" class="sidebar-muted">normative context</text>
+
+  <text x="55" y="811" font-size="8.2" fill="#4a9eff">messages</text>
+  <text x="123" y="811" class="sidebar-muted">LLM messages</text>
+
+  <text x="55" y="828" font-size="8.2" fill="#4a9eff">answer</text>
+  <text x="108" y="828" class="sidebar-muted">generated response</text>
+
+  <text x="55" y="845" font-size="8.2" fill="#4a9eff">result</text>
+  <text x="101" y="845" class="sidebar-muted">LangChainRagResult</text>
+
+  <text x="55" y="868" class="sidebar-muted">
+    Traces:
+  </text>
+
+  <text x="60" y="884" class="sidebar-muted">
+    query expansion · reranking
+  </text>
+
+  <text x="60" y="899" class="sidebar-muted">
+    relevance grading · retrieval
+  </text>
+
+  <line
+    x1="52"
+    y1="918"
+    x2="303"
+    y2="918"
+    stroke="#1e3a5f"
+  />
+
+  <!-- NOT WIRED -->
+  <text
+    x="177"
+    y="939"
+    text-anchor="middle"
+    class="sidebar-heading"
+  >
+    DEFINED BUT NOT WIRED
+  </text>
+
+  <text x="55" y="959" class="sidebar-muted">
+    sufficient_context_route()
+  </text>
+
+  <text x="55" y="976" class="sidebar-muted">
+    SufficientContextGate
+  </text>
+
+  <text x="55" y="993" class="sidebar-muted">
+    self_refine_trace
+  </text>
+
+  <text x="55" y="1010" class="sidebar-muted">
+    query_rewrite_trace
+  </text>
+
+  <text x="55" y="1027" class="sidebar-muted">
+    multi_query experimental state
+  </text>
+
+  <text
+    x="55"
+    y="1052"
+    font-size="8"
+    fill="#c58b54"
+  >
+    These fields do not alter the
+  </text>
+
+  <text
+    x="55"
+    y="1067"
+    font-size="8"
+    fill="#c58b54"
+  >
+    execution graph shown here.
+  </text>
+
+  <!-- =========================================================
+       RIGHT SIDEBAR
+  ========================================================== -->
+  <rect
+    x="1280"
+    y="92"
+    width="285"
+    height="780"
+    rx="10"
+    class="soft-border"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="1422"
+    y="116"
+    text-anchor="middle"
+    class="sidebar-title"
+  >
+    PROMPTS &amp; LLM USAGE
+  </text>
+
+  <line
+    x1="1297"
+    y1="126"
+    x2="1548"
+    y2="126"
+    stroke="#1e3a5f"
+  />
+
+  <!-- BUSINESS PROFILE -->
+  <text
+    x="1422"
+    y="151"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#c084fc"
+  >
+    Company profile
+  </text>
+
+  <text x="1300" y="169" class="sidebar-text">
+    Identifies information about
+  </text>
+
+  <text x="1300" y="184" class="sidebar-text">
+    the company mentioned by the user.
+  </text>
+
+  <text x="1300" y="202" class="sidebar-muted">
+    Recognizes activity, CIIU,
+  </text>
+
+  <text x="1300" y="217" class="sidebar-muted">
+    workers and risk class.
+  </text>
+
+  <line x1="1298" y1="237" x2="1547" y2="237" stroke="#1e293b"/>
+
+  <!-- QUERY EXPANSION -->
+  <text
+    x="1422"
+    y="258"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#c084fc"
+  >
+    Query expansion
+  </text>
+
+  <text x="1300" y="276" class="sidebar-text">
+    Enriches the user's question
+  </text>
+
+  <text x="1300" y="291" class="sidebar-text">
+    with useful SG-SST terminology.
+  </text>
+
+  <text x="1300" y="309" class="sidebar-muted">
+    Helps the search find documents
+  </text>
+
+  <text x="1300" y="324" class="sidebar-muted">
+    even when different wording is used.
+  </text>
+
+  <line x1="1298" y1="344" x2="1547" y2="344" stroke="#1e293b"/>
+
+  <!-- RELEVANCE -->
+  <text
+    x="1422"
+    y="365"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#c084fc"
+  >
+    Evidence validation
+  </text>
+
+  <text x="1300" y="383" class="sidebar-text">
+    Reviews the retrieved documents
+  </text>
+
+  <text x="1300" y="398" class="sidebar-text">
+    before they are used in the answer.
+  </text>
+
+  <text x="1300" y="416" class="sidebar-muted">
+    Keeps only information related
+  </text>
+
+  <text x="1300" y="431" class="sidebar-muted">
+    to the user's actual question.
+  </text>
+
+  <line x1="1298" y1="451" x2="1547" y2="451" stroke="#1e293b"/>
+
+  <!-- ANSWER GENERATION -->
+  <text
+    x="1422"
+    y="472"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#c084fc"
+  >
+    Answer generation
+  </text>
+
+  <text x="1300" y="490" class="sidebar-text">
+    Builds the final response using
+  </text>
+
+  <text x="1300" y="505" class="sidebar-text">
+    only the validated evidence.
+  </text>
+
+  <text x="1300" y="523" class="sidebar-muted">
+    Company context is included when
+  </text>
+
+  <text x="1300" y="538" class="sidebar-muted">
+    it helps personalize the answer.
+  </text>
+
+  <line x1="1298" y1="558" x2="1547" y2="558" stroke="#1e293b"/>
+
+  <!-- FALLBACK -->
+  <text
+    x="1422"
+    y="579"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#f472b6"
+  >
+    Fallback explanation
+  </text>
+
+  <text x="1300" y="597" class="sidebar-text">
+    Explains why the assistant could
+  </text>
+
+  <text x="1300" y="612" class="sidebar-text">
+    not provide a reliable answer.
+  </text>
+
+  <text x="1300" y="630" class="sidebar-muted">
+    It may identify missing evidence,
+  </text>
+
+  <text x="1300" y="645" class="sidebar-muted">
+    an unrelated question or an error.
+  </text>
+
+  <text x="1300" y="663" font-size="8.1" fill="#f472b6">
+    If generation fails, a safe
+  </text>
+
+  <text x="1300" y="678" font-size="8.1" fill="#f472b6">
+    predefined response is returned.
+  </text>
+
+  <line x1="1298" y1="698" x2="1547" y2="698" stroke="#1e293b"/>
+
+  <!-- MEMORY -->
+  <text
+    x="1422"
+    y="719"
+    text-anchor="middle"
+    font-size="9"
+    font-weight="700"
+    fill="#d97706"
+  >
+    Conversation context
+  </text>
+
+  <text x="1300" y="737" class="sidebar-text">
+    Adds useful information from the
+  </text>
+
+  <text x="1300" y="752" class="sidebar-text">
+    current and previous conversation.
+  </text>
+
+  <text x="1300" y="770" class="sidebar-muted">
+    Helps maintain continuity without
+  </text>
+
+  <text x="1300" y="785" class="sidebar-muted">
+    requiring the user to repeat details.
+  </text>
+
+  <line x1="1298" y1="805" x2="1547" y2="805" stroke="#1e293b"/>
+
+  <text
+    x="1422"
+    y="826"
+    text-anchor="middle"
+    class="sidebar-heading"
+  >
+    LANGUAGE MODEL
+  </text>
+
+  <text
+    x="1422"
+    y="846"
+    text-anchor="middle"
+    font-size="9"
+    fill="#c084fc"
+  >
+    DeepSeek
+  </text>
+
+  <text
+    x="1422"
+    y="862"
+    text-anchor="middle"
+    class="sidebar-muted"
+  >
+    Supports understanding, validation
+  </text>
+
+  <text
+    x="1422"
+    y="877"
+    text-anchor="middle"
+    class="sidebar-muted"
+  >
+    and response generation.
+  </text>
+
+  <!-- =========================================================
+       MAIN FLOW
+  ========================================================== -->
+  <text
+    x="800"
+    y="102"
+    text-anchor="middle"
+    class="section-label"
+    fill="#60a5fa"
+  >
+    ONLINE EXECUTION FLOW
+  </text>
+
+  <!-- ENTRY -->
+  <rect
+    x="560"
+    y="118"
+    width="480"
+    height="58"
+    rx="29"
+    fill="#0d2237"
+    stroke="#4a9eff"
+    stroke-width="2"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="141"
+    text-anchor="middle"
+    font-size="11"
+    font-weight="700"
+    fill="#7dd3fc"
+  >
+    graph.invoke({"question": "..."})
+  </text>
+
+  <text
+    x="800"
+    y="159"
+    text-anchor="middle"
+    class="node-text"
+  >
+    Initialize RagGraphState · Resolve conversation thread_id
+  </text>
+
+  <path d="M800 176 V198" class="flow-blue"/>
+
+  <!-- =========================================================
+       1 BUSINESS PROFILE
+  ========================================================== -->
+  <rect
+    x="565"
+    y="200"
+    width="470"
+    height="76"
+    rx="9"
+    fill="url(#purpleNode)"
+    stroke="#7c3aed"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="222"
+    text-anchor="middle"
+    class="node-title"
+    fill="#c084fc"
+  >
+    ① business_profile
+  </text>
+
+  <text x="800" y="241" text-anchor="middle" class="node-text">
+    Extract explicit company information from the current question
+  </text>
+
+  <text x="800" y="257" text-anchor="middle" class="node-meta">
+    CIIU · economic activity · worker count · risk class
+  </text>
+
+  <text x="800" y="269" text-anchor="middle" class="node-meta">
+    Writes → business_context.profile
+  </text>
+
+  <rect
+    x="1055"
+    y="209"
+    width="185"
+    height="58"
+    rx="6"
+    fill="#0d1117"
+    stroke="#374151"
+    stroke-dasharray="4 3"
+  />
+
+  <text
+    x="1147"
+    y="229"
+    text-anchor="middle"
+    font-size="8.7"
+    font-weight="700"
+    fill="#60a5fa"
+  >
+    STATE UPDATE
+  </text>
+
+  <text x="1147" y="247" text-anchor="middle" class="node-meta">
+    profile: BusinessProfile
+  </text>
+
+  <text x="1147" y="261" text-anchor="middle" class="node-meta">
+    inside business_context
+  </text>
+
+  <line
+    x1="1035"
+    y1="238"
+    x2="1055"
+    y2="238"
+    stroke="#475569"
+    stroke-dasharray="3 3"
+  />
+
+  <path d="M800 276 V298" class="flow-blue"/>
+
+  <!-- =========================================================
+       2 MEMORY
+  ========================================================== -->
+  <rect
+    x="545"
+    y="300"
+    width="510"
+    height="88"
+    rx="9"
+    fill="url(#memoryNode)"
+    stroke="#d97706"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="323"
+    text-anchor="middle"
+    class="node-title"
+    fill="#f59e0b"
+  >
+    ② retrieval_long_term_memory
+  </text>
+
+  <text x="800" y="343" text-anchor="middle" class="node-text">
+    Search previous conversation turns relevant to the current question
+  </text>
+
+  <text x="800" y="359" text-anchor="middle" class="node-meta">
+    InMemoryStore · Qwen embeddings · top 3 memories
+  </text>
+
+  <text x="800" y="375" text-anchor="middle" class="node-meta">
+    Safe fallback: no store or thread → empty retrieved memory
+  </text>
+
+  <rect
+    x="1075"
+    y="310"
+    width="175"
+    height="68"
+    rx="6"
+    fill="#0d1117"
+    stroke="#374151"
+    stroke-dasharray="4 3"
+  />
+
+  <text
+    x="1162"
+    y="328"
+    text-anchor="middle"
+    font-size="8.7"
+    font-weight="700"
+    fill="#60a5fa"
+  >
+    STATE UPDATE
+  </text>
+
+  <text x="1162" y="345" text-anchor="middle" class="node-meta">
+    retrieved_memories[]
+  </text>
+
+  <text x="1162" y="360" text-anchor="middle" class="node-meta">
+    current_context
+  </text>
+
+  <line
+    x1="1055"
+    y1="344"
+    x2="1075"
+    y2="344"
+    stroke="#475569"
+    stroke-dasharray="3 3"
+  />
+
+  <path d="M800 388 V410" class="flow-blue"/>
+
+  <!-- =========================================================
+       3 QUERY EXPANSION
+  ========================================================== -->
+  <rect
+    x="565"
+    y="412"
+    width="470"
+    height="78"
+    rx="9"
+    fill="url(#purpleNode)"
+    stroke="#7c3aed"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="435"
+    text-anchor="middle"
+    class="node-title"
+    fill="#c084fc"
+  >
+    ③ expand_query
+  </text>
+
+  <text x="800" y="454" text-anchor="middle" class="node-text">
+    Add normative and technical terms that may improve retrieval
+  </text>
+
+  <text x="800" y="470" text-anchor="middle" class="node-meta">
+    Maximum 6 terms · structured QueryExpansionOutput
+  </text>
+
+  <text x="800" y="483" text-anchor="middle" class="node-meta">
+    On failure → use the original question as retrieval_query
+  </text>
+
+  <path d="M800 490 V512" class="flow-blue"/>
+
+  <!-- =========================================================
+       4 RETRIEVAL
+  ========================================================== -->
+  <rect
+    x="565"
+    y="514"
+    width="470"
+    height="70"
+    rx="9"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="536"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    ④ retrieve · Hybrid Retriever
+  </text>
+
+  <text x="800" y="555" text-anchor="middle" class="node-text">
+    Search the normative corpus using dense and sparse retrieval
+  </text>
+
+  <text x="800" y="571" text-anchor="middle" class="node-meta">
+    Both retrieval branches execute independently before fusion
+  </text>
+
+  <path
+    d="M800 584 V606"
+    fill="none"
+    stroke="#4ade80"
+    stroke-width="1.7"
+  />
+
+  <line
+    x1="610"
+    y1="606"
+    x2="990"
+    y2="606"
+    stroke="#4ade80"
+    stroke-width="1.7"
+  />
+
+  <path d="M610 606 V625" class="flow-green"/>
+  <path d="M990 606 V625" class="flow-green"/>
+
+  <!-- CHROMA -->
+  <rect
+    x="470"
+    y="628"
+    width="280"
+    height="80"
+    rx="8"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.5"
+  />
+
+  <text
+    x="610"
+    y="650"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    ChromaDB · Dense Retrieval
+  </text>
+
+  <text x="610" y="669" text-anchor="middle" class="node-text">
+    Semantic similarity using Qwen embeddings
+  </text>
+
+  <text x="610" y="686" text-anchor="middle" class="node-meta">
+    candidate_top_k = 60
+  </text>
+
+  <text x="610" y="700" text-anchor="middle" class="node-meta">
+    cosine similarity
+  </text>
+
+  <!-- BM25 -->
+  <rect
+    x="850"
+    y="628"
+    width="280"
+    height="80"
+    rx="8"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.5"
+  />
+
+  <text
+    x="990"
+    y="650"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    BM25 · Sparse Retrieval
+  </text>
+
+  <text x="990" y="669" text-anchor="middle" class="node-text">
+    Lexical matching with BM25Okapi
+  </text>
+
+  <text x="990" y="686" text-anchor="middle" class="node-meta">
+    candidate_top_k = 60
+  </text>
+
+  <text x="990" y="700" text-anchor="middle" class="node-meta">
+    token / keyword relevance
+  </text>
+
+  <!-- Converge -->
+  <path
+    d="M610 708 V728 H800"
+    fill="none"
+    stroke="#4ade80"
+    stroke-width="1.7"
+  />
+
+  <path
+    d="M990 708 V728 H800"
+    fill="none"
+    stroke="#4ade80"
+    stroke-width="1.7"
+  />
+
+  <path d="M800 728 V745" class="flow-green"/>
+
+  <!-- RRF -->
+  <rect
+    x="600"
+    y="748"
+    width="400"
+    height="66"
+    rx="8"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.6"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="770"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    Reciprocal Rank Fusion · RRF
+  </text>
+
+  <text x="800" y="789" text-anchor="middle" class="node-text">
+    Merge dense + sparse rankings into a single candidate list
+  </text>
+
+  <text x="800" y="805" text-anchor="middle" class="node-meta">
+    k = 60 · output top 16 · preserve retrieval source metadata
+  </text>
+
+  <path d="M800 814 V836" class="flow-green"/>
+
+  <!-- =========================================================
+       5 NORMALIZATION
+  ========================================================== -->
+  <rect
+    x="610"
+    y="838"
+    width="380"
+    height="62"
+    rx="8"
+    fill="url(#blueNode)"
+    stroke="#3b82f6"
+    stroke-width="1.7"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="860"
+    text-anchor="middle"
+    class="node-title"
+    fill="#60a5fa"
+  >
+    ⑤ normalize_documents
+  </text>
+
+  <text x="800" y="879" text-anchor="middle" class="node-text">
+    Convert raw retriever output into RetrievedDocument[]
+  </text>
+
+  <text x="800" y="893" text-anchor="middle" class="node-meta">
+    Standardizes document text and metadata
+  </text>
+
+  <path d="M800 900 V922" class="flow-blue"/>
+
+  <!-- =========================================================
+       6 RERANK
+  ========================================================== -->
+  <rect
+    x="565"
+    y="924"
+    width="470"
+    height="76"
+    rx="9"
+    fill="url(#purpleNode)"
+    stroke="#7c3aed"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="946"
+    text-anchor="middle"
+    class="node-title"
+    fill="#c084fc"
+  >
+    ⑥ rerank
+  </text>
+
+  <text x="800" y="965" text-anchor="middle" class="node-text">
+    ALIA-MrBERT legal cross-encoder reorders the 16 candidates
+  </text>
+
+  <text x="800" y="982" text-anchor="middle" class="node-meta">
+    batch 8 · max length 512 · CPU · retain top 8
+  </text>
+
+  <text x="800" y="995" text-anchor="middle" class="node-meta">
+    On model failure → preserve incoming candidate order
+  </text>
+
+  <path d="M800 1000 V1022" class="flow-purple"/>
+
+  <!-- =========================================================
+       7 PARENT EXPANSION
+  ========================================================== -->
+  <rect
+    x="565"
+    y="1024"
+    width="470"
+    height="74"
+    rx="9"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="1046"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    ⑦ expand_parent_documents
+  </text>
+
+  <text x="800" y="1065" text-anchor="middle" class="node-text">
+    Replace selected child chunks with their broader parent documents
+  </text>
+
+  <text x="800" y="1082" text-anchor="middle" class="node-meta">
+    Lookup by parent_id · deduplicate repeated parents
+  </text>
+
+  <text x="800" y="1094" text-anchor="middle" class="node-meta">
+    Restores more complete normative context
+  </text>
+
+  <path d="M800 1098 V1120" class="flow-green"/>
+
+  <!-- =========================================================
+       8 TRACE
+  ========================================================== -->
+  <rect
+    x="625"
+    y="1122"
+    width="350"
+    height="56"
+    rx="8"
+    fill="url(#blueNode)"
+    stroke="#3b82f6"
+    stroke-width="1.5"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="1144"
+    text-anchor="middle"
+    class="node-title"
+    fill="#60a5fa"
+  >
+    ⑧ record_retrieval_trace
+  </text>
+
+  <text x="800" y="1162" text-anchor="middle" class="node-meta">
+    Record retrieval metrics and observability information
+  </text>
+
+  <path d="M800 1178 V1200" class="flow-blue"/>
+
+  <!-- =========================================================
+       9 GRADING / DECISION
+  ========================================================== -->
+  <rect
+    x="550"
+    y="1202"
+    width="500"
+    height="82"
+    rx="9"
+    fill="url(#decisionNode)"
+    stroke="#a16207"
+    stroke-width="1.9"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="1224"
+    text-anchor="middle"
+    class="node-title"
+    fill="#d6a66a"
+  >
+    ⑨ retrieval_relevance_grading
+  </text>
+
+  <text x="800" y="1243" text-anchor="middle" class="node-text">
+    Evaluate whether each retrieved document supports the user question
+  </text>
+
+  <text x="800" y="1260" text-anchor="middle" class="node-meta">
+    Structured output: relevant:boolean + reason:string
+  </text>
+
+  <text x="800" y="1275" text-anchor="middle" class="node-meta">
+    Grader failure policy: preserve evidence rather than discard everything
+  </text>
+
+  <path d="M800 1284 V1307" class="flow-orange"/>
+
+  <!-- =========================================================
+       EVIDENCE ROUTE
+  ========================================================== -->
+  <polygon
+    points="800,1310 900,1350 800,1390 700,1350"
+    fill="url(#decisionNode)"
+    stroke="#a16207"
+    stroke-width="2"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="1347"
+    text-anchor="middle"
+    font-size="10"
+    font-weight="700"
+    fill="#d6a66a"
+  >
+    Evidence available?
+  </text>
+
+  <text
+    x="800"
+    y="1363"
+    text-anchor="middle"
+    font-size="8.4"
+    fill="#94a3b8"
+  >
+    documents is not empty
+  </text>
+
+  <!-- =========================================================
+       LEFT: WITH EVIDENCE
+  ========================================================== -->
+  <path
+    d="M700 1350 H545 V1384"
+    fill="none"
+    stroke="#4ade80"
+    stroke-width="1.7"
+    marker-end="url(#arrowGreen)"
+  />
+
+  <text
+    x="610"
+    y="1339"
+    text-anchor="middle"
+    font-size="9"
+    fill="#4ade80"
+  >
+    with evidence
+  </text>
+
+  <rect
+    x="390"
+    y="1388"
+    width="310"
+    height="72"
+    rx="8"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.7"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="545"
+    y="1410"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    ⑩A format_context
+  </text>
+
+  <text x="545" y="1429" text-anchor="middle" class="node-text">
+    Build numbered normative context
+  </text>
+
+  <text x="545" y="1445" text-anchor="middle" class="node-meta">
+    Create references from validated documents
+  </text>
+
+  <path d="M545 1460 V1480" class="flow-green"/>
+
+  <rect
+    x="390"
+    y="1482"
+    width="310"
+    height="72"
+    rx="8"
+    fill="url(#blueNode)"
+    stroke="#3b82f6"
+    stroke-width="1.7"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="545"
+    y="1504"
+    text-anchor="middle"
+    class="node-title"
+    fill="#60a5fa"
+  >
+    ⑪A build_messages
+  </text>
+
+  <text x="545" y="1523" text-anchor="middle" class="node-text">
+    Combine instructions, evidence and
+  </text>
+
+  <text x="545" y="1538" text-anchor="middle" class="node-text">
+    available business context
+  </text>
+
+  <path d="M545 1554 V1574" class="flow-blue"/>
+
+  <rect
+    x="390"
+    y="1576"
+    width="310"
+    height="72"
+    rx="8"
+    fill="url(#purpleNode)"
+    stroke="#7c3aed"
+    stroke-width="1.7"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="545"
+    y="1598"
+    text-anchor="middle"
+    class="node-title"
+    fill="#c084fc"
+  >
+    ⑫A generate_answer
+  </text>
+
+  <text x="545" y="1617" text-anchor="middle" class="node-text">
+    Generate evidence-grounded response
+  </text>
+
+  <text x="545" y="1633" text-anchor="middle" class="node-meta">
+    DeepSeek · final answer string
+  </text>
+
+  <!-- =========================================================
+       RIGHT: FALLBACK
+  ========================================================== -->
+  <path
+    d="M900 1350 H1055 V1384"
+    fill="none"
+    stroke="#f472b6"
+    stroke-width="1.7"
+    marker-end="url(#arrowFallback)"
+  />
+
+  <text
+    x="990"
+    y="1339"
+    text-anchor="middle"
+    font-size="9"
+    fill="#f472b6"
+  >
+    without evidence
+  </text>
+
+  <rect
+    x="900"
+    y="1388"
+    width="310"
+    height="106"
+    rx="8"
+    fill="url(#fallbackNode)"
+    stroke="#db2777"
+    stroke-width="1.8"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="1055"
+    y="1412"
+    text-anchor="middle"
+    class="node-title"
+    fill="#f472b6"
+  >
+    ⑩B fallback_answer
+  </text>
+
+  <text x="1055" y="1433" text-anchor="middle" class="node-text">
+    Explain why a grounded answer
+  </text>
+
+  <text x="1055" y="1449" text-anchor="middle" class="node-text">
+    could not be generated
+  </text>
+
+  <text x="1055" y="1468" text-anchor="middle" class="node-meta">
+    Uses grading diagnostics and context
+  </text>
+
+  <text x="1055" y="1482" text-anchor="middle" class="node-meta">
+    LLM failure → deterministic fallback
+  </text>
+
+  <!-- =========================================================
+       MERGE
+  ========================================================== -->
+  <path
+    d="M545 1648 V1665 H800"
+    fill="none"
+    stroke="#c084fc"
+    stroke-width="1.5"
+  />
+
+  <path
+    d="M1055 1494 V1665 H800"
+    fill="none"
+    stroke="#f472b6"
+    stroke-width="1.5"
+  />
+
+  <circle
+    cx="800"
+    cy="1665"
+    r="7"
+    fill="#60a5fa"
+    stroke="#93c5fd"
+    stroke-width="1"
+  />
+
+  <path
+    d="M800 1672 V1690"
+    class="flow-blue"
+  />
+
+  <!-- =========================================================
+       FINAL PATH
+  ========================================================== -->
+  <rect
+    x="405"
+    y="1692"
+    width="245"
+    height="66"
+    rx="8"
+    fill="url(#blueNode)"
+    stroke="#3b82f6"
+    stroke-width="1.6"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="527"
+    y="1714"
+    text-anchor="middle"
+    class="node-title"
+    fill="#60a5fa"
+  >
+    ⑬ save_conversation_turn
+  </text>
+
+  <text x="527" y="1733" text-anchor="middle" class="node-text">
+    Append user / assistant turn
+  </text>
+
+  <text x="527" y="1748" text-anchor="middle" class="node-meta">
+    Update conversation history
+  </text>
+
+  <path
+    d="M800 1690 H527"
+    class="flow-blue"
+  />
+
+  <path
+    d="M650 1725 H675"
+    class="flow-memory"
+  />
+
+  <rect
+    x="678"
+    y="1692"
+    width="245"
+    height="66"
+    rx="8"
+    fill="url(#memoryNode)"
+    stroke="#d97706"
+    stroke-width="1.6"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="800"
+    y="1714"
+    text-anchor="middle"
+    class="node-title"
+    fill="#f59e0b"
+  >
+    ⑭ store_long_term_memory
+  </text>
+
+  <text x="800" y="1733" text-anchor="middle" class="node-text">
+    Index the completed turn
+  </text>
+
+  <text x="800" y="1748" text-anchor="middle" class="node-meta">
+    InMemoryStore · semantic memory
+  </text>
+
+  <path
+    d="M923 1725 H948"
+    class="flow-blue"
+  />
+
+  <rect
+    x="950"
+    y="1692"
+    width="245"
+    height="66"
+    rx="8"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.6"
+    filter="url(#shadow)"
+  />
+
+  <text
+    x="1072"
+    y="1714"
+    text-anchor="middle"
+    class="node-title"
+    fill="#4ade80"
+  >
+    ⑮ format_result
+  </text>
+
+  <text x="1072" y="1733" text-anchor="middle" class="node-text">
+    Build LangChainRagResult
+  </text>
+
+  <text x="1072" y="1748" text-anchor="middle" class="node-meta">
+    answer · references · metadata
+  </text>
+
+  <path
+    d="M1195 1725 H1225"
+    class="flow-green"
+  />
+
+  <rect
+    x="1228"
+    y="1703"
+    width="90"
+    height="44"
+    rx="22"
+    fill="url(#greenNode)"
+    stroke="#22c55e"
+    stroke-width="1.8"
+  />
+
+  <text
+    x="1273"
+    y="1730"
+    text-anchor="middle"
+    font-size="11"
+    font-weight="700"
+    fill="#4ade80"
+  >
+    END
+  </text>
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================== -->
+  <line
+    x1="40"
+    y1="1778"
+    x2="1560"
+    y2="1778"
+    stroke="#1e293b"
+  />
+
+  <text
+    x="800"
+    y="1794"
+    text-anchor="middle"
+    font-size="8.4"
+    fill="#475569"
+  >
+    Complete online flow: query understanding → hybrid retrieval → reranking → evidence validation → answer or fallback → memory → result
+  </text>
+</svg>

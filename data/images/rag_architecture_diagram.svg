@@ -1,0 +1,1132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-labelledby="rag-architecture-title rag-architecture-desc"
+  viewBox="0 0 1600 1120"
+>
+  <title id="rag-architecture-title">
+    SG-SST normative RAG technical architecture
+  </title>
+
+  <desc id="rag-architecture-desc">
+    Technical architecture showing interfaces, LangGraph orchestration,
+    local memory, hybrid retrieval infrastructure, local machine-learning
+    models, external DeepSeek services and the offline indexing pipeline.
+  </desc>
+
+  <defs>
+
+    <!-- =========================================================
+         BACKGROUND
+    ========================================================== -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d13"/>
+      <stop offset="55%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#121a24"/>
+    </linearGradient>
+
+    <!-- Interface / framework -->
+    <linearGradient id="blueCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#173b5d"/>
+      <stop offset="100%" stop-color="#0c243c"/>
+    </linearGradient>
+
+    <!-- RAG orchestration -->
+    <linearGradient id="graphCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#182a3e"/>
+      <stop offset="100%" stop-color="#0c1928"/>
+    </linearGradient>
+
+    <!-- Models -->
+    <linearGradient id="purpleCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a1c62"/>
+      <stop offset="100%" stop-color="#1c0c35"/>
+    </linearGradient>
+
+    <!-- Retrieval -->
+    <linearGradient id="greenCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#123d25"/>
+      <stop offset="100%" stop-color="#091f15"/>
+    </linearGradient>
+
+    <!-- Memory -->
+    <linearGradient id="memoryCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#42280f"/>
+      <stop offset="100%" stop-color="#241306"/>
+    </linearGradient>
+
+    <!-- Offline pipeline -->
+    <linearGradient id="offlineCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#35230c"/>
+      <stop offset="100%" stop-color="#1d1105"/>
+    </linearGradient>
+
+    <!-- =========================================================
+         SHADOW
+    ========================================================== -->
+    <filter id="shadow">
+      <feDropShadow
+        dx="0"
+        dy="3"
+        stdDeviation="5"
+        flood-color="#000000"
+        flood-opacity="0.55"
+      />
+    </filter>
+
+    <!-- =========================================================
+         ARROWS
+    ========================================================== -->
+    <marker
+      id="arrow-neutral"
+      markerWidth="8"
+      markerHeight="6"
+      refX="7"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 8 3, 0 6" fill="#cbd5e1"/>
+    </marker>
+
+    <marker
+      id="arrow-blue"
+      markerWidth="8"
+      markerHeight="6"
+      refX="7"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 8 3, 0 6" fill="#60a5fa"/>
+    </marker>
+
+    <marker
+      id="arrow-green"
+      markerWidth="8"
+      markerHeight="6"
+      refX="7"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 8 3, 0 6" fill="#4ade80"/>
+    </marker>
+
+    <marker
+      id="arrow-purple"
+      markerWidth="8"
+      markerHeight="6"
+      refX="7"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 8 3, 0 6" fill="#c084fc"/>
+    </marker>
+
+    <marker
+      id="arrow-amber"
+      markerWidth="8"
+      markerHeight="6"
+      refX="7"
+      refY="3"
+      orient="auto"
+    >
+      <polygon points="0 0, 8 3, 0 6" fill="#f59e0b"/>
+    </marker>
+
+    <!-- =========================================================
+         TYPOGRAPHY
+    ========================================================== -->
+    <style>
+      .title {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 32px;
+        font-weight: 400;
+        fill: #f8fafc;
+      }
+
+      .subtitle {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        fill: #a8b6c8;
+      }
+
+      .eyebrow {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        fill: #7dd3fc;
+      }
+
+      .zone-label {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        fill: #cbd5e1;
+      }
+
+      .node-title {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        fill: #f8fafc;
+      }
+
+      .node-copy {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        fill: #cbd5e1;
+      }
+
+      .tech {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        fill: #e2e8f0;
+      }
+
+      .tech-small {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        fill: #94a3b8;
+      }
+
+      .tag {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+      }
+
+      .arrow-label {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.35px;
+        fill: #cbd5e1;
+      }
+
+      .legend {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        fill: #cbd5e1;
+      }
+
+      .badge-text {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 9px;
+        font-weight: 700;
+      }
+
+      .model-name {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        fill: #e9d5ff;
+      }
+
+      .retrieval-tech {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        fill: #bbf7d0;
+      }
+
+      .framework-tech {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        fill: #bfdbfe;
+      }
+
+      .offline-tech {
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        fill: #fde68a;
+      }
+    </style>
+  </defs>
+
+  <!-- =========================================================
+       BACKGROUND
+  ========================================================== -->
+  <rect width="1600" height="1120" fill="url(#bgGrad)"/>
+
+  <!-- =========================================================
+       HEADER
+  ========================================================== -->
+  <text x="40" y="34" class="eyebrow">
+    CURRENT LOCAL ARCHITECTURE · TECHNICAL OVERVIEW
+  </text>
+
+  <text x="40" y="72" class="title">
+    SG-SST normative RAG architecture
+  </text>
+
+  <text x="40" y="96" class="subtitle">
+    Runtime technologies, AI models, retrieval infrastructure, communication boundaries and offline index construction.
+  </text>
+
+  <!-- =========================================================
+       ZONES
+  ========================================================== -->
+
+  <!-- Client -->
+  <rect
+    x="40"
+    y="112"
+    width="400"
+    height="620"
+    rx="8"
+    fill="#0b1621"
+    stroke="#315a83"
+    stroke-width="1"
+  />
+
+  <rect
+    x="52"
+    y="116"
+    width="172"
+    height="16"
+    rx="2"
+    fill="#0d1117"
+  />
+
+  <text x="60" y="128" class="zone-label">
+    CLIENT &amp; INTERFACES
+  </text>
+
+  <!-- Runtime -->
+  <rect
+    x="464"
+    y="112"
+    width="1096"
+    height="620"
+    rx="8"
+    fill="#0e151f"
+    stroke="#364b65"
+    stroke-width="1"
+  />
+
+  <rect
+    x="476"
+    y="116"
+    width="252"
+    height="16"
+    rx="2"
+    fill="#0d1117"
+  />
+
+  <text x="484" y="128" class="zone-label">
+    CURRENT LOCAL APPLICATION RUNTIME
+  </text>
+
+  <!-- Offline -->
+  <rect
+    x="40"
+    y="760"
+    width="1520"
+    height="280"
+    rx="8"
+    fill="#151008"
+    stroke="#92400e"
+    stroke-width="1"
+    stroke-dasharray="5 4"
+  />
+
+  <rect
+    x="52"
+    y="764"
+    width="232"
+    height="16"
+    rx="2"
+    fill="#0d1117"
+  />
+
+  <text x="60" y="776" class="zone-label">
+    OFFLINE CORPUS PIPELINE · LOCAL
+  </text>
+
+  <!-- =========================================================
+       CONNECTORS
+  ========================================================== -->
+  <line
+    x1="240"
+    y1="292"
+    x2="240"
+    y2="352"
+    stroke="#60a5fa"
+    stroke-width="1.5"
+    marker-end="url(#arrow-blue)"
+  />
+
+  <line
+    x1="408"
+    y1="416"
+    x2="520"
+    y2="416"
+    stroke="#60a5fa"
+    stroke-width="1.5"
+    marker-end="url(#arrow-blue)"
+  />
+
+  <line
+    x1="920"
+    y1="300"
+    x2="968"
+    y2="300"
+    stroke="#4ade80"
+    stroke-width="1.5"
+    marker-end="url(#arrow-green)"
+  />
+
+  <line
+    x1="680"
+    y1="484"
+    x2="680"
+    y2="548"
+    stroke="#d97706"
+    stroke-width="1.5"
+    marker-end="url(#arrow-amber)"
+  />
+
+  <path
+    d="M920 408 H944 Q952 408 952 416 V572 Q952 580 960 580 H968"
+    fill="none"
+    stroke="#c084fc"
+    stroke-width="1.5"
+    marker-end="url(#arrow-purple)"
+  />
+
+  <line
+    x1="1096"
+    y1="444"
+    x2="1096"
+    y2="500"
+    stroke="#c084fc"
+    stroke-width="1.5"
+    marker-end="url(#arrow-purple)"
+  />
+
+  <path
+    d="M920 452 H928 V708 Q928 716 936 716 H1376 Q1384 716 1384 708 V680"
+    fill="none"
+    stroke="#60a5fa"
+    stroke-width="1.5"
+    marker-end="url(#arrow-blue)"
+  />
+
+  <path
+    d="M1480 820 H1532 Q1540 820 1540 812 V388 Q1540 380 1532 380 H1512"
+    fill="none"
+    stroke="#f59e0b"
+    stroke-width="1.5"
+    marker-end="url(#arrow-amber)"
+  />
+
+  <!-- =========================================================
+       CONNECTOR LABELS
+  ========================================================== -->
+  <rect x="252" y="312" width="82" height="17" rx="3" fill="#111827" stroke="#315a83"/>
+  <text x="293" y="324" text-anchor="middle" class="arrow-label">
+    HTTP + JSON
+  </text>
+
+  <rect x="414" y="392" width="98" height="17" rx="3" fill="#111827" stroke="#315a83"/>
+  <text x="463" y="404" text-anchor="middle" class="arrow-label">
+    SHARED CALL
+  </text>
+
+  <rect x="836" y="508" width="106" height="17" rx="3" fill="#111827" stroke="#8a5208"/>
+  <text x="889" y="520" text-anchor="middle" class="arrow-label">
+    MEMORY VECTOR
+  </text>
+
+  <rect x="1098" y="456" width="108" height="17" rx="3" fill="#111827" stroke="#6d3ba1"/>
+  <text x="1152" y="468" text-anchor="middle" class="arrow-label">
+    EMBED + RERANK
+  </text>
+
+  <rect x="1123" y="692" width="90" height="17" rx="3" fill="#111827" stroke="#315a83"/>
+  <text x="1168" y="704" text-anchor="middle" class="arrow-label">
+    HTTPS API
+  </text>
+
+  <rect x="1448" y="732" width="88" height="17" rx="3" fill="#111827" stroke="#92400e"/>
+  <text x="1492" y="744" text-anchor="middle" class="arrow-label">
+    LOCAL FILES
+  </text>
+
+  <!-- =========================================================
+       CLIENT
+  ========================================================== -->
+  <rect
+    x="72"
+    y="180"
+    width="336"
+    height="112"
+    rx="7"
+    fill="url(#blueCard)"
+    stroke="#3b82f6"
+    stroke-width="1.4"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="84"
+    y="192"
+    width="55"
+    height="16"
+    rx="3"
+    fill="#172554"
+    stroke="#60a5fa"
+  />
+
+  <text x="111" y="203" text-anchor="middle" class="tag" fill="#93c5fd">
+    CLIENT
+  </text>
+
+  <text x="92" y="230" class="node-title">
+    Browser / HTTP client
+  </text>
+
+  <text x="92" y="252" class="node-copy">
+    No implemented frontend
+  </text>
+
+  <text x="92" y="273" class="framework-tech">
+    HTTP · JSON · REST
+  </text>
+
+  <!-- =========================================================
+       API / CLI
+  ========================================================== -->
+  <rect
+    x="72"
+    y="352"
+    width="336"
+    height="256"
+    rx="7"
+    fill="url(#blueCard)"
+    stroke="#3b82f6"
+    stroke-width="1.4"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="84"
+    y="364"
+    width="88"
+    height="16"
+    rx="3"
+    fill="#172554"
+    stroke="#60a5fa"
+  />
+
+  <text x="128" y="375" text-anchor="middle" class="tag" fill="#93c5fd">
+    INTERFACES
+  </text>
+
+  <text x="92" y="405" class="node-title">
+    FastAPI adapter + CLI
+  </text>
+
+  <!-- Technology badges -->
+  <rect x="92" y="420" width="62" height="20" rx="4" fill="#1e40af"/>
+  <text x="123" y="434" text-anchor="middle" class="badge-text" fill="#dbeafe">
+    Python
+  </text>
+
+  <rect x="162" y="420" width="72" height="20" rx="4" fill="#075985"/>
+  <text x="198" y="434" text-anchor="middle" class="badge-text" fill="#e0f2fe">
+    FastAPI
+  </text>
+
+  <rect x="242" y="420" width="78" height="20" rx="4" fill="#164e63"/>
+  <text x="281" y="434" text-anchor="middle" class="badge-text" fill="#cffafe">
+    Pydantic
+  </text>
+
+  <line
+    x1="92"
+    y1="452"
+    x2="388"
+    y2="452"
+    stroke="#315a83"
+    stroke-width="0.8"
+  />
+
+  <text x="92" y="475" class="tech">
+    GET /health
+  </text>
+
+  <text x="92" y="496" class="tech">
+    POST /api/v1/query
+  </text>
+
+  <text x="92" y="517" class="node-copy">
+    Request / response validation via Pydantic
+  </text>
+
+  <text x="92" y="540" class="node-copy">
+    API owns one shared RAG runtime.
+  </text>
+
+  <text x="92" y="561" class="node-copy">
+    CLI invokes the same runtime locally.
+  </text>
+
+  <text x="92" y="586" class="tech-small">
+    CORS · localhost:3000 · local Python process
+  </text>
+
+  <!-- =========================================================
+       RAG ORCHESTRATION
+  ========================================================== -->
+  <rect
+    x="520"
+    y="196"
+    width="400"
+    height="288"
+    rx="7"
+    fill="url(#graphCard)"
+    stroke="#60a5fa"
+    stroke-width="1.5"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="532"
+    y="208"
+    width="112"
+    height="16"
+    rx="3"
+    fill="#172554"
+    stroke="#60a5fa"
+  />
+
+  <text x="588" y="219" text-anchor="middle" class="tag" fill="#93c5fd">
+    ORCHESTRATION
+  </text>
+
+  <text x="540" y="251" class="node-title">
+    RAG orchestration
+  </text>
+
+  <!-- Main technology badges -->
+  <rect x="540" y="268" width="92" height="22" rx="4" fill="#3730a3"/>
+  <text x="586" y="283" text-anchor="middle" class="badge-text" fill="#e0e7ff">
+    LangGraph
+  </text>
+
+  <rect x="640" y="268" width="92" height="22" rx="4" fill="#5b21b6"/>
+  <text x="686" y="283" text-anchor="middle" class="badge-text" fill="#ede9fe">
+    LangChain
+  </text>
+
+  <line
+    x1="540"
+    y1="306"
+    x2="900"
+    y2="306"
+    stroke="#315a83"
+    stroke-width="0.8"
+  />
+
+  <text x="540" y="332" class="node-copy">
+    Runtime component responsible for:
+  </text>
+
+  <text x="552" y="357" class="node-copy">
+    • graph state and agent orchestration
+  </text>
+
+  <text x="552" y="381" class="node-copy">
+    • retrieval and model coordination
+  </text>
+
+  <text x="552" y="405" class="node-copy">
+    • answer generation and fallback
+  </text>
+
+  <rect
+    x="540"
+    y="427"
+    width="168"
+    height="32"
+    rx="4"
+    fill="#111827"
+    stroke="#60a5fa"
+    stroke-opacity="0.65"
+  />
+
+  <text x="624" y="447" text-anchor="middle" class="framework-tech">
+    RagGraphState
+  </text>
+
+  <text x="722" y="447" class="tech-small">
+    internal graph omitted
+  </text>
+
+  <!-- =========================================================
+       MEMORY
+  ========================================================== -->
+  <rect
+    x="520"
+    y="548"
+    width="400"
+    height="112"
+    rx="7"
+    fill="url(#memoryCard)"
+    stroke="#d97706"
+    stroke-width="1.3"
+    stroke-dasharray="5 3"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="532"
+    y="560"
+    width="170"
+    height="16"
+    rx="3"
+    fill="#422006"
+    stroke="#d97706"
+  />
+
+  <text x="617" y="571" text-anchor="middle" class="tag" fill="#fbbf24">
+    PROCESS-LOCAL · EPHEMERAL
+  </text>
+
+  <text x="540" y="600" class="node-title">
+    Runtime memory
+  </text>
+
+  <text x="540" y="623" class="offline-tech">
+    InMemorySaver + InMemoryStore
+  </text>
+
+  <text x="540" y="646" class="node-copy">
+    Checkpoints + semantic conversation memory · cleared at restart
+  </text>
+
+  <!-- =========================================================
+       RETRIEVAL INFRASTRUCTURE
+  ========================================================== -->
+  <rect
+    x="968"
+    y="164"
+    width="544"
+    height="280"
+    rx="7"
+    fill="url(#greenCard)"
+    stroke="#22c55e"
+    stroke-width="1.5"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="980"
+    y="176"
+    width="184"
+    height="16"
+    rx="3"
+    fill="#052e16"
+    stroke="#22c55e"
+  />
+
+  <text x="1072" y="187" text-anchor="middle" class="tag" fill="#86efac">
+    FILESYSTEM · PERSISTENT
+  </text>
+
+  <text x="988" y="218" class="node-title">
+    Hybrid retrieval &amp; local indexes
+  </text>
+
+  <line
+    x1="988"
+    y1="238"
+    x2="1492"
+    y2="238"
+    stroke="#26633b"
+    stroke-width="0.9"
+  />
+
+  <!-- Dense -->
+  <rect x="988" y="252" width="88" height="20" rx="4" fill="#166534"/>
+  <text x="1032" y="266" text-anchor="middle" class="badge-text" fill="#dcfce7">
+    ChromaDB
+  </text>
+
+  <text x="1086" y="266" class="retrieval-tech">
+    Dense semantic retrieval
+  </text>
+
+  <text x="988" y="287" class="tech-small">
+    collection: sg_sst_base_rag · data/processed/chroma
+  </text>
+
+  <!-- Sparse -->
+  <rect x="988" y="303" width="76" height="20" rx="4" fill="#14532d"/>
+  <text x="1026" y="317" text-anchor="middle" class="badge-text" fill="#dcfce7">
+    BM25S
+  </text>
+
+  <text x="1074" y="317" class="retrieval-tech">
+    Sparse lexical retrieval
+  </text>
+
+  <text x="988" y="338" class="tech-small">
+    bm25s.BM25 · Spanish stopwords · data/processed/bm25
+  </text>
+
+  <!-- Retrieval pipeline -->
+  <rect
+    x="988"
+    y="355"
+    width="504"
+    height="40"
+    rx="5"
+    fill="#071a10"
+    stroke="#4ade80"
+    stroke-opacity="0.55"
+  />
+
+  <text x="1240" y="372" text-anchor="middle" class="retrieval-tech">
+    ChromaDB + BM25S → RRF k=60 → ALIA reranker 16→8
+  </text>
+
+  <text x="1240" y="387" text-anchor="middle" class="tech-small">
+    → parent-document expansion
+  </text>
+
+  <text x="988" y="420" class="tech-small">
+    Parent lookup: parents.jsonl
+  </text>
+
+  <!-- =========================================================
+       LOCAL ML MODELS
+  ========================================================== -->
+  <rect
+    x="968"
+    y="500"
+    width="256"
+    height="180"
+    rx="7"
+    fill="url(#purpleCard)"
+    stroke="#a855f7"
+    stroke-width="1.5"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="980"
+    y="512"
+    width="74"
+    height="16"
+    rx="3"
+    fill="#3b0764"
+    stroke="#c084fc"
+  />
+
+  <text x="1017" y="523" text-anchor="middle" class="tag" fill="#d8b4fe">
+    LOCAL ML
+  </text>
+
+  <text x="988" y="551" class="node-title">
+    Local AI models
+  </text>
+
+  <!-- Qwen -->
+  <rect x="988" y="563" width="64" height="20" rx="4" fill="#6b21a8"/>
+  <text x="1020" y="577" text-anchor="middle" class="badge-text" fill="#f3e8ff">
+    Qwen
+  </text>
+
+  <text x="1060" y="577" class="model-name">
+    Qwen3-Embedding-0.6B
+  </text>
+
+  <text x="988" y="598" class="tech-small">
+    SentenceTransformers · 1024-dimensional vectors
+  </text>
+
+  <text x="988" y="614" class="tech-small">
+    Corpus retrieval + semantic memory
+  </text>
+
+  <!-- ALIA -->
+  <rect x="988" y="626" width="64" height="20" rx="4" fill="#7e22ce"/>
+  <text x="1020" y="640" text-anchor="middle" class="badge-text" fill="#f3e8ff">
+    ALIA
+  </text>
+
+  <text x="1060" y="640" class="model-name">
+    MrBERT reranker
+  </text>
+
+  <text x="988" y="660" class="tech-small">
+    CrossEncoder · CPU · max 512 · batch 8
+  </text>
+
+  <text x="988" y="675" class="tech-small">
+    Spanish legal-administrative domain
+  </text>
+
+  <!-- =========================================================
+       EXTERNAL DEEPSEEK
+  ========================================================== -->
+  <rect
+    x="1256"
+    y="500"
+    width="256"
+    height="180"
+    rx="7"
+    fill="url(#purpleCard)"
+    stroke="#a855f7"
+    stroke-width="1.5"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="1268"
+    y="512"
+    width="82"
+    height="16"
+    rx="3"
+    fill="#3b0764"
+    stroke="#c084fc"
+  />
+
+  <text x="1309" y="523" text-anchor="middle" class="tag" fill="#d8b4fe">
+    EXTERNAL AI
+  </text>
+
+  <text x="1276" y="551" class="node-title">
+    DeepSeek
+  </text>
+
+  <rect x="1276" y="563" width="118" height="22" rx="4" fill="#6b21a8"/>
+  <text x="1335" y="578" text-anchor="middle" class="badge-text" fill="#f3e8ff">
+    deepseek-chat
+  </text>
+
+  <text x="1276" y="605" class="model-name">
+    ChatOpenAI / langchain-openai
+  </text>
+
+  <text x="1276" y="623" class="tech-small">
+    HTTPS · api.deepseek.com
+  </text>
+
+  <text x="1276" y="647" class="node-copy">
+    Profile · expansion · grading
+  </text>
+
+  <text x="1276" y="665" class="node-copy">
+    Generation · fallback
+  </text>
+
+  <!-- =========================================================
+       OFFLINE PIPELINE
+  ========================================================== -->
+  <rect
+    x="72"
+    y="820"
+    width="1456"
+    height="184"
+    rx="7"
+    fill="url(#offlineCard)"
+    stroke="#92400e"
+    stroke-width="1.4"
+    filter="url(#shadow)"
+  />
+
+  <rect
+    x="84"
+    y="832"
+    width="64"
+    height="16"
+    rx="3"
+    fill="#451a03"
+    stroke="#f59e0b"
+  />
+
+  <text x="116" y="843" text-anchor="middle" class="tag" fill="#fbbf24">
+    OFFLINE
+  </text>
+
+  <text x="164" y="844" class="node-title">
+    Corpus transformation and index construction
+  </text>
+
+  <line x1="344" y1="864" x2="344" y2="956" stroke="#6f4313" stroke-width="0.9"/>
+  <line x1="632" y1="864" x2="632" y2="956" stroke="#6f4313" stroke-width="0.9"/>
+  <line x1="920" y1="864" x2="920" y2="956" stroke="#6f4313" stroke-width="0.9"/>
+  <line x1="1208" y1="864" x2="1208" y2="956" stroke="#6f4313" stroke-width="0.9"/>
+
+  <!-- 1 -->
+  <text x="92" y="884" class="node-title">
+    1 · DOCX corpus
+  </text>
+
+  <text x="92" y="908" class="offline-tech">
+    data/raw/*.docx
+  </text>
+
+  <text x="92" y="932" class="node-copy">
+    SG-SST legal sources
+  </text>
+
+  <!-- 2 -->
+  <text x="364" y="884" class="node-title">
+    2 · Ingestion
+  </text>
+
+  <rect x="364" y="896" width="68" height="20" rx="4" fill="#92400e"/>
+  <text x="398" y="910" text-anchor="middle" class="badge-text" fill="#fef3c7">
+    Pandoc
+  </text>
+
+  <rect x="440" y="896" width="76" height="20" rx="4" fill="#78350f"/>
+  <text x="478" y="910" text-anchor="middle" class="badge-text" fill="#fef3c7">
+    pypandoc
+  </text>
+
+  <text x="364" y="934" class="node-copy">
+    DOCX → Markdown · tables extracted
+  </text>
+
+  <!-- 3 -->
+  <text x="652" y="884" class="node-title">
+    3 · Clean &amp; chunk
+  </text>
+
+  <text x="652" y="908" class="node-copy">
+    Parent chunks + regex-constrained
+  </text>
+
+  <text x="652" y="928" class="node-copy">
+    semantic child chunks
+  </text>
+
+  <!-- 4 -->
+  <text x="940" y="884" class="node-title">
+    4 · Table documents
+  </text>
+
+  <text x="940" y="908" class="offline-tech">
+    Markdown + JSONL
+  </text>
+
+  <text x="940" y="932" class="node-copy">
+    Structured table documents
+  </text>
+
+  <!-- 5 -->
+  <text x="1228" y="884" class="node-title">
+    5 · Build indexes
+  </text>
+
+  <text x="1228" y="908" class="offline-tech">
+    Qwen → ChromaDB
+  </text>
+
+  <text x="1228" y="928" class="offline-tech">
+    BM25S → sparse index
+  </text>
+
+  <text x="1228" y="948" class="node-copy">
+    Parent-document lookup
+  </text>
+
+  <line
+    x1="92"
+    y1="964"
+    x2="1508"
+    y2="964"
+    stroke="#6f4313"
+    stroke-width="0.9"
+  />
+
+  <text x="92" y="987" class="tech-small">
+    data/processed/ · chunks · tables · table_documents.jsonl · ChromaDB · BM25S index · parents.jsonl
+  </text>
+
+  <!-- =========================================================
+       LEGEND
+  ========================================================== -->
+  <line
+    x1="40"
+    y1="1072"
+    x2="1560"
+    y2="1072"
+    stroke="#273548"
+    stroke-width="0.9"
+  />
+
+  <text x="40" y="1098" class="eyebrow">
+    COLOR LEGEND
+  </text>
+
+  <!-- Interface -->
+  <rect x="138" y="1085" width="18" height="14" rx="3" fill="#173b5d" stroke="#60a5fa"/>
+  <text x="165" y="1096" class="legend">
+    frameworks / interfaces
+  </text>
+
+  <!-- Models -->
+  <rect x="330" y="1085" width="18" height="14" rx="3" fill="#3a1c62" stroke="#c084fc"/>
+  <text x="357" y="1096" class="legend">
+    AI / ML models
+  </text>
+
+  <!-- Retrieval -->
+  <rect x="485" y="1085" width="18" height="14" rx="3" fill="#123d25" stroke="#4ade80"/>
+  <text x="512" y="1096" class="legend">
+    retrieval / indexes
+  </text>
+
+  <!-- Memory -->
+  <rect x="670" y="1085" width="18" height="14" rx="3" fill="#42280f" stroke="#d97706"/>
+  <text x="697" y="1096" class="legend">
+    runtime memory
+  </text>
+
+  <!-- Offline -->
+  <rect x="830" y="1085" width="18" height="14" rx="3" fill="#35230c" stroke="#f59e0b"/>
+  <text x="857" y="1096" class="legend">
+    offline processing
+  </text>
+
+  <!-- Network -->
+  <line
+    x1="1015"
+    y1="1092"
+    x2="1047"
+    y2="1092"
+    stroke="#60a5fa"
+    stroke-width="1.5"
+    marker-end="url(#arrow-blue)"
+  />
+
+  <text x="1058" y="1096" class="legend">
+    network / API
+  </text>
+
+  <!-- AI dependency -->
+  <line
+    x1="1190"
+    y1="1092"
+    x2="1222"
+    y2="1092"
+    stroke="#c084fc"
+    stroke-width="1.5"
+    marker-end="url(#arrow-purple)"
+  />
+
+  <text x="1233" y="1096" class="legend">
+    model dependency
+  </text>
+</svg>
