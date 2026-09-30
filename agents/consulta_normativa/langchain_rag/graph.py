@@ -11,7 +11,7 @@ from agents.consulta_normativa.langchain_rag.core.llm import invoke_llm_text
 from agents.consulta_normativa.langchain_rag.core.routes import evidence_route
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.formatting import build_context, build_references, recovered_documents
-from agents.consulta_normativa.langchain_rag.models import LangChainRagResult
+from agents.consulta_normativa.langchain_rag.models import LangChainRagResult, RetrievedDocument
 from agents.consulta_normativa.langchain_rag.prompts import (
     BASE_SYSTEM_INSTRUCTIONS,
     FALLBACK_PROMPT,
@@ -29,6 +29,7 @@ from agents.consulta_normativa.langchain_rag.query_understanding.query_expansion
 # retrieval - R3
 from agents.consulta_normativa.langchain_rag.retrieval.reranking import rerank_node
 from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (expand_parent_documents)
+from agents.consulta_normativa.langchain_rag.retrieval.table_complement import complement_linked_tables_node
 # business_context - long-term memory
 from agents.consulta_normativa.langchain_rag.business_context.techniques.retrieval_long_term_memory import (retrieval_long_term_memory_node,store_latest_conversation_memory_node)
 # validation - relevance grading
@@ -53,6 +54,7 @@ def build_langgraph_rag(
     reranker_device: str = "cpu",
     reranker_input_max_length: int = 512,
     parent_lookup: dict[str, Any] | None = None,
+    first_table_parts: dict[str, RetrievedDocument] | None = None,
 ) -> Any:
     """Build the LangGraph RAG pipeline with explicit evidence branching."""
 
@@ -94,6 +96,10 @@ def build_langgraph_rag(
         "retrieval_relevance_grading",
         retrieval_relevance_grading_node(llm),
     )
+    workflow.add_node(
+        "complement_linked_tables",
+        complement_linked_tables_node(first_table_parts or {}),
+    )
 
     workflow.add_node("record_retrieval_trace",record_retrieval_trace_node)
 
@@ -134,8 +140,12 @@ def build_langgraph_rag(
 
 
 
-    workflow.add_conditional_edges(
+    workflow.add_edge(
         "retrieval_relevance_grading",
+        "complement_linked_tables",
+    )
+    workflow.add_conditional_edges(
+        "complement_linked_tables",
         evidence_route,
         {"with_evidence": "format_context", "without_evidence": "fallback_answer"},)
 

@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from typing import Any
 from langchain_core.embeddings import Embeddings
 
-
-
 from agents.consulta_normativa.langchain_rag.config import (
     DEFAULT_CHROMA_PATH,
     DEFAULT_COLLECTION_NAME,
@@ -26,6 +24,9 @@ from agents.consulta_normativa.langchain_rag.config import (
     RERANKER_FINAL_TOP_K,
     RERANKER_MAX_LENGTH,
     RERANKER_MODEL_NAME,
+)
+from agents.consulta_normativa.langchain_rag.retrieval.table_complement import (
+    DEFAULT_TABLE_DOCUMENTS_PATH,
 )
 
 logging.getLogger(
@@ -55,6 +56,7 @@ class RuntimeDependencies:
     hybrid_retriever: Callable[..., Retriever]
     get_reranker: Callable[..., Any]
     load_parent_documents: Callable[..., Any]
+    load_first_table_parts: Callable[..., Any]
     
 
 
@@ -179,6 +181,9 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         parent_lookup = dependencies.load_parent_documents(
             DEFAULT_PARENT_CHUNKS_PATH
         )
+        first_table_parts = dependencies.load_first_table_parts(
+            DEFAULT_TABLE_DOCUMENTS_PATH
+        )
 
         # Memoria de corto plazo asociada al thread.
         checkpointer = InMemorySaver()
@@ -218,6 +223,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             reranker_device=RERANKER_DEVICE,
             reranker_input_max_length=RERANKER_MAX_LENGTH,
             parent_lookup=parent_lookup,
+            first_table_parts=first_table_parts,
         )
 
         if write_graph_image:
@@ -258,6 +264,7 @@ def load_dependencies() -> RuntimeDependencies:
         from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
         from agents.consulta_normativa.langchain_rag.retrieval.reranking import (get_reranker)
         from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (load_parent_documents)
+        from agents.consulta_normativa.langchain_rag.retrieval.table_complement import load_first_table_parts
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
@@ -270,6 +277,7 @@ def load_dependencies() -> RuntimeDependencies:
         hybrid_retriever=hybrid_retriever,
         get_reranker=get_reranker,
         load_parent_documents=load_parent_documents,
+        load_first_table_parts=load_first_table_parts,
     )
 
 

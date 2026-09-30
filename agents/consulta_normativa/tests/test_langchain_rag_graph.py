@@ -109,6 +109,7 @@ class LangGraphRagTest(unittest.TestCase):
                 "rerank",
                 "expand_parent_documents",
                 "retrieval_relevance_grading",
+                "complement_linked_tables",
                 "record_retrieval_trace",
                 "fallback_answer",
                 "format_context",
@@ -122,7 +123,8 @@ class LangGraphRagTest(unittest.TestCase):
         self.assertEqual(workflow.edges["record_retrieval_trace"], "retrieval_relevance_grading")
         self.assertEqual(workflow.edges["generate_answer"], "save_conversation_turn")
         self.assertEqual(workflow.edges["store_long_term_memory"], "format_result")
-        router, routes = workflow.conditional["retrieval_relevance_grading"]
+        self.assertEqual(workflow.edges["retrieval_relevance_grading"], "complement_linked_tables")
+        router, routes = workflow.conditional["complement_linked_tables"]
         self.assertIs(router, evidence_route)
         self.assertEqual(routes, {"with_evidence": "format_context", "without_evidence": "fallback_answer"})
         self.assertEqual(workflow.compile_kwargs, {"checkpointer": checkpointer, "store": store})
