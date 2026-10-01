@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
 from agents.diagnostico_cumplimiento.catalog.schemas import AssessmentCatalog
+from agents.diagnostico_cumplimiento.catalog.selector import select_catalog_path
 
 
 class CatalogLoadError(Exception):
@@ -53,3 +55,14 @@ def load_catalog(path: str | Path) -> AssessmentCatalog:
         raise CatalogLoadError(
             f"Catalog does not match the expected schema: {catalog_path}"
         ) from exc
+
+
+def load_catalog_for_profile(profile: Any) -> AssessmentCatalog:
+    """
+    Selecciona y carga automáticamente el catálogo normativo
+    correspondiente al perfil de la empresa.
+    """
+
+    catalog_path = select_catalog_path(profile)
+
+    return load_catalog(catalog_path)

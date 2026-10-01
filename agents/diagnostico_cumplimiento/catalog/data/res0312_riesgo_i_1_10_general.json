@@ -1,0 +1,756 @@
+{
+  "schema_version": "2.1",
+  "catalog_id": "res0312_riesgo_i_1_10_general",
+  "name": "Estándares Mínimos SG-SST - Empresas de 1 a 10 trabajadores - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "requirements_article": 3,
+  "scoring_article": 27,
+  "scope": {
+    "risk_classes": [
+      "I"
+    ],
+    "worker_count": {
+      "min": 1,
+      "max": 10,
+      "count_type": "total"
+    },
+    "company_types": [
+      "general"
+    ],
+    "excluded_company_types": [
+      "agricultural_production_unit"
+    ]
+  },
+  "applicability": {
+    "priority": 50,
+    "rules": [
+      {
+        "field": "risk_class",
+        "operator": "equals",
+        "value": "I"
+      },
+      {
+        "field": "worker_count",
+        "operator": "between",
+        "min": 1,
+        "max": 10
+      },
+      {
+        "field": "is_agricultural_production_unit",
+        "operator": "equals",
+        "value": false
+      }
+    ]
+  },
+  "non_applicability_policy": {
+    "package_default": "applicable",
+    "requirement_not_applicable_only_when": "explicit_conditional_rule",
+    "unanswered_is_not_not_applicable": true,
+    "not_applicable_reason_required": true,
+    "show_not_applicable_requirements_in_report": true,
+    "not_applicable_scoring": "pending_rule_definition"
+  },
+  "reporting": {
+    "group_by_phva": true,
+    "show_all_requirements": true,
+    "show_not_applicable_requirements": true,
+    "include_official_criterion": true,
+    "include_official_verification_method": true,
+    "include_question_trace": true,
+    "status_values": [
+      "complies_as_declared",
+      "does_not_comply_as_declared",
+      "not_applicable",
+      "insufficient_information"
+    ]
+  },
+  "sections": [
+    {
+      "id": "planear",
+      "name": "Planear",
+      "cycle": "PLANEAR",
+      "requirements": [
+        {
+          "id": "art3_asignacion_persona_sgsst",
+          "official_item_id": null,
+          "name": "Asignación de persona que diseña el Sistema de Gestión de SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Asignar una persona que cumpla con el perfil establecido para diseñar el Sistema de Gestión de SST.",
+          "official_verification_method": "Solicitar documento soporte de la asignación y constatar la hoja de vida con soportes de la persona asignada.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_designer_assigned",
+              "role": "primary",
+              "text": "¿La empresa tiene asignada una persona responsable del diseño del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_designer_allowed_profile",
+              "role": "clarification",
+              "text": "¿La persona asignada cumple con alguno de los perfiles permitidos para diseñar el SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_designer_assigned",
+                "value": true
+              }
+            },
+            {
+              "id": "q_designer_valid_license",
+              "role": "clarification",
+              "text": "¿La persona asignada cuenta con licencia vigente en Seguridad y Salud en el Trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_designer_assigned",
+                "value": true
+              }
+            },
+            {
+              "id": "q_designer_50h_course",
+              "role": "clarification",
+              "text": "¿La persona asignada acredita la aprobación del curso virtual de cincuenta (50) horas en SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_designer_assigned",
+                "value": true
+              }
+            },
+            {
+              "id": "q_designer_assignment_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento que soporta la asignación de esta persona?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_designer_assigned",
+                "value": true
+              }
+            },
+            {
+              "id": "q_designer_cv_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de la hoja de vida y los soportes que acreditan el perfil de la persona asignada?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_designer_assigned",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "res0312_art3_afiliacion_1_10",
+          "official_item_id": null,
+          "name": "Afiliación al Sistema de Seguridad Social Integral",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Afiliación a los Sistemas de Seguridad Social en Salud, Pensión y Riesgos Laborales de acuerdo con la normatividad vigente.",
+          "official_verification_method": "Solicitar documento soporte de afiliación y del pago correspondiente.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_health_affiliation",
+              "role": "primary",
+              "text": "¿Las personas trabajadoras de su empresa cuentan con afiliación al sistema de salud, según corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_health_affiliation_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes que documenten la afiliación al sistema de salud de las personas trabajadoras a quienes corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_health_affiliation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_health_payment_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de comprobantes de los pagos correspondientes al sistema de salud de las personas trabajadoras, cuando corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_health_affiliation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_pension_affiliation",
+              "role": "primary",
+              "text": "¿Las personas trabajadoras de su empresa cuentan con afiliación al sistema de pensiones, según corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_pension_affiliation_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes que documenten la afiliación al sistema de pensiones de las personas trabajadoras a quienes corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_pension_affiliation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_pension_payment_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de comprobantes de los pagos correspondientes al sistema de pensiones de las personas trabajadoras, cuando corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_pension_affiliation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_occupational_risk_affiliation",
+              "role": "primary",
+              "text": "¿Las personas trabajadoras de su empresa cuentan con afiliación al sistema de riesgos laborales, según corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_occupational_risk_affiliation_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes que documenten la afiliación al sistema de riesgos laborales de las personas trabajadoras a quienes corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_occupational_risk_affiliation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_occupational_risk_payment_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de comprobantes de los pagos correspondientes al sistema de riesgos laborales de las personas trabajadoras, cuando corresponda?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_occupational_risk_affiliation",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "res0312_art3_capacitacion_1_10",
+          "official_item_id": null,
+          "name": "Capacitación en SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "CAPACITACION",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Elaborar y ejecutar programas o actividades de capacitación en promoción y prevención, incluyendo los peligros o riesgos prioritarios y las medidas de prevención y control.",
+          "official_verification_method": "Solicitar documento soporte de las acciones de capacitación realizadas y planillas donde se evidencie la firma de los trabajadores.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_training_preparation",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un programa o actividades de capacitación en promoción y prevención de SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_training_execution",
+              "role": "clarification",
+              "text": "¿La empresa ha ejecutado las actividades de capacitación en promoción y prevención de SST previstas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_training_preparation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_priority_risks_training",
+              "role": "clarification",
+              "text": "¿Las capacitaciones realizadas incluyen los peligros o riesgos prioritarios identificados en la empresa?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_training_execution",
+                "value": true
+              }
+            },
+            {
+              "id": "q_prevention_control_training",
+              "role": "clarification",
+              "text": "¿Las capacitaciones realizadas incluyen las medidas de prevención y control de los peligros o riesgos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_training_execution",
+                "value": true
+              }
+            },
+            {
+              "id": "q_training_records",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de las capacitaciones realizadas y de planillas donde conste la firma de los trabajadores participantes?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_training_execution",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "res0312_art3_plan_anual_1_10",
+          "official_item_id": null,
+          "name": "Plan Anual de Trabajo",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Elaborar el Plan Anual de Trabajo del SG-SST, firmado por el empleador o contratante, identificando como mínimo objetivos, metas, responsabilidades, recursos y cronograma anual.",
+          "official_verification_method": "Solicitar documento que contenga el Plan Anual de Trabajo.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_plan_exists",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un Plan Anual de Trabajo del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_employer_signature",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo está firmado por el empleador o contratante?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            },
+            {
+              "id": "q_plan_objectives",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo identifica los objetivos del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            },
+            {
+              "id": "q_plan_targets",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo identifica las metas del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            },
+            {
+              "id": "q_plan_responsibilities",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo identifica las responsabilidades?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            },
+            {
+              "id": "q_plan_resources",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo identifica los recursos previstos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            },
+            {
+              "id": "q_annual_schedule",
+              "role": "clarification",
+              "text": "¿El Plan Anual de Trabajo incluye un cronograma anual?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_plan_exists",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        }
+      ]
+    },
+    {
+      "id": "hacer",
+      "name": "Hacer",
+      "cycle": "HACER",
+      "requirements": [
+        {
+          "id": "art3_evaluaciones_medicas",
+          "official_item_id": null,
+          "name": "Evaluaciones médicas ocupacionales",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Realizar evaluaciones médicas ocupacionales de acuerdo con la normatividad y con los peligros o riesgos a los cuales se encuentre expuesto el trabajador.",
+          "official_verification_method": "Conceptos emitidos por el médico evaluador en los cuales se informen recomendaciones y restricciones laborales.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_medical_evaluations_performed",
+              "role": "primary",
+              "text": "¿La empresa realiza las evaluaciones médicas ocupacionales que corresponden a sus trabajadores?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_medical_evaluations_risk_based",
+              "role": "clarification",
+              "text": "¿Las evaluaciones médicas ocupacionales se realizan teniendo en cuenta los peligros o riesgos a los que están expuestos los trabajadores?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_medical_evaluations_performed",
+                "value": true
+              }
+            },
+            {
+              "id": "q_medical_concepts_available",
+              "role": "clarification",
+              "text": "¿La empresa dispone de los conceptos emitidos por el médico evaluador?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_medical_evaluations_performed",
+                "value": true
+              }
+            },
+            {
+              "id": "q_medical_recommendations_restrictions",
+              "role": "clarification",
+              "text": "¿Los conceptos médicos informan las recomendaciones o restricciones laborales cuando estas existen?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_medical_concepts_available",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "res0312_art3_identificacion_peligros_1_10",
+          "official_item_id": null,
+          "name": "Identificación de peligros, evaluación y valoración de riesgos",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Realizar la identificación de peligros y la evaluación y valoración de los riesgos con el acompañamiento de la ARL.",
+          "official_verification_method": "Solicitar el documento con la identificación de peligros, evaluación y valoración de los riesgos y la constancia de acompañamiento de la ARL.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_hazard_identification",
+              "role": "primary",
+              "text": "¿La empresa ha realizado la identificación de los peligros presentes en sus actividades y lugares de trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_risk_evaluation",
+              "role": "clarification",
+              "text": "¿La empresa ha realizado la evaluación de los riesgos asociados con los peligros identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_hazard_identification",
+                "value": true
+              }
+            },
+            {
+              "id": "q_risk_valuation",
+              "role": "clarification",
+              "text": "¿La empresa ha realizado la valoración de los riesgos asociados con los peligros identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_risk_evaluation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_arl_accompaniment",
+              "role": "clarification",
+              "text": "¿La empresa contó con acompañamiento de la ARL para la identificación de peligros y la evaluación y valoración de los riesgos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_hazard_identification",
+                "value": true
+              }
+            },
+            {
+              "id": "q_risk_document_available",
+              "role": "evidence",
+              "text": "¿La empresa dispone de un documento que registre la identificación de peligros y la evaluación y valoración de los riesgos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_risk_valuation",
+                "value": true
+              }
+            },
+            {
+              "id": "q_arl_support_available",
+              "role": "evidence",
+              "text": "¿La empresa dispone de una constancia del acompañamiento de la ARL en este proceso?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_arl_accompaniment",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "res0312_art3_medidas_prevencion_control_1_10",
+          "official_item_id": null,
+          "name": "Medidas de prevención y control frente a peligros y riesgos identificados",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Ejecutar las actividades de prevención y control de peligros y riesgos con base en los resultados de la identificación de peligros y la evaluación y valoración de riesgos.",
+          "official_verification_method": "Solicitar documento soporte con las acciones ejecutadas.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_prevention_measures_execution",
+              "role": "primary",
+              "text": "¿La empresa ha ejecutado medidas de prevención y control frente a los peligros y riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_prevention_measures_risk_based",
+              "role": "clarification",
+              "text": "¿Las medidas de prevención y control ejecutadas se definieron teniendo en cuenta los resultados de la identificación de peligros y la evaluación y valoración de riesgos de la empresa?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_prevention_measures_execution",
+                "value": true
+              }
+            },
+            {
+              "id": "q_prevention_measures_support",
+              "role": "evidence",
+              "text": "¿La empresa dispone de documentos que registren las medidas de prevención y control ejecutadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_prevention_measures_execution",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 3,
+            "scoring_article": 27
+          }
+        }
+      ]
+    },
+    {
+      "id": "verificar",
+      "name": "Verificar",
+      "cycle": "VERIFICAR",
+      "requirements": []
+    },
+    {
+      "id": "actuar",
+      "name": "Actuar",
+      "cycle": "ACTUAR",
+      "requirements": []
+    }
+  ],
+  "metadata": {
+    "question_origin": "Preguntas diagnósticas derivadas de los criterios y modos de verificación del artículo 3 de la Resolución 0312 de 2019.",
+    "phva_mapping_source": "Resolución 0312 de 2019, artículo 27, Tabla de Valores y Calificación.",
+    "declarative_assessment": true,
+    "documentary_verification": false,
+    "validation": {
+      "normative_source": "official",
+      "normative_requirements_require_expert_validation": false,
+      "derived_questions_require_expert_review": true,
+      "routing_rules_require_expert_review": true,
+      "assessment_rules_require_expert_review": true,
+      "non_applicability_rules_require_expert_review": true
+    },
+    "notes": [
+      "Este paquete excluye las Unidades de Producción Agropecuaria cubiertas por el artículo 7."
+    ]
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "schema_version": "2.1",
+  "catalog_id": "res0312_riesgo_i_1_10_agropecuaria",
+  "name": "Estándares Mínimos SG-SST - Unidad de Producción Agropecuaria con 10 o menos trabajadores permanentes - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "requirements_article": 7,
+  "scoring_article": null,
+  "scope": {
+    "risk_classes": [
+      "I"
+    ],
+    "worker_count": {
+      "min": 1,
+      "max": 10,
+      "count_type": "permanent"
+    },
+    "company_types": [
+      "agricultural_production_unit"
+    ],
+    "excluded_company_types": []
+  },
+  "applicability": {
+    "priority": 50,
+    "rules": [
+      {
+        "field": "risk_class",
+        "operator": "equals",
+        "value": "I"
+      },
+      {
+        "field": "is_agricultural_production_unit",
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "field": "permanent_worker_count",
+        "operator": "between",
+        "min": 1,
+        "max": 10
+      }
+    ]
+  },
+  "non_applicability_policy": {
+    "package_default": "applicable",
+    "requirement_not_applicable_only_when": "explicit_conditional_rule",
+    "unanswered_is_not_not_applicable": true,
+    "not_applicable_reason_required": true,
+    "show_not_applicable_requirements_in_report": true,
+    "not_applicable_scoring": "pending_rule_definition"
+  },
+  "reporting": {
+    "group_by_phva": true,
+    "show_all_requirements": true,
+    "show_not_applicable_requirements": true,
+    "include_official_criterion": true,
+    "include_official_verification_method": true,
+    "include_question_trace": true,
+    "status_values": [
+      "complies_as_declared",
+      "does_not_comply_as_declared",
+      "not_applicable",
+      "insufficient_information"
+    ]
+  },
+  "sections": [
+    {
+      "id": "planear",
+      "name": "Planear",
+      "cycle": "PLANEAR",
+      "requirements": []
+    },
+    {
+      "id": "hacer",
+      "name": "Hacer",
+      "cycle": "HACER",
+      "requirements": [
+        {
+          "id": "art7_identificacion_peligros_riesgos_controles",
+          "official_item_id": null,
+          "name": "Identificación de peligros, evaluación y valoración de riesgos y establecimiento de controles",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Identificar los peligros en el marco de los procesos productivos de la unidad de producción agropecuaria, evaluar y valorar los riesgos y establecer los respectivos controles.",
+          "official_verification_method": null,
+          "verification_method_source": "not_defined_in_article_7",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_agro_hazards_identified",
+              "role": "primary",
+              "text": "¿La unidad de producción agropecuaria ha identificado los peligros presentes en sus procesos y actividades productivas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            },
+            {
+              "id": "q_agro_risks_evaluated",
+              "role": "clarification",
+              "text": "¿La unidad ha evaluado los riesgos asociados a los peligros identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_agro_hazards_identified",
+                "value": true
+              }
+            },
+            {
+              "id": "q_agro_risks_valued",
+              "role": "clarification",
+              "text": "¿La unidad ha realizado la valoración de los riesgos evaluados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_agro_risks_evaluated",
+                "value": true
+              }
+            },
+            {
+              "id": "q_agro_controls_established",
+              "role": "clarification",
+              "text": "¿La unidad ha establecido controles frente a los peligros y riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_agro_risks_valued",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 7,
+            "scoring_article": null
+          }
+        },
+        {
+          "id": "art7_prevencion_accidentes_enfermedades",
+          "official_item_id": null,
+          "name": "Prevención de accidentes de trabajo y enfermedades laborales",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Desarrollar actividades enfocadas a prevenir la presencia de accidentes de trabajo o enfermedades laborales.",
+          "official_verification_method": null,
+          "verification_method_source": "not_defined_in_article_7",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_agro_prevention_activities",
+              "role": "primary",
+              "text": "¿La unidad de producción agropecuaria desarrolla actividades orientadas a prevenir accidentes de trabajo y enfermedades laborales?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 7,
+            "scoring_article": null
+          }
+        },
+        {
+          "id": "art7_proteccion_personas_actividad_productiva",
+          "official_item_id": null,
+          "name": "Protección de la seguridad y salud de las personas que desarrollan actividades productivas",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": null,
+            "section_weight_percent": null,
+            "mapping_status": "not_mapped"
+          },
+          "official_criterion": "Proteger la seguridad y salud de todas las personas que desarrollan actividades productivas en la unidad de producción agropecuaria.",
+          "official_verification_method": null,
+          "verification_method_source": "not_defined_in_article_7",
+          "applicability": {
+            "mode": "always",
+            "screening_question_id": null,
+            "applies_when": null,
+            "not_applicable_when": null,
+            "not_applicable_reason": null,
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_agro_all_persons_protected",
+              "role": "primary",
+              "text": "¿Las medidas de seguridad y salud implementadas por la unidad cubren a todas las personas que desarrollan actividades productivas en ella?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": null
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 7,
+            "scoring_article": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "verificar",
+      "name": "Verificar",
+      "cycle": "VERIFICAR",
+      "requirements": []
+    },
+    {
+      "id": "actuar",
+      "name": "Actuar",
+      "cycle": "ACTUAR",
+      "requirements": []
+    }
+  ],
+  "metadata": {
+    "question_origin": "Preguntas diagnósticas derivadas de los tres estándares establecidos en el artículo 7 de la Resolución 0312 de 2019.",
+    "phva_mapping_source": "Mapeo interno al ciclo PHVA para organización del diagnóstico; el artículo 7 no clasifica expresamente sus tres estándares por PHVA.",
+    "declarative_assessment": true,
+    "documentary_verification": false,
+    "validation": {
+      "normative_source": "official",
+      "normative_requirements_require_expert_validation": false,
+      "derived_questions_require_expert_review": true,
+      "routing_rules_require_expert_review": true,
+      "assessment_rules_require_expert_review": true,
+      "non_applicability_rules_require_expert_review": true
+    },
+    "notes": [
+      "El artículo 7 no define un modo de verificación tabular para estos tres estándares.",
+      "El mapeo PHVA se utiliza para organización del reporte y debe identificarse como mapeo interno."
+    ]
+  }
+}

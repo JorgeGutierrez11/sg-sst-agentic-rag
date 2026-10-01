@@ -1,0 +1,436 @@
+{
+  "catalog_id": "res0312_riesgo_i_1_10_general",
+  "name": "Estándares Mínimos SG-SST - Empresa General de 1 a 10 trabajadores - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "article": 3,
+
+  "applicability": {
+    "risk_classes": ["I"],
+    "worker_count": {
+      "min": 1,
+      "max": 10
+    },
+    "exclude_agricultural_production_units": true
+  },
+
+  "requirements": [
+    {
+      "id": "art3_asignacion_persona_sgsst",
+      "name": "Asignación de persona que diseña el Sistema de Gestión de SST",
+
+      "criterion": "Asignar una persona que cumpla con el perfil establecido para diseñar el Sistema de Gestión de SST.",
+
+      "verification_method": "Solicitar documento soporte de la asignación y constatar la hoja de vida con soportes de la persona asignada.",
+
+      "questions": [
+        {
+          "id": "q_designer_assigned",
+          "text": "¿La empresa tiene asignada una persona responsable del diseño del SG-SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_designer_allowed_profile",
+          "text": "¿La persona asignada cumple con alguno de los perfiles permitidos para diseñar el SG-SST?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_designer_valid_license",
+          "text": "¿La persona asignada cuenta con licencia vigente en Seguridad y Salud en el Trabajo?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_designer_50h_course",
+          "text": "¿La persona asignada acredita la aprobación del curso virtual de cincuenta (50) horas en SST?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_designer_assignment_support",
+          "text": "¿La empresa dispone del documento que soporta la asignación de esta persona?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_designer_cv_support",
+          "text": "¿La empresa dispone de la hoja de vida y los soportes que acreditan el perfil de la persona asignada?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_designer_assigned",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art3_afiliacion_seguridad_social",
+      "name": "Afiliación al Sistema de Seguridad Social Integral",
+
+      "criterion": "Afiliación a los Sistemas de Seguridad Social en Salud, Pensión y Riesgos Laborales de acuerdo con la normatividad vigente.",
+
+      "verification_method": "Solicitar documento soporte de afiliación y del pago correspondiente.",
+
+      "questions": [
+        {
+          "id": "q_health_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al sistema de salud?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_health_support",
+          "text": "¿La empresa dispone de soportes de la afiliación al sistema de salud?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_health_affiliation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_health_payment",
+          "text": "¿La empresa dispone de los comprobantes de pago correspondientes al sistema de salud?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_health_affiliation",
+            "value": true
+          }
+        },
+
+        {
+          "id": "q_pension_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al sistema de pensiones?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_pension_support",
+          "text": "¿La empresa dispone de soportes de la afiliación al sistema de pensiones?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_pension_affiliation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_pension_payment",
+          "text": "¿La empresa dispone de los comprobantes de pago correspondientes al sistema de pensiones?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_pension_affiliation",
+            "value": true
+          }
+        },
+
+        {
+          "id": "q_arl_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al Sistema General de Riesgos Laborales?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_arl_support",
+          "text": "¿La empresa dispone de soportes de afiliación al Sistema General de Riesgos Laborales?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_arl_affiliation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_arl_payment",
+          "text": "¿La empresa dispone de los comprobantes de pago correspondientes al Sistema General de Riesgos Laborales?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_arl_affiliation",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art3_capacitacion_sst",
+      "name": "Capacitación en SST",
+
+      "criterion": "Elaborar y ejecutar programas o actividades de capacitación en promoción y prevención, incluyendo los peligros o riesgos prioritarios y las medidas de prevención y control.",
+
+      "verification_method": "Solicitar documento soporte de las acciones de capacitación realizadas y planillas donde se evidencie la firma de los trabajadores.",
+
+      "questions": [
+        {
+          "id": "q_training_preparation",
+          "text": "¿La empresa cuenta con un programa o actividades de capacitación en promoción y prevención de SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_training_execution",
+          "text": "¿La empresa ha ejecutado las actividades de capacitación en SST previstas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_preparation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_priority_risks_training",
+          "text": "¿Las capacitaciones realizadas incluyen los peligros o riesgos prioritarios identificados en la empresa?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_execution",
+            "value": true
+          }
+        },
+        {
+          "id": "q_prevention_control_training",
+          "text": "¿Las capacitaciones incluyen las medidas de prevención y control correspondientes a los peligros o riesgos identificados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_execution",
+            "value": true
+          }
+        },
+        {
+          "id": "q_training_records",
+          "text": "¿La empresa dispone de soportes de las capacitaciones realizadas y de planillas o registros de participación de los trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_execution",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art3_plan_anual",
+      "name": "Plan Anual de Trabajo",
+
+      "criterion": "Elaborar el Plan Anual de Trabajo del SG-SST, firmado por el empleador o contratante, identificando como mínimo objetivos, metas, responsabilidades, recursos y cronograma anual.",
+
+      "verification_method": "Solicitar documento que contenga el Plan Anual de Trabajo.",
+
+      "questions": [
+        {
+          "id": "q_plan_exists",
+          "text": "¿La empresa cuenta con un Plan Anual de Trabajo del SG-SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_employer_signature",
+          "text": "¿El Plan Anual de Trabajo está firmado por el empleador o contratante?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_objectives",
+          "text": "¿El Plan Anual de Trabajo identifica los objetivos del SG-SST?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_targets",
+          "text": "¿El Plan Anual de Trabajo identifica las metas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_responsibilities",
+          "text": "¿El Plan Anual de Trabajo identifica las responsabilidades?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_resources",
+          "text": "¿El Plan Anual de Trabajo identifica los recursos previstos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_annual_schedule",
+          "text": "¿El Plan Anual de Trabajo incluye un cronograma anual?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art3_evaluaciones_medicas",
+      "name": "Evaluaciones médicas ocupacionales",
+
+      "criterion": "Realizar evaluaciones médicas ocupacionales de acuerdo con la normatividad y con los peligros o riesgos a los cuales se encuentre expuesto el trabajador.",
+
+      "verification_method": "Conceptos emitidos por el médico evaluador en los cuales se informen recomendaciones y restricciones laborales.",
+
+      "questions": [
+        {
+          "id": "q_medical_evaluations_performed",
+          "text": "¿La empresa realiza las evaluaciones médicas ocupacionales que corresponden a sus trabajadores?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_medical_evaluations_risk_based",
+          "text": "¿Las evaluaciones médicas ocupacionales se realizan teniendo en cuenta los peligros o riesgos a los que están expuestos los trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_evaluations_performed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_medical_concepts_available",
+          "text": "¿La empresa dispone de los conceptos emitidos por el médico evaluador?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_evaluations_performed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_medical_recommendations_restrictions",
+          "text": "¿Los conceptos médicos informan las recomendaciones o restricciones laborales cuando estas existen?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_concepts_available",
+            "value": true
+          }
+        }
+      ],
+
+      "exceptions": [
+        {
+          "id": "medical_provider_remote_departments",
+          "source": "Resolución 0312 de 2019, artículo 3, parágrafo 1",
+          "effect": "alternative_provider_requirements",
+          "description": "En determinados departamentos, cuando no exista disponibilidad de médicos con posgrado en SST o equivalente y licencia vigente, pueden operar las condiciones excepcionales previstas en el parágrafo 1."
+        }
+      ]
+    },
+
+    {
+      "id": "art3_identificacion_peligros",
+      "name": "Identificación de peligros, evaluación y valoración de riesgos",
+
+      "criterion": "Realizar la identificación de peligros y la evaluación y valoración de los riesgos con el acompañamiento de la ARL.",
+
+      "verification_method": "Solicitar documento con la identificación de peligros, evaluación y valoración de riesgos y constancia de acompañamiento de la ARL.",
+
+      "questions": [
+        {
+          "id": "q_hazard_identification",
+          "text": "¿La empresa ha realizado la identificación de los peligros presentes en sus actividades y lugares de trabajo?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_risk_evaluation",
+          "text": "¿La empresa ha realizado la evaluación de los riesgos asociados a los peligros identificados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_hazard_identification",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risk_valuation",
+          "text": "¿La empresa ha realizado la valoración de los riesgos evaluados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_risk_evaluation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risk_document_available",
+          "text": "¿La empresa dispone del documento que contiene la identificación de peligros y la evaluación y valoración de riesgos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_risk_valuation",
+            "value": true
+          }
+        },
+        {
+          "id": "q_arl_accompaniment",
+          "text": "¿La empresa contó con acompañamiento de la ARL para la identificación de peligros y la evaluación y valoración de riesgos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_hazard_identification",
+            "value": true
+          }
+        },
+        {
+          "id": "q_arl_support_available",
+          "text": "¿La empresa dispone de una constancia o acta que soporte el acompañamiento realizado por la ARL?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_arl_accompaniment",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art3_medidas_prevencion_control",
+      "name": "Medidas de prevención y control frente a peligros y riesgos identificados",
+
+      "criterion": "Ejecutar las actividades de prevención y control de peligros y riesgos con base en los resultados de la identificación de peligros y la evaluación y valoración de riesgos.",
+
+      "verification_method": "Solicitar documento soporte con las acciones ejecutadas.",
+
+      "questions": [
+        {
+          "id": "q_prevention_measures_execution",
+          "text": "¿La empresa ha ejecutado medidas de prevención y control frente a los peligros y riesgos identificados?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_prevention_measures_risk_based",
+          "text": "¿Las medidas ejecutadas se definieron con base en los resultados de la identificación de peligros y la evaluación y valoración de riesgos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_prevention_measures_execution",
+            "value": true
+          }
+        },
+        {
+          "id": "q_prevention_measures_support",
+          "text": "¿La empresa dispone de documentos que soporten las medidas de prevención y control ejecutadas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_prevention_measures_execution",
+            "value": true
+          }
+        }
+      ]
+    }
+  ]
+}

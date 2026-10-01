@@ -1,0 +1,2870 @@
+{
+  "schema_version": "2.0",
+  "catalog_id": "res0312_riesgo_i_51_plus",
+  "name": "Estándares Mínimos SG-SST - Empresas con más de 50 trabajadores - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "requirements_article": 16,
+  "scoring_article": 27,
+  "scope": {
+    "risk_classes": [
+      "I"
+    ],
+    "worker_count": {
+      "min": 51,
+      "max": null
+    },
+    "company_type": "general_and_agricultural_production_units"
+  },
+  "applicability": {
+    "priority": 50,
+    "rules": [
+      {
+        "field": "risk_class",
+        "operator": "equals",
+        "value": "I"
+      },
+      {
+        "field": "worker_count",
+        "operator": "greater_than_or_equal",
+        "value": 51
+      }
+    ]
+  },
+  "non_applicability_policy": {
+    "package_default": "applicable",
+    "explicit_requirement_condition_can_generate_not_applicable": true,
+    "unanswered_is_not_not_applicable": true,
+    "not_applicable_reason_required": true,
+    "show_not_applicable_requirements_in_report": true,
+    "not_applicable_scoring": "pending_expert_validation"
+  },
+  "sections": [
+    {
+      "id": "planear",
+      "name": "Planear",
+      "cycle": "PLANEAR",
+      "requirements": [
+        {
+          "id": "1.1.1",
+          "name": "Responsable del SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Asignar una persona que diseñe e implemente el SG-SST y cumpla el perfil profesional, licencia vigente y curso virtual de 50 horas.",
+          "official_verification_method": "Solicitar el documento de asignación con responsabilidades y constatar la hoja de vida con soportes.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_111_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene asignada una persona responsable del diseño e implementación del SG-SST que cumple el perfil, licencia y formación exigidos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_111_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento de asignación y de los soportes de la hoja de vida de la persona responsable?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_111_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.2",
+          "name": "Responsabilidades en el SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Asignar y documentar responsabilidades específicas en SST a todos los niveles de la organización.",
+          "official_verification_method": "Solicitar el soporte que contenga la asignación de responsabilidades en SST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_112_primary",
+              "role": "primary",
+              "text": "¿La empresa ha asignado y documentado las responsabilidades en SST para los niveles de la organización que corresponden?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_112_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del soporte documental de esas responsabilidades?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_112_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.3",
+          "name": "Asignación de recursos para el SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Definir y asignar talento humano y recursos financieros, técnicos y tecnológicos para la implementación, mantenimiento y continuidad del SG-SST.",
+          "official_verification_method": "Constatar evidencias físicas de la definición y asignación de recursos, en relación con el Plan Anual de Trabajo.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_113_primary",
+              "role": "primary",
+              "text": "¿La empresa ha definido y asignado los recursos humanos, financieros, técnicos y tecnológicos necesarios para el SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_113_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias de la asignación de esos recursos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_113_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.4",
+          "name": "Afiliación al Sistema General de Riesgos Laborales",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Garantizar la afiliación de los trabajadores, independientemente de su forma de vinculación, a Salud, Pensión y Riesgos Laborales.",
+          "official_verification_method": "Comparar listados de trabajadores y contratistas con planillas de aportes; aplicar el muestreo señalado por la Resolución.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_114_primary",
+              "role": "primary",
+              "text": "¿Todos los trabajadores y contratistas que deben estar afiliados cuentan con afiliación vigente a Salud, Pensión y Riesgos Laborales?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_114_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de listados y planillas que soportan las afiliaciones declaradas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_114_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.5",
+          "name": "Trabajadores de alto riesgo y cotización de pensión especial",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Cuando aplique, identificar trabajadores que desarrollan permanentemente actividades de alto riesgo y realizar la cotización pensional especial.",
+          "official_verification_method": "Cuando aplique, verificar la identificación de estos trabajadores y el pago de la cotización especial.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "conditional",
+            "not_applicable_allowed": true,
+            "screening_question_id": "q_115_primary",
+            "applies_when": true,
+            "not_applicable_when": false,
+            "not_applicable_reason": "La empresa declara no tener trabajadores que desarrollen permanentemente actividades de alto riesgo sujetas a cotización pensional especial.",
+            "not_applicable_scoring": "pending_expert_validation"
+          },
+          "questions": [
+            {
+              "id": "q_115_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene trabajadores que realizan permanentemente actividades de alto riesgo que generan obligación de cotización pensional especial?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_115_compliance",
+              "role": "clarification",
+              "text": "¿La empresa tiene identificados a esos trabajadores y realiza la cotización especial correspondiente?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_115_primary",
+                "value": true
+              }
+            },
+            {
+              "id": "q_115_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de identificación y pago de la cotización especial?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_115_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.6",
+          "name": "Conformación y funcionamiento del COPASST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Conformar y garantizar el funcionamiento del COPASST.",
+          "official_verification_method": "Solicitar soportes de convocatoria, elección y conformación; revisar vigencia, representación, actas mensuales y cumplimiento de funciones.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_116_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene conformado y vigente el COPASST y este se encuentra funcionando?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_116_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de convocatoria, elección, conformación y actas de reuniones del COPASST?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_116_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.7",
+          "name": "Capacitación de los integrantes del COPASST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Capacitar a los integrantes del COPASST para el cumplimiento efectivo de sus responsabilidades.",
+          "official_verification_method": "Solicitar documentos que evidencien las actividades de capacitación del COPASST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_117_primary",
+              "role": "primary",
+              "text": "¿Los integrantes del COPASST han recibido capacitación para cumplir sus responsabilidades?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_117_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de documentos que evidencien esas capacitaciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_117_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.1.8",
+          "name": "Comité de Convivencia Laboral",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "RECURSOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 0.5,
+            "section_weight_percent": 4
+          },
+          "official_criterion": "Conformar y garantizar el funcionamiento del Comité de Convivencia Laboral conforme a la normatividad vigente.",
+          "official_verification_method": "Solicitar documento de conformación, verificar integración y vigencia y revisar actas e informes de gestión.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_118_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene conformado, vigente y en funcionamiento el Comité de Convivencia Laboral?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_118_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento de conformación, actas de reuniones e informes de gestión?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_118_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.2.1",
+          "name": "Programa de capacitación promoción y prevención",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "CAPACITACION",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "Elaborar y ejecutar un programa anual de capacitación en promoción y prevención que incluya riesgos prioritarios y medidas de prevención y control, extensivo a todos los niveles.",
+          "official_verification_method": "Solicitar el programa anual, la matriz de peligros y los soportes que evidencien su ejecución.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_121_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un programa anual de capacitación en SST, alineado con los riesgos prioritarios, y lo ejecuta?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_121_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del programa, matriz de peligros y soportes de ejecución?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_121_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.2.2",
+          "name": "Inducción y reinducción en SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "CAPACITACION",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "Realizar inducción y reinducción en SST a todos los trabajadores antes del inicio de labores, incluyendo peligros, controles y prevención.",
+          "official_verification_method": "Solicitar lista de trabajadores y soportes documentales de inducción y reinducción según el muestreo previsto.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_122_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza inducción y reinducción en SST a los trabajadores, incluyendo peligros, controles y prevención asociados a sus labores?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_122_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de listados y soportes documentales de estas actividades?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_122_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "1.2.3",
+          "name": "Curso virtual de cincuenta (50) horas del responsable del SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "CAPACITACION",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "El responsable del SG-SST debe realizar el curso virtual de capacitación de cincuenta (50) horas en SST.",
+          "official_verification_method": "Solicitar el certificado de aprobación del curso expedido a nombre del responsable.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_123_primary",
+              "role": "primary",
+              "text": "¿La persona responsable del SG-SST cuenta con el curso virtual de cincuenta (50) horas en SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_123_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del certificado de aprobación del curso?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_123_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.1.1",
+          "name": "Política de Seguridad y Salud en el Trabajo",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Establecer una Política de SST escrita, firmada, fechada, comunicada, accesible, revisada al menos anualmente y con los compromisos exigidos por la norma.",
+          "official_verification_method": "Solicitar la política, verificar sus elementos y revisión anual e indagar su conocimiento en el COPASST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_211_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con una Política de SST escrita, vigente, firmada, fechada, comunicada y acorde con los compromisos normativos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_211_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de la política y de soportes de divulgación y revisión?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_211_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.2.1",
+          "name": "Objetivos del SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Definir objetivos claros, medibles, cuantificables, con metas, coherentes con el plan anual, documentados, comunicados, revisados al menos anualmente y firmados por el empleador.",
+          "official_verification_method": "Revisar los objetivos y verificar evidencias de su difusión.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_221_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene objetivos del SG-SST definidos, documentados, medibles, con metas y coherentes con el Plan Anual de Trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_221_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento de objetivos y de evidencias de su difusión y revisión?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_221_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.3.1",
+          "name": "Evaluación inicial del SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Realizar la evaluación inicial del SG-SST para identificar prioridades y establecer o actualizar el Plan Anual de Trabajo.",
+          "official_verification_method": "Solicitar la evaluación inicial y los documentos utilizados para sustentarla.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_231_primary",
+              "role": "primary",
+              "text": "¿La empresa ha realizado la evaluación inicial del SG-SST e identificado prioridades para su gestión?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_231_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento de evaluación inicial y sus soportes?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_231_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.4.1",
+          "name": "Plan Anual de Trabajo",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Diseñar y definir un Plan Anual de Trabajo con objetivos, metas, responsabilidades, recursos, cronograma y firmas requeridas.",
+          "official_verification_method": "Solicitar el plan, verificar su cumplimiento y, cuando haya incumplimientos, los planes de mejora.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_241_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un Plan Anual de Trabajo del SG-SST con objetivos, metas, responsabilidades, recursos, cronograma y firmas requeridas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_241_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del plan y de soportes de seguimiento y acciones de mejora?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_241_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.5.1",
+          "name": "Archivo y retención documental del SG-SST",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Contar con un sistema de archivo y retención documental para los registros y documentos que soportan el SG-SST.",
+          "official_verification_method": "Verificar que los registros sean legibles, identificables, accesibles y protegidos contra daño y pérdida.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_251_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un sistema de archivo y retención documental para los registros del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_251_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de registros legibles, identificables, accesibles y protegidos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_251_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.6.1",
+          "name": "Rendición de cuentas",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Realizar anualmente la rendición de cuentas del desarrollo del SG-SST incluyendo todos los niveles de la empresa.",
+          "official_verification_method": "Solicitar registros documentales de la rendición de cuentas y verificar los mecanismos utilizados.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_261_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza anualmente la rendición de cuentas sobre el desarrollo del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_261_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de registros documentales de la rendición de cuentas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_261_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.7.1",
+          "name": "Matriz legal",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Definir una matriz legal con las normas actualizadas de riesgos laborales y SST aplicables a la empresa.",
+          "official_verification_method": "Solicitar la matriz legal y verificar que contenga las normas vigentes y aplicables.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_271_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con una matriz legal actualizada que identifica la normatividad de SST aplicable?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_271_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de la matriz y puede evidenciar su actualización?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_271_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.8.1",
+          "name": "Mecanismos de comunicación",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Disponer de mecanismos eficaces para recibir y responder comunicaciones internas y externas relativas a SST, incluidos mecanismos de autorreporte.",
+          "official_verification_method": "Constatar la existencia de mecanismos eficaces de comunicación interna y externa en SST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_281_primary",
+              "role": "primary",
+              "text": "¿La empresa dispone de mecanismos eficaces de comunicación interna y externa en SST, incluido el autorreporte?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_281_evidence",
+              "role": "evidence",
+              "text": "¿La empresa puede evidenciar la existencia y uso de estos mecanismos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_281_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.9.1",
+          "name": "Adquisiciones de bienes y servicios",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Establecer un procedimiento para identificar y evaluar especificaciones de SST en compras y adquisición de productos y servicios.",
+          "official_verification_method": "Verificar la existencia del procedimiento y constatar su cumplimiento.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_291_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un procedimiento para identificar y evaluar requisitos de SST en la adquisición de bienes y servicios?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_291_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del procedimiento y evidencias de su aplicación?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_291_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.10.1",
+          "name": "Evaluación y selección de proveedores y contratistas",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Establecer aspectos de SST para la evaluación y selección de proveedores y contratistas.",
+          "official_verification_method": "Solicitar el documento que contenga los criterios de SST utilizados para la evaluación y selección.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_2101_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene definidos criterios de SST para evaluar y seleccionar proveedores y contratistas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_2101_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento que contiene esos criterios?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_2101_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "2.11.1",
+          "name": "Gestión del cambio",
+          "phva": {
+            "cycle": "PLANEAR",
+            "section": "GESTION_INTEGRAL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Disponer de un procedimiento para evaluar el impacto en SST de cambios internos o externos.",
+          "official_verification_method": "Solicitar el documento que contenga el procedimiento.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_2111_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un procedimiento para evaluar el impacto en SST de cambios internos o externos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_2111_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento que contiene ese procedimiento?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_2111_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        }
+      ]
+    },
+    {
+      "id": "hacer",
+      "name": "Hacer",
+      "cycle": "HACER",
+      "requirements": [
+        {
+          "id": "3.1.1",
+          "name": "Descripción sociodemográfica y diagnóstico de condiciones de salud",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Recolectar información sociodemográfica actualizada y realizar el diagnóstico de condiciones de salud de los trabajadores.",
+          "official_verification_method": "Solicitar el documento consolidado con la información sociodemográfica y el diagnóstico de salud.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_311_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con una descripción sociodemográfica actualizada y un diagnóstico de las condiciones de salud de los trabajadores?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_311_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento consolidado que soporta esta información?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_311_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.2",
+          "name": "Actividades de promoción y prevención en salud",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Desarrollar actividades de medicina del trabajo, prevención, promoción y vigilancia epidemiológica según prioridades de salud y riesgos.",
+          "official_verification_method": "Solicitar evidencias de la definición y ejecución de estas actividades y programas.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_312_primary",
+              "role": "primary",
+              "text": "¿La empresa desarrolla actividades de medicina del trabajo, prevención y promoción acordes con sus prioridades y riesgos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_312_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias de la definición y ejecución de estas actividades?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_312_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.3",
+          "name": "Información al médico de los perfiles de cargo",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Informar al médico evaluador los perfiles de cargo, tareas y condiciones del medio en que se desarrolla la labor.",
+          "official_verification_method": "Verificar soportes documentales remitidos al médico evaluador.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_313_primary",
+              "role": "primary",
+              "text": "¿La empresa informa al médico evaluador los perfiles de cargo, tareas y condiciones del medio de trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_313_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de la información remitida?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_313_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.4",
+          "name": "Evaluaciones médicas ocupacionales",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Realizar evaluaciones médicas según la normatividad y los riesgos, definir su frecuencia y comunicar por escrito los resultados al trabajador.",
+          "official_verification_method": "Solicitar conceptos de aptitud, registro de frecuencia y evidencia de comunicación de resultados.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_314_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza las evaluaciones médicas ocupacionales requeridas y tiene definida su frecuencia según los riesgos?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_314_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de conceptos de aptitud y registros que soportan la realización y comunicación de las evaluaciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_314_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.5",
+          "name": "Custodia de historias clínicas",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Mantener la custodia de historias clínicas ocupacionales a cargo de una institución prestadora de servicios en SST o del médico evaluador autorizado.",
+          "official_verification_method": "Evidenciar soportes que demuestren quién ejerce la custodia.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_315_primary",
+              "role": "primary",
+              "text": "¿La custodia de las historias clínicas ocupacionales está a cargo de una institución o profesional autorizado?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_315_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes que acreditan quién ejerce la custodia?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_315_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.6",
+          "name": "Restricciones y recomendaciones médico-laborales",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Cumplir las restricciones y recomendaciones médico-laborales y realizar adecuaciones, reubicaciones o readaptaciones cuando se requiera.",
+          "official_verification_method": "Solicitar las recomendaciones y verificar evidencias de las acciones realizadas.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "conditional",
+            "not_applicable_allowed": true,
+            "screening_question_id": "q_316_primary",
+            "applies_when": true,
+            "not_applicable_when": false,
+            "not_applicable_reason": "La empresa declara no tener trabajadores con restricciones o recomendaciones médico-laborales vigentes que requieran actuación.",
+            "not_applicable_scoring": "pending_expert_validation"
+          },
+          "questions": [
+            {
+              "id": "q_316_primary",
+              "role": "primary",
+              "text": "¿Existen trabajadores con restricciones o recomendaciones médico-laborales vigentes que requieran actuación de la empresa?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_316_compliance",
+              "role": "clarification",
+              "text": "¿La empresa cumple las restricciones y recomendaciones y realiza las acciones requeridas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_316_primary",
+                "value": true
+              }
+            },
+            {
+              "id": "q_316_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de las recomendaciones y de soportes de las actuaciones realizadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_316_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.7",
+          "name": "Estilos de vida y entornos saludables",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Elaborar y ejecutar un programa para promover estilos de vida y entornos de trabajo saludables.",
+          "official_verification_method": "Solicitar el programa y registros que evidencien su ejecución.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_317_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un programa para promover estilos de vida y entornos de trabajo saludables y lo ejecuta?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_317_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del programa y de registros de su ejecución?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_317_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.8",
+          "name": "Agua potable, servicios sanitarios y disposición de basuras",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Contar con suministro permanente de agua potable, servicios sanitarios y mecanismos para disponer excretas y basuras.",
+          "official_verification_method": "Verificar mediante observación directa y dejar soporte.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_318_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con agua potable, servicios sanitarios y mecanismos adecuados para disponer excretas y basuras?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_318_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencia que soporte las condiciones declaradas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_318_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.1.9",
+          "name": "Eliminación adecuada de residuos",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 9
+          },
+          "official_criterion": "Eliminar residuos sólidos, líquidos o gaseosos, incluidos los peligrosos, sin poner en riesgo a los trabajadores.",
+          "official_verification_method": "Constatar evidencias de eliminación y, cuando corresponda, soportes del gestor de residuos peligrosos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_319_primary",
+              "role": "primary",
+              "text": "¿La empresa gestiona y elimina sus residuos de forma que no se ponga en riesgo a los trabajadores?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_319_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias del proceso de eliminación y, cuando corresponde, del gestor de residuos peligrosos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_319_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.2.1",
+          "name": "Reporte de accidentes de trabajo y enfermedad laboral",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Reportar a ARL y EPS los accidentes y enfermedades laborales diagnosticadas y, cuando corresponda, a la Dirección Territorial dentro de los plazos establecidos.",
+          "official_verification_method": "Indagar si se presentaron eventos y verificar reportes FURAT, FUREL y oportunidad de presentación.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia de eventos en el periodo debe registrarse como condición contextual; no se convierte automáticamente en 'No aplica'."
+          },
+          "questions": [
+            {
+              "id": "q_321_primary",
+              "role": "primary",
+              "text": "¿La empresa reporta los accidentes de trabajo y enfermedades laborales a las entidades correspondientes dentro de los plazos aplicables?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_321_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los reportes y soportes de los eventos ocurridos?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_321_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.2.2",
+          "name": "Investigación de accidentes, incidentes y enfermedad laboral",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Investigar incidentes, accidentes de trabajo y enfermedades laborales con participación del COPASST, determinando causas y acciones para prevenir nuevos casos.",
+          "official_verification_method": "Verificar las investigaciones, su oportunidad, participación del COPASST y acciones definidas.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia de eventos en el periodo debe registrarse como condición contextual; no se convierte automáticamente en 'No aplica'."
+          },
+          "questions": [
+            {
+              "id": "q_322_primary",
+              "role": "primary",
+              "text": "¿La empresa investiga oportunamente los incidentes, accidentes y enfermedades laborales y define acciones para prevenir su repetición?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_322_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los informes y soportes de las investigaciones realizadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_322_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.2.3",
+          "name": "Registro y análisis estadístico de accidentes y enfermedades laborales",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Llevar registro estadístico de accidentes y enfermedades laborales, analizarlo y utilizar sus conclusiones para mejorar el SG-SST.",
+          "official_verification_method": "Solicitar el registro estadístico actualizado y evidencias de su análisis.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia de eventos en el periodo debe registrarse como condición contextual; no se convierte automáticamente en 'No aplica'."
+          },
+          "questions": [
+            {
+              "id": "q_323_primary",
+              "role": "primary",
+              "text": "¿La empresa mantiene y analiza un registro estadístico de accidentes de trabajo y enfermedades laborales?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_323_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del registro y de evidencias del análisis realizado?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_323_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.1",
+          "name": "Medición de la frecuencia de la accidentalidad",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide mensualmente la frecuencia de accidentalidad y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_331_primary",
+              "role": "primary",
+              "text": "¿La empresa mide mensualmente la frecuencia de accidentalidad y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_331_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_331_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.2",
+          "name": "Medición de la severidad de la accidentalidad",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide mensualmente la severidad de la accidentalidad y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_332_primary",
+              "role": "primary",
+              "text": "¿La empresa mide mensualmente la severidad de la accidentalidad y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_332_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_332_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.3",
+          "name": "Medición de la mortalidad por accidente de trabajo",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide al menos anualmente la mortalidad por accidentes de trabajo y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_333_primary",
+              "role": "primary",
+              "text": "¿La empresa mide al menos anualmente la mortalidad por accidentes de trabajo y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_333_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_333_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.4",
+          "name": "Medición de la prevalencia de enfermedad laboral",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide al menos anualmente la prevalencia de enfermedad laboral y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_334_primary",
+              "role": "primary",
+              "text": "¿La empresa mide al menos anualmente la prevalencia de enfermedad laboral y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_334_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_334_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.5",
+          "name": "Medición de la incidencia de enfermedad laboral",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide al menos anualmente la incidencia de enfermedad laboral y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_335_primary",
+              "role": "primary",
+              "text": "¿La empresa mide al menos anualmente la incidencia de enfermedad laboral y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_335_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_335_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "3.3.6",
+          "name": "Medición del ausentismo por causa médica",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_LA_SALUD",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1,
+            "section_weight_percent": 6
+          },
+          "official_criterion": "mide mensualmente el ausentismo por causa médica y relaciona los resultados con los peligros o riesgos identificados",
+          "official_verification_method": "Solicitar los resultados de la medición y constatar su comportamiento y relación con los peligros o riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_336_primary",
+              "role": "primary",
+              "text": "¿La empresa mide mensualmente el ausentismo por causa médica y relaciona los resultados con los peligros o riesgos identificados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_336_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los resultados y registros de estas mediciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_336_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.1.1",
+          "name": "Metodología para identificación de peligros, evaluación y valoración de riesgos",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 4,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Definir y aplicar una metodología para identificar peligros y evaluar y valorar riesgos con alcance a procesos, actividades, maquinaria, equipos, centros de trabajo y trabajadores.",
+          "official_verification_method": "Solicitar la metodología y verificar su aplicación y la participación de los trabajadores.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_411_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene definida y aplica una metodología para identificar peligros y evaluar y valorar los riesgos en todos sus procesos y centros de trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_411_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento metodológico y de evidencias de su aplicación?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_411_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.1.2",
+          "name": "Identificación de peligros con participación de todos los niveles",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 4,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Realizar la identificación de peligros y valoración de riesgos con participación de los trabajadores y actualizarla al menos una vez al año y ante eventos o cambios relevantes.",
+          "official_verification_method": "Solicitar evidencias de participación, actualización y acciones frente a riesgos no tolerables.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_412_primary",
+              "role": "primary",
+              "text": "¿La identificación de peligros y valoración de riesgos se realiza con participación de los trabajadores y se actualiza cuando corresponde?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_412_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias de participación y actualización?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_412_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.1.3",
+          "name": "Identificación de sustancias carcinógenas o con toxicidad aguda",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 3,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "En empresas donde se procesen, manipulen o utilicen sustancias o agentes carcinógenos o con toxicidad aguda, priorizar sus riesgos y ejecutar acciones de prevención e intervención.",
+          "official_verification_method": "Revisar materias primas, insumos, productos, subproductos y desechos y verificar identificación, priorización, intervención y almacenamiento.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "conditional",
+            "not_applicable_allowed": true,
+            "screening_question_id": "q_413_primary",
+            "applies_when": true,
+            "not_applicable_when": false,
+            "not_applicable_reason": "La empresa declara no procesar, manipular ni trabajar con sustancias o agentes carcinógenos o con toxicidad aguda.",
+            "not_applicable_scoring": "pending_expert_validation"
+          },
+          "questions": [
+            {
+              "id": "q_413_primary",
+              "role": "primary",
+              "text": "¿La empresa procesa, manipula o trabaja con sustancias o agentes carcinógenos o con toxicidad aguda?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_413_compliance",
+              "role": "clarification",
+              "text": "¿La empresa ha identificado y priorizado estos riesgos y ejecuta acciones de prevención e intervención?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_413_primary",
+                "value": true
+              }
+            },
+            {
+              "id": "q_413_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes sobre identificación, priorización, intervención y almacenamiento de estas sustancias?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_413_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.1.4",
+          "name": "Mediciones ambientales químicas, físicas y biológicas",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 4,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Realizar mediciones ambientales de riesgos prioritarios provenientes de peligros químicos, físicos y/o biológicos.",
+          "official_verification_method": "Verificar soportes de las mediciones y remisión de resultados al COPASST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "conditional",
+            "not_applicable_allowed": true,
+            "screening_question_id": "q_414_primary",
+            "applies_when": true,
+            "not_applicable_when": false,
+            "not_applicable_reason": "La empresa declara que su evaluación de riesgos no identifica riesgos prioritarios químicos, físicos o biológicos que requieran mediciones ambientales.",
+            "not_applicable_scoring": "pending_expert_validation"
+          },
+          "questions": [
+            {
+              "id": "q_414_primary",
+              "role": "primary",
+              "text": "¿La evaluación de riesgos identifica peligros prioritarios químicos, físicos o biológicos que requieran mediciones ambientales?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_414_compliance",
+              "role": "clarification",
+              "text": "¿La empresa realiza las mediciones ambientales requeridas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_414_primary",
+                "value": true
+              }
+            },
+            {
+              "id": "q_414_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de las mediciones y de la remisión de resultados al COPASST?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_414_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.1",
+          "name": "Implementación de medidas de prevención y control",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Ejecutar medidas de prevención y control con base en la identificación y valoración de riesgos, aplicando la jerarquización de controles.",
+          "official_verification_method": "Solicitar evidencias de ejecución y verificar su inclusión en el Plan Anual y la priorización de riesgos.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_421_primary",
+              "role": "primary",
+              "text": "¿La empresa ejecuta medidas de prevención y control basadas en la identificación y valoración de riesgos y aplica la jerarquización de controles?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_421_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias de ejecución y de su programación en el Plan Anual?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_421_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.2",
+          "name": "Aplicación de medidas de prevención y control por los trabajadores",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Verificar la aplicación por parte de los trabajadores de las medidas de prevención y control definidas.",
+          "official_verification_method": "Solicitar soportes documentales y verificar en las instalaciones su cumplimiento.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_422_primary",
+              "role": "primary",
+              "text": "¿La empresa verifica que los trabajadores apliquen las medidas de prevención y control definidas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_422_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de registros o soportes de las verificaciones realizadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_422_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.3",
+          "name": "Procedimientos, instructivos, fichas y protocolos de SST",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Elaborar procedimientos, instructivos y fichas técnicas de SST cuando se requieran y entregarlos a los trabajadores.",
+          "official_verification_method": "Solicitar los documentos cuando apliquen y los soportes de entrega.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "conditional",
+            "not_applicable_allowed": true,
+            "screening_question_id": "q_423_primary",
+            "applies_when": true,
+            "not_applicable_when": false,
+            "not_applicable_reason": "La empresa declara que, de acuerdo con sus peligros y actividades, no requiere procedimientos, instructivos, fichas técnicas o protocolos específicos adicionales.",
+            "not_applicable_scoring": "pending_expert_validation"
+          },
+          "questions": [
+            {
+              "id": "q_423_primary",
+              "role": "primary",
+              "text": "¿De acuerdo con los peligros y actividades de la empresa se requieren procedimientos, instructivos, fichas técnicas o protocolos específicos de SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_423_compliance",
+              "role": "clarification",
+              "text": "¿La empresa cuenta con los documentos requeridos y los entrega a los trabajadores correspondientes?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion",
+              "depends_on": {
+                "question_id": "q_423_primary",
+                "value": true
+              }
+            },
+            {
+              "id": "q_423_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los documentos y de soportes de entrega?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_423_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.4",
+          "name": "Inspecciones sistemáticas a instalaciones, maquinaria o equipos",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Elaborar formatos y realizar inspecciones sistemáticas a instalaciones, maquinaria y equipos con participación del COPASST.",
+          "official_verification_method": "Solicitar formatos y evidencias de las inspecciones y verificar la participación del COPASST.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_424_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza inspecciones sistemáticas a instalaciones, maquinaria y equipos con participación del COPASST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_424_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de formatos y registros de las inspecciones realizadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_424_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.5",
+          "name": "Mantenimiento periódico de instalaciones, equipos, máquinas y herramientas",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Realizar mantenimiento periódico conforme a inspecciones, reportes de condiciones inseguras y manuales o fichas técnicas.",
+          "official_verification_method": "Solicitar evidencia del mantenimiento preventivo y/o correctivo realizado.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_425_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza el mantenimiento preventivo o correctivo requerido de instalaciones, equipos, máquinas y herramientas?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_425_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de registros de los mantenimientos realizados?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_425_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "4.2.6",
+          "name": "Entrega de EPP y capacitación en uso adecuado",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_PELIGROS_Y_RIESGOS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 15
+          },
+          "official_criterion": "Suministrar y reponer oportunamente los EPP requeridos, capacitar en su uso y verificar el cumplimiento por contratistas y subcontratistas.",
+          "official_verification_method": "Solicitar soportes de entrega, reposición, capacitación y cumplimiento de contratistas y subcontratistas.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_426_primary",
+              "role": "primary",
+              "text": "¿La empresa suministra y repone oportunamente los EPP requeridos y capacita a los trabajadores sobre su uso adecuado?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_426_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes de entrega, reposición y capacitación en EPP?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_426_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "5.1.1",
+          "name": "Plan de prevención, preparación y respuesta ante emergencias",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_AMENAZAS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Elaborar un plan de emergencias que identifique amenazas, evalúe vulnerabilidad, incluya planos, salidas, señalización, simulacros anuales, cubra todas las jornadas y centros de trabajo y sea divulgado.",
+          "official_verification_method": "Solicitar el plan y evidencias de divulgación, planos, señalización, simulacros y acciones de mejora.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_511_primary",
+              "role": "primary",
+              "text": "¿La empresa cuenta con un Plan de Prevención, Preparación y Respuesta ante Emergencias acorde con sus amenazas, vulnerabilidad, jornadas y centros de trabajo?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_511_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del plan y de evidencias de divulgación, simulacros y acciones de mejora?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_511_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "5.1.2",
+          "name": "Brigada de prevención, preparación y respuesta ante emergencias",
+          "phva": {
+            "cycle": "HACER",
+            "section": "GESTION_DE_AMENAZAS",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Conformar, capacitar y dotar la brigada de emergencias según las necesidades y tamaño de la empresa.",
+          "official_verification_method": "Solicitar documento de conformación y soportes de capacitación y dotación.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_512_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene conformada, capacitada y dotada una brigada de emergencias acorde con sus necesidades y tamaño?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_512_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento de conformación y de soportes de capacitación y dotación?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_512_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        }
+      ]
+    },
+    {
+      "id": "verificar",
+      "name": "Verificar",
+      "cycle": "VERIFICAR",
+      "requirements": [
+        {
+          "id": "6.1.1",
+          "name": "Definición de indicadores del SG-SST",
+          "phva": {
+            "cycle": "VERIFICAR",
+            "section": "VERIFICACION_DEL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1.25,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Definir indicadores para evaluar el SG-SST de acuerdo con las condiciones de la empresa y mantener disponibles los resultados.",
+          "official_verification_method": "Solicitar los indicadores definidos y el informe con los resultados de evaluación.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_611_primary",
+              "role": "primary",
+              "text": "¿La empresa tiene definidos indicadores para evaluar el SG-SST y dispone de resultados actualizados?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_611_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de los indicadores y del informe o registros de resultados?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_611_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "6.1.2",
+          "name": "Auditoría anual",
+          "phva": {
+            "cycle": "VERIFICAR",
+            "section": "VERIFICACION_DEL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1.25,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Realizar una auditoría anual planificada con participación del COPASST.",
+          "official_verification_method": "Verificar soportes de auditorías internas, programa de auditoría, alcance, periodicidad, metodología, informes e idoneidad del auditor.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_612_primary",
+              "role": "primary",
+              "text": "¿La empresa realiza al menos una auditoría interna anual del SG-SST con participación del COPASST en su planificación?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_612_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del programa, informes y soportes de la auditoría?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_612_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "6.1.3",
+          "name": "Revisión anual por la alta dirección",
+          "phva": {
+            "cycle": "VERIFICAR",
+            "section": "VERIFICACION_DEL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1.25,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Revisar como mínimo una vez al año, por parte de la alta dirección, el SG-SST, sus resultados y el alcance de la auditoría.",
+          "official_verification_method": "Solicitar soportes de la revisión por la alta dirección.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_613_primary",
+              "role": "primary",
+              "text": "¿La alta dirección revisa al menos una vez al año el SG-SST, sus resultados y el alcance de la auditoría?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_613_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de soportes documentales de esta revisión?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_613_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "6.1.4",
+          "name": "Comunicación de resultados al COPASST y responsable del SG-SST",
+          "phva": {
+            "cycle": "VERIFICAR",
+            "section": "VERIFICACION_DEL_SGSST",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 1.25,
+            "section_weight_percent": 5
+          },
+          "official_criterion": "Comunicar los resultados de la revisión anual al COPASST y al responsable del SG-SST.",
+          "official_verification_method": "Solicitar el documento donde conste la revisión y la comunicación de resultados.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_614_primary",
+              "role": "primary",
+              "text": "¿Los resultados de la revisión anual del SG-SST se comunican al COPASST y a la persona responsable del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_614_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone del documento que soporta esa comunicación?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_614_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        }
+      ]
+    },
+    {
+      "id": "actuar",
+      "name": "Actuar",
+      "cycle": "ACTUAR",
+      "requirements": [
+        {
+          "id": "7.1.1",
+          "name": "Acciones preventivas y correctivas con base en resultados del SG-SST",
+          "phva": {
+            "cycle": "ACTUAR",
+            "section": "MEJORAMIENTO",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Definir e implementar acciones preventivas y/o correctivas con base en supervisión, inspecciones, indicadores y recomendaciones del COPASST.",
+          "official_verification_method": "Solicitar evidencia documental de la implementación de las acciones.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "always",
+            "not_applicable_allowed": false
+          },
+          "questions": [
+            {
+              "id": "q_711_primary",
+              "role": "primary",
+              "text": "¿La empresa define e implementa acciones preventivas o correctivas con base en los resultados de seguimiento del SG-SST?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_711_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencia documental de la implementación de estas acciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_711_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "7.1.2",
+          "name": "Acciones de mejora conforme a revisión de la alta dirección",
+          "phva": {
+            "cycle": "ACTUAR",
+            "section": "MEJORAMIENTO",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Cuando la revisión por la alta dirección evidencie medidas inadecuadas o que puedan dejar de ser eficaces, tomar acciones correctivas, preventivas y/o de mejora.",
+          "official_verification_method": "Solicitar evidencia documental de las acciones implementadas según lo detectado en la revisión.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia del evento desencadenante se registra como condición contextual; no se convierte automáticamente en 'No aplica' sin validación experta."
+          },
+          "questions": [
+            {
+              "id": "q_712_primary",
+              "role": "primary",
+              "text": "¿La empresa implementa acciones correctivas, preventivas o de mejora cuando la revisión de la alta dirección identifica deficiencias?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_712_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencia documental de esas acciones?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_712_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "7.1.3",
+          "name": "Acciones de mejora con base en investigaciones de accidentes y enfermedades laborales",
+          "phva": {
+            "cycle": "ACTUAR",
+            "section": "MEJORAMIENTO",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Definir e implementar acciones preventivas y/o correctivas con base en los resultados de investigaciones de accidentes y enfermedades laborales.",
+          "official_verification_method": "Solicitar evidencia de las acciones de mejora y verificar su efectividad.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia del evento desencadenante se registra como condición contextual; no se convierte automáticamente en 'No aplica' sin validación experta."
+          },
+          "questions": [
+            {
+              "id": "q_713_primary",
+              "role": "primary",
+              "text": "¿La empresa implementa acciones de mejora derivadas de las investigaciones de accidentes de trabajo y enfermedades laborales?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_713_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencia de las acciones y de la verificación de su efectividad?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_713_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        },
+        {
+          "id": "7.1.4",
+          "name": "Plan de mejoramiento por requerimientos de autoridades y ARL",
+          "phva": {
+            "cycle": "ACTUAR",
+            "section": "MEJORAMIENTO",
+            "mapping_source": "Resolución 0312 de 2019, artículo 27"
+          },
+          "scoring": {
+            "item_value": 2.5,
+            "section_weight_percent": 10
+          },
+          "official_criterion": "Implementar medidas y acciones correctivas producto de requerimientos o recomendaciones de autoridades administrativas y de la ARL.",
+          "official_verification_method": "Solicitar evidencias de las acciones realizadas en respuesta a esos requerimientos o recomendaciones.",
+          "verification_method_source": "official",
+          "applicability": {
+            "mode": "event_dependent",
+            "not_applicable_allowed": false,
+            "note": "La ausencia del evento desencadenante se registra como condición contextual; no se convierte automáticamente en 'No aplica' sin validación experta."
+          },
+          "questions": [
+            {
+              "id": "q_714_primary",
+              "role": "primary",
+              "text": "¿La empresa implementa las acciones correctivas derivadas de requerimientos o recomendaciones de autoridades y de la ARL?",
+              "type": "boolean",
+              "source_type": "derived_from_criterion"
+            },
+            {
+              "id": "q_714_evidence",
+              "role": "evidence",
+              "text": "¿La empresa dispone de evidencias de las acciones realizadas?",
+              "type": "boolean",
+              "source_type": "derived_from_verification_method",
+              "depends_on": {
+                "question_id": "q_714_primary",
+                "value": true
+              }
+            }
+          ],
+          "source": {
+            "norm": "Resolución 0312 de 2019",
+            "requirements_article": 16,
+            "scoring_article": 27
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "question_origin": "Preguntas diagnósticas derivadas de los criterios y modos de verificación del artículo 16 de la Resolución 0312 de 2019.",
+    "phva_mapping_source": "Resolución 0312 de 2019, artículo 27, Tabla de Valores y Calificación.",
+    "declarative_assessment": true,
+    "documentary_verification": false,
+    "expert_validation_required": true,
+    "notes": [
+      "El paquete completo aplica al régimen del artículo 16 para empresas de más de cincuenta trabajadores clasificadas en riesgo I.",
+      "Los ítems condicionales solo generan 'No aplica' cuando existe una condición normativa explícita y esta resulta falsa.",
+      "La ausencia de un evento desencadenante no se transforma automáticamente en 'No aplica'.",
+      "La asignación de puntaje a ítems condicionales marcados como 'No aplica' queda pendiente de validación experta."
+    ]
+  }
+}

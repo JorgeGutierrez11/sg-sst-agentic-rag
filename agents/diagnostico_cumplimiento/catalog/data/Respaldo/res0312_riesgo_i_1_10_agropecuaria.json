@@ -1,0 +1,169 @@
+{
+  "catalog_id": "res0312_riesgo_i_1_10_agropecuaria",
+  "name": "Estándares Mínimos SG-SST - Unidad de Producción Agropecuaria con 10 o menos trabajadores permanentes - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "article": 7,
+
+  "scope": {
+    "risk_classes": [
+      "I"
+    ],
+    "company_type": "agricultural_production_unit",
+    "permanent_worker_count": {
+      "min": 1,
+      "max": 10
+    }
+  },
+
+  "applicability": {
+    "priority": 100,
+    "rules": [
+      {
+        "field": "risk_class",
+        "operator": "equals",
+        "value": "I"
+      },
+      {
+        "field": "is_agricultural_production_unit",
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "field": "permanent_worker_count",
+        "operator": "between",
+        "min": 1,
+        "max": 10
+      }
+    ]
+  },
+
+  "legal_definitions": {
+    "agricultural_production_unit": {
+      "source": "Resolución 0312 de 2019, artículo 7, parágrafo 1",
+      "description": "Predio o predios utilizados total o parcialmente para el desarrollo de actividades agrícolas, forestales, pecuarias, pesqueras o acuícolas.",
+      "economic_activity_types": [
+        "agricultural",
+        "forestry",
+        "livestock",
+        "fishing",
+        "aquaculture"
+      ]
+    },
+
+    "permanent_worker": {
+      "source": "Resolución 0312 de 2019, artículo 7, parágrafo 2",
+      "description": "Persona que desarrolla actividad económica vinculada con la unidad de producción de forma continua y que no atiende a periodos estacionales, cosechas, incrementos en la producción o a la naturaleza de los sistemas productivos y asimilables."
+    }
+  },
+
+  "requirements": [
+    {
+      "id": "art7_identificacion_peligros_riesgos_controles",
+      "name": "Identificación de peligros, evaluación y valoración de riesgos y establecimiento de controles",
+
+      "official_criterion": "Identificar los peligros en el marco de los procesos productivos de la unidad de producción agropecuaria, evaluar y valorar los riesgos y establecer los respectivos controles.",
+
+      "source": {
+        "norm": "Resolución 0312 de 2019",
+        "article": 7
+      },
+
+      "official_verification_method": null,
+      "verification_method_source": "not_defined_in_article_7",
+
+      "questions": [
+        {
+          "id": "q_agro_hazards_identified",
+          "text": "¿La unidad de producción agropecuaria ha identificado los peligros presentes en sus procesos y actividades productivas?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion"
+        },
+        {
+          "id": "q_agro_risks_evaluated",
+          "text": "¿La unidad ha evaluado los riesgos asociados a los peligros identificados?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_agro_hazards_identified",
+            "value": true
+          }
+        },
+        {
+          "id": "q_agro_risks_valued",
+          "text": "¿La unidad ha realizado la valoración de los riesgos evaluados?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_agro_risks_evaluated",
+            "value": true
+          }
+        },
+        {
+          "id": "q_agro_controls_established",
+          "text": "¿La unidad ha establecido controles frente a los peligros y riesgos identificados?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_agro_risks_valued",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art7_prevencion_accidentes_enfermedades",
+      "name": "Prevención de accidentes de trabajo y enfermedades laborales",
+
+      "official_criterion": "Desarrollar actividades enfocadas a prevenir la presencia de accidentes de trabajo o enfermedades laborales.",
+
+      "source": {
+        "norm": "Resolución 0312 de 2019",
+        "article": 7
+      },
+
+      "official_verification_method": null,
+      "verification_method_source": "not_defined_in_article_7",
+
+      "questions": [
+        {
+          "id": "q_agro_prevention_activities",
+          "text": "¿La unidad de producción agropecuaria desarrolla actividades orientadas a prevenir accidentes de trabajo y enfermedades laborales?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion"
+        }
+      ]
+    },
+
+    {
+      "id": "art7_proteccion_personas_actividad_productiva",
+      "name": "Protección de la seguridad y salud de las personas que desarrollan actividades productivas",
+
+      "official_criterion": "Proteger la seguridad y salud de todas las personas que desarrollan actividades productivas en la unidad de producción agropecuaria.",
+
+      "source": {
+        "norm": "Resolución 0312 de 2019",
+        "article": 7
+      },
+
+      "official_verification_method": null,
+      "verification_method_source": "not_defined_in_article_7",
+
+      "questions": [
+        {
+          "id": "q_agro_all_persons_protected",
+          "text": "¿Las medidas de seguridad y salud implementadas por la unidad cubren a todas las personas que desarrollan actividades productivas en ella?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion"
+        }
+      ]
+    }
+  ],
+
+  "metadata": {
+    "question_origin": "Preguntas diagnósticas derivadas de los criterios establecidos en el artículo 7 de la Resolución 0312 de 2019.",
+    "declarative_assessment": true,
+    "documentary_verification": false,
+    "expert_validation_required": true
+  }
+}

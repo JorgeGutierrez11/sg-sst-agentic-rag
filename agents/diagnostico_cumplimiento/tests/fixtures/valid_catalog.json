@@ -4,6 +4,8 @@
   "requirements": [
     {
       "id": "test_requirement",
+      "requirement_group_id": "test_requirement",
+      "official_item_id": "TEST-ITEM",
       "source": {
         "regulation": "Resolución 0312 de 2019",
         "article": "Artículo de prueba",

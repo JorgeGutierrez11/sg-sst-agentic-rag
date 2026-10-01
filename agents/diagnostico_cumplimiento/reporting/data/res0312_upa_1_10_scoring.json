@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "scoring_id": "res0312_upa_1_10_scoring",
+  "catalog_id": "res0312_riesgo_i_1_10_agropecuaria",
+  "name": "Calificación de Estándares Mínimos para Unidades de Producción Agropecuaria",
+  "norm": {
+    "name": "Resolución 0312 de 2019",
+    "requirements_article": 7
+  },
+  "scope": {
+    "permanent_worker_count_min": 1,
+    "permanent_worker_count_max": 10,
+    "risk_classes": [
+      "I"
+    ],
+    "agricultural_production_unit": true
+  },
+  "scoring_strategy": "upa_three_standards",
+  "assessment_unit": "normative_requirement",
+  "question_level_scoring": false,
+  "official_system_options": [
+    "complies_fully",
+    "complies_partially",
+    "does_not_comply",
+    "not_applicable"
+  ],
+  "partial_compliance": {
+    "supported_by_official_system": true,
+    "implemented_by_agent": false,
+    "reason": "El catálogo actual evalúa el estándar como unidad normativa y todavía no contiene reglas validadas para convertir combinaciones de respuestas auxiliares en cumplimiento parcial."
+  },
+  "standards": [
+    {
+      "requirement_id": "art7_identificacion_peligros_riesgos_controles",
+      "order": 1,
+      "name": "Identificación de peligros, evaluación y valoración de riesgos y establecimiento de controles",
+      "maximum_score": 34.0
+    },
+    {
+      "requirement_id": "art7_prevencion_accidentes_enfermedades",
+      "order": 2,
+      "name": "Prevención de accidentes de trabajo y enfermedades laborales",
+      "maximum_score": 33.0
+    },
+    {
+      "requirement_id": "art7_proteccion_personas_actividad_productiva",
+      "order": 3,
+      "name": "Protección de la seguridad y salud de las personas que desarrollan actividades productivas",
+      "maximum_score": 33.0
+    }
+  ],
+  "validation": {
+    "expected_standard_count": 3,
+    "expected_total_score": 100.0
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "mapping_id": "res0312_art27_mapping_1_10_general",
+  "catalog_id": "res0312_riesgo_i_1_10_general",
+  "name": "Mapeo Artículo 3 a Tabla de Valores del Artículo 27",
+  "norm": {
+    "name": "Resolución 0312 de 2019",
+    "requirements_article": 3,
+    "scoring_article": 27
+  },
+  "scope": {
+    "worker_count_min": 1,
+    "worker_count_max": 10,
+    "risk_classes": [
+      "I"
+    ],
+    "agricultural_production_unit": false
+  },
+  "evaluated_items": [
+    {
+      "requirement_id": "art3_asignacion_persona_sgsst",
+      "official_item_id": "1.1.1",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "res0312_art3_afiliacion_1_10",
+      "official_item_id": "1.1.4",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "res0312_art3_capacitacion_1_10",
+      "official_item_id": "1.2.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "res0312_art3_plan_anual_1_10",
+      "official_item_id": "2.4.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art3_evaluaciones_medicas",
+      "official_item_id": "3.1.4",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "res0312_art3_identificacion_peligros_1_10",
+      "official_item_id": "4.1.2",
+      "item_value": 4.0
+    },
+    {
+      "requirement_id": "res0312_art3_medidas_prevencion_control_1_10",
+      "official_item_id": "4.2.1",
+      "item_value": 2.5
+    }
+  ],
+  "non_applicability": {
+    "strategy": "all_other_article_27_items",
+    "expected_item_count": 53,
+    "score_policy": "maximum_item_value",
+    "expected_score": 87.5,
+    "reason": "Ítems de la Tabla de Valores que no forman parte de los Estándares Mínimos aplicables al alcance definido en el artículo 3."
+  },
+  "validation": {
+    "expected_total_article_27_items": 60,
+    "expected_evaluated_items": 7,
+    "expected_not_applicable_items": 53,
+    "expected_evaluated_max_score": 12.5,
+    "expected_not_applicable_score": 87.5,
+    "expected_total_score": 100.0
+  }
+}

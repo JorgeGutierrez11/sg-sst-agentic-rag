@@ -1,0 +1,146 @@
+{
+  "schema_version": "1.0",
+  "mapping_id": "res0312_art27_mapping_11_50",
+  "catalog_id": "res0312_riesgo_i_11_50",
+  "name": "Mapeo Artículo 9 a Tabla de Valores del Artículo 27",
+  "norm": {
+    "name": "Resolución 0312 de 2019",
+    "requirements_article": 9,
+    "scoring_article": 27
+  },
+  "scope": {
+    "worker_count_min": 11,
+    "worker_count_max": 50,
+    "risk_classes": [
+      "I"
+    ],
+    "agricultural_production_unit": null
+  },
+  "mapping_policy": {
+    "assessment_unit": "normative_requirement",
+    "question_level_scoring": false,
+    "description": "Las preguntas son auxiliares para recopilar información y determinar el estado declarativo del estándar. No reciben puntaje independiente."
+  },
+  "evaluated_items": [
+    {
+      "requirement_id": "art9_asignacion_persona_sgsst",
+      "official_item_id": "1.1.1",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "art9_asignacion_recursos",
+      "official_item_id": "1.1.3",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "art9_afiliacion_seguridad_social",
+      "official_item_id": "1.1.4",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "art9_copasst",
+      "official_item_id": "1.1.6",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "art9_comite_convivencia",
+      "official_item_id": "1.1.8",
+      "item_value": 0.5
+    },
+    {
+      "requirement_id": "art9_programa_capacitacion",
+      "official_item_id": "1.2.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art9_politica_sst",
+      "official_item_id": "2.1.1",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "art9_plan_anual",
+      "official_item_id": "2.4.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art9_archivo_retencion",
+      "official_item_id": "2.5.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art9_descripcion_sociodemografica_salud",
+      "official_item_id": "3.1.1",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "art9_medicina_prevencion_promocion",
+      "official_item_id": "3.1.2",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "art9_evaluaciones_medicas",
+      "official_item_id": "3.1.4",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "art9_restricciones_recomendaciones",
+      "official_item_id": "3.1.6",
+      "item_value": 1.0
+    },
+    {
+      "requirement_id": "art9_reporte_accidentes_enfermedades",
+      "official_item_id": "3.2.1",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art9_investigacion_incidentes_accidentes",
+      "official_item_id": "3.2.2",
+      "item_value": 2.0
+    },
+    {
+      "requirement_id": "art9_identificacion_peligros",
+      "official_item_id": "4.1.2",
+      "item_value": 4.0
+    },
+    {
+      "requirement_id": "art9_mantenimiento",
+      "official_item_id": "4.2.5",
+      "item_value": 2.5
+    },
+    {
+      "requirement_id": "art9_epp",
+      "official_item_id": "4.2.6",
+      "item_value": 2.5
+    },
+    {
+      "requirement_id": "art9_plan_emergencias",
+      "official_item_id": "5.1.1",
+      "item_value": 5.0
+    },
+    {
+      "requirement_id": "art9_brigada_emergencias",
+      "official_item_id": "5.1.2",
+      "item_value": 5.0
+    },
+    {
+      "requirement_id": "art9_revision_alta_direccion",
+      "official_item_id": "6.1.3",
+      "item_value": 1.25
+    }
+  ],
+  "non_applicability": {
+    "strategy": "all_other_article_27_items",
+    "expected_item_count": 39,
+    "score_policy": "maximum_item_value",
+    "expected_score": 62.25,
+    "reason": "Ítems de la Tabla de Valores que no forman parte del paquete de Estándares Mínimos establecido en el artículo 9."
+  },
+  "validation": {
+    "expected_total_article_27_items": 60,
+    "expected_evaluated_items": 21,
+    "expected_not_applicable_items": 39,
+    "expected_evaluated_max_score": 37.75,
+    "expected_not_applicable_score": 62.25,
+    "expected_total_score": 100.0
+  }
+}

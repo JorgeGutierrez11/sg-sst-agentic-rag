@@ -26,6 +26,8 @@ from agents.diagnostico_cumplimiento.catalog.loader import (
 def build_requirement() -> RequirementDefinition:
     return RequirementDefinition(
         id="example_requirement",
+        requirement_group_id="example_requirement",
+        official_item_id="TEST-ITEM",
         source=NormativeSource(
             regulation="Resolución 0312 de 2019",
             article="Artículo 3",
@@ -91,6 +93,8 @@ def test_requirement_rejects_empty_conditions() -> None:
     with pytest.raises(ValidationError):
         RequirementDefinition(
             id=requirement.id,
+            requirement_group_id=requirement.requirement_group_id,
+            official_item_id=requirement.official_item_id,
             source=requirement.source,
             applicability=requirement.applicability,
             criterion=requirement.criterion,
@@ -115,6 +119,8 @@ def test_requirement_rejects_negative_weight() -> None:
     with pytest.raises(ValidationError):
         RequirementDefinition(
             id=requirement.id,
+            requirement_group_id="example_requirement",
+            official_item_id=requirement.official_item_id,
             source=requirement.source,
             applicability=requirement.applicability,
             criterion=requirement.criterion,
@@ -129,6 +135,8 @@ def test_requirement_rejects_unknown_condition_reference() -> None:
     with pytest.raises(ValidationError):
         RequirementDefinition(
             id=requirement.id,
+            requirement_group_id="example_requirement",
+            official_item_id=requirement.official_item_id,
             source=requirement.source,
             applicability=requirement.applicability,
             criterion=requirement.criterion,
@@ -149,6 +157,8 @@ def test_requirement_rejects_duplicate_condition_ids() -> None:
     with pytest.raises(ValidationError):
         RequirementDefinition(
             id=requirement.id,
+            requirement_group_id="example_requirement",
+            official_item_id=requirement.official_item_id,
             source=requirement.source,
             applicability=requirement.applicability,
             criterion=requirement.criterion,
@@ -178,6 +188,8 @@ def test_requirement_rejects_duplicate_question_ids() -> None:
     with pytest.raises(ValidationError):
         RequirementDefinition(
             id=requirement.id,
+            requirement_group_id="example_requirement",
+            official_item_id=requirement.official_item_id,
             source=requirement.source,
             applicability=requirement.applicability,
             criterion=requirement.criterion,
@@ -283,3 +295,59 @@ def test_load_catalog_rejects_invalid_schema(
         load_catalog(catalog_path)
 
 
+def test_requirement_without_general_table_item_id() -> None:
+    """
+    Un requisito puede pertenecer a un conjunto reducido
+    sin tener asignada una equivalencia con un ítem
+    numerado de la tabla general.
+    """
+
+    requirement = build_requirement()
+
+    data = requirement.model_dump()
+    data.pop("official_item_id")
+
+    reduced_requirement = RequirementDefinition.model_validate(data)
+
+    assert reduced_requirement.official_item_id is None
+    assert reduced_requirement.id == "example_requirement"
+    assert reduced_requirement.source.article == "Artículo 3"
+
+
+def test_requirement_with_general_table_item_id() -> None:
+    """
+    Un requisito puede conservar su identificador
+    oficial cuando corresponde directamente a un
+    ítem numerado de la tabla general.
+    """
+
+    requirement = build_requirement()
+
+    assert requirement.official_item_id == "TEST-ITEM"
+
+
+
+
+def test_catalog_allows_variants_of_same_requirement_group() -> None:
+    first = build_requirement()
+
+    second = first.model_copy(
+        update={
+            "id": "example_requirement_large_company",
+            "applicability": ApplicabilityRule(
+                risk_classes=["I"],
+                worker_count_min=51,
+                worker_count_max=None,
+            ),
+        }
+    )
+
+    catalog = AssessmentCatalog(
+        catalog_version="test-v1",
+        regulation="Norma de prueba",
+        requirements=[first, second],
+    )
+
+    assert len(catalog.requirements) == 2
+    assert first.id != second.id
+    assert first.requirement_group_id == second.requirement_group_id

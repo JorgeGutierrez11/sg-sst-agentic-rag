@@ -26,3 +26,19 @@ class QuestionType(StrEnum):
     TEXT = "text"
     SINGLE_CHOICE = "single_choice"
     MULTIPLE_CHOICE = "multiple_choice"
+
+
+class RiskClass(StrEnum):
+    """
+    Clases de riesgo del Sistema General de Riesgos Laborales.
+
+    El Agente 2 únicamente realiza diagnósticos para empresas
+    clasificadas en riesgo I, pero el modelo debe permitir
+    identificar empresas que se encuentran fuera de su alcance.
+    """
+
+    I = "I"
+    II = "II"
+    III = "III"
+    IV = "IV"
+    V = "V"

@@ -57,13 +57,28 @@ def test_company_profile_rejects_zero_workers() -> None:
         )
 
 
-def test_company_profile_rejects_unsupported_risk_class() -> None:
+def test_company_profile_accepts_other_valid_risk_classes() -> None:
+    profile = CompanyProfile(
+        worker_count=8,
+        risk_class="II",
+    )
+
+    assert profile.risk_class == "II"
+
+
+def test_company_profile_rejects_invalid_risk_class() -> None:
     with pytest.raises(ValidationError):
         CompanyProfile(
             worker_count=8,
-            risk_class="II",
+            risk_class="VI",
         )
 
+
+def test_company_profile_requires_risk_class() -> None:
+    with pytest.raises(ValidationError):
+        CompanyProfile(
+            worker_count=8,
+        )
 
 def test_normative_source() -> None:
     source = NormativeSource(

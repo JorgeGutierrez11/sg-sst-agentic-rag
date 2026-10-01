@@ -1,0 +1,1032 @@
+{
+  "catalog_id": "res0312_riesgo_i_11_50",
+  "name": "Estándares Mínimos SG-SST - Empresas de 11 a 50 trabajadores - Riesgo I",
+  "norm": "Resolución 0312 de 2019",
+  "article": 9,
+
+  "scope": {
+    "risk_classes": ["I"],
+    "worker_count": {
+      "min": 11,
+      "max": 50
+    },
+    "includes_agricultural_production_units": true
+  },
+
+  "applicability": {
+    "priority": 50,
+    "rules": [
+      {
+        "field": "risk_class",
+        "operator": "equals",
+        "value": "I"
+      },
+      {
+        "field": "worker_count",
+        "operator": "between",
+        "min": 11,
+        "max": 50
+      }
+    ]
+  },
+
+  "requirements": [
+    {
+      "id": "art9_asignacion_persona_sgsst",
+      "name": "Asignación de una persona que diseñe el Sistema de Gestión de SST",
+
+      "official_criterion": "Asignar una persona que cumpla con el perfil establecido para el diseño del Sistema de Gestión de SST.",
+
+      "official_verification_method": "Solicitar documento soporte de la asignación y constatar la hoja de vida con soportes de la persona asignada.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_sgsst_designer_assigned",
+          "text": "¿La empresa tiene asignada una persona responsable del diseño del SG-SST?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion"
+        },
+        {
+          "id": "q_sgsst_designer_profile",
+          "text": "¿La persona asignada cumple con el perfil profesional exigido para diseñar el SG-SST en empresas de 11 a 50 trabajadores?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_sgsst_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sgsst_designer_license",
+          "text": "¿La persona asignada cuenta con licencia vigente en Seguridad y Salud en el Trabajo?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_sgsst_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sgsst_designer_experience",
+          "text": "¿La persona asignada acredita la experiencia requerida en actividades de Seguridad y Salud en el Trabajo?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_sgsst_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sgsst_designer_course",
+          "text": "¿La persona asignada cuenta con el curso de capacitación virtual de cincuenta (50) horas en SST?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion",
+          "depends_on": {
+            "question_id": "q_sgsst_designer_assigned",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sgsst_designer_support",
+          "text": "¿La empresa dispone del documento de asignación y de los soportes de la hoja de vida de la persona designada?",
+          "type": "boolean",
+          "source_type": "derived_from_verification_method",
+          "depends_on": {
+            "question_id": "q_sgsst_designer_assigned",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_asignacion_recursos",
+      "name": "Asignación de recursos para el Sistema de Gestión de SST",
+
+      "official_criterion": "Asignar recursos económicos para desarrollar acciones de promoción de la salud y prevención de riesgos laborales.",
+
+      "official_verification_method": "Solicitar documento soporte de asignación de recursos.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_sgsst_resources_assigned",
+          "text": "¿La empresa ha asignado recursos económicos para desarrollar las actividades del SG-SST?",
+          "type": "boolean",
+          "source_type": "derived_from_criterion"
+        },
+        {
+          "id": "q_sgsst_resources_support",
+          "text": "¿La empresa dispone de un documento que soporte la asignación de estos recursos?",
+          "type": "boolean",
+          "source_type": "derived_from_verification_method",
+          "depends_on": {
+            "question_id": "q_sgsst_resources_assigned",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_afiliacion_seguridad_social",
+      "name": "Afiliación al Sistema de Seguridad Social Integral",
+
+      "official_criterion": "Afiliación a los Sistemas de Seguridad Social en Salud, Pensión y Riesgos Laborales de acuerdo con la normatividad vigente. Pago de pensión de trabajadores de alto riesgo.",
+
+      "official_verification_method": "Solicitar documento soporte de afiliación y del pago correspondiente.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_health_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al sistema de salud?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_pension_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al sistema de pensiones?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_arl_affiliation",
+          "text": "¿Las personas trabajadoras que deben estar afiliadas cuentan con afiliación al Sistema General de Riesgos Laborales?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_social_security_support",
+          "text": "¿La empresa dispone de los soportes de afiliación y pago correspondientes?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_high_risk_workers_exist",
+          "text": "¿La empresa tiene trabajadores que desarrollan de manera permanente actividades consideradas de alto riesgo para efectos pensionales?",
+          "type": "boolean",
+          "role": "applicability_screening"
+        },
+        {
+          "id": "q_high_risk_pension_payment",
+          "text": "¿La empresa realiza la cotización especial de pensión correspondiente para esos trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_high_risk_workers_exist",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_copasst",
+      "name": "Conformación y funcionamiento del COPASST",
+
+      "official_criterion": "Conformar, capacitar y verificar el cumplimiento de las responsabilidades del COPASST.",
+
+      "official_verification_method": "Solicitar actas de conformación, actas de reuniones e informes.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_copasst_conformed",
+          "text": "¿La empresa tiene conformado el COPASST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_copasst_trained",
+          "text": "¿Los integrantes del COPASST han recibido capacitación para el cumplimiento de sus responsabilidades?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_copasst_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_copasst_operating",
+          "text": "¿El COPASST se encuentra funcionando y desarrollando las responsabilidades que le corresponden?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_copasst_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_copasst_records",
+          "text": "¿La empresa dispone de actas de conformación, reuniones e informes del COPASST?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_copasst_conformed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_comite_convivencia",
+      "name": "Conformación y funcionamiento del Comité de Convivencia Laboral",
+
+      "official_criterion": "Conformar, capacitar y verificar el cumplimiento de las responsabilidades del Comité de Convivencia Laboral.",
+
+      "official_verification_method": "Solicitar actas de reuniones e informes del Comité de Convivencia Laboral.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_coexistence_committee_conformed",
+          "text": "¿La empresa tiene conformado el Comité de Convivencia Laboral?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_coexistence_committee_trained",
+          "text": "¿Los integrantes del Comité de Convivencia Laboral han recibido capacitación para el cumplimiento de sus responsabilidades?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_coexistence_committee_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_coexistence_committee_operating",
+          "text": "¿El Comité de Convivencia Laboral desarrolla las funciones que le corresponden?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_coexistence_committee_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_coexistence_committee_records",
+          "text": "¿La empresa dispone de actas de reuniones e informes del Comité de Convivencia Laboral?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_coexistence_committee_conformed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_programa_capacitacion",
+      "name": "Programa de capacitación",
+
+      "official_criterion": "Elaborar y ejecutar el programa de capacitación en promoción y prevención, incluyendo los peligros o riesgos prioritarios y las medidas de prevención y control, extensivo a todos los niveles de la organización.",
+
+      "official_verification_method": "Solicitar el programa de capacitación y los soportes de la ejecución del mismo y planillas donde se evidencie la firma de los trabajadores participantes.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_training_program_exists",
+          "text": "¿La empresa cuenta con un programa de capacitación en promoción y prevención en SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_training_program_executed",
+          "text": "¿El programa de capacitación se ha ejecutado?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_program_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_training_priority_risks",
+          "text": "¿El programa incluye capacitación sobre los peligros o riesgos prioritarios identificados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_program_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_training_controls",
+          "text": "¿El programa incluye las medidas de prevención y control asociadas a los riesgos identificados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_program_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_training_all_levels",
+          "text": "¿Las capacitaciones están dirigidas a todos los niveles de la organización que corresponda?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_program_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_training_records",
+          "text": "¿La empresa dispone del programa, soportes de ejecución y registros de participación de los trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_training_program_executed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_politica_sst",
+      "name": "Política de Seguridad y Salud en el Trabajo",
+
+      "official_criterion": "Elaborar política de SST escrita, firmada, fechada y comunicada al COPASST y a todos los trabajadores.",
+
+      "official_verification_method": "Solicitar la política escrita y soportes de su divulgación.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_sst_policy_exists",
+          "text": "¿La empresa cuenta con una política escrita de Seguridad y Salud en el Trabajo?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_sst_policy_signed",
+          "text": "¿La política se encuentra firmada?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sst_policy_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sst_policy_dated",
+          "text": "¿La política se encuentra fechada?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sst_policy_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sst_policy_communicated",
+          "text": "¿La política ha sido comunicada al COPASST y a los trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sst_policy_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sst_policy_support",
+          "text": "¿La empresa dispone de la política escrita y de soportes de su divulgación?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sst_policy_exists",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_plan_anual",
+      "name": "Plan Anual de Trabajo",
+
+      "official_criterion": "Elaborar el Plan Anual de Trabajo firmado por el empleador o contratante, identificando como mínimo objetivos, metas, responsabilidades, recursos y cronograma anual.",
+
+      "official_verification_method": "Solicitar documento que contenga plan anual de trabajo.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_plan_exists",
+          "text": "¿La empresa cuenta con un Plan Anual de Trabajo del SG-SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_plan_signed",
+          "text": "¿El Plan Anual está firmado por el empleador o contratante?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_objectives",
+          "text": "¿El Plan Anual identifica los objetivos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_targets",
+          "text": "¿El Plan Anual identifica las metas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_responsibilities",
+          "text": "¿El Plan Anual identifica las responsabilidades?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_resources",
+          "text": "¿El Plan Anual identifica los recursos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_plan_schedule",
+          "text": "¿El Plan Anual contiene un cronograma anual?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_plan_exists",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_archivo_retencion",
+      "name": "Archivo y retención documental del Sistema de Gestión de SST",
+
+      "official_criterion": "Mantener el archivo de los documentos del SG-SST durante el término establecido en la normatividad vigente.",
+
+      "official_verification_method": "Revisar el archivo con los documentos soporte de acuerdo con la normatividad vigente.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_sgsst_archive_exists",
+          "text": "¿La empresa mantiene un archivo de los documentos y registros que soportan el SG-SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_sgsst_archive_required_documents",
+          "text": "¿El archivo incluye los documentos exigidos para soportar la gestión de SST de la empresa?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sgsst_archive_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_sgsst_archive_retention",
+          "text": "¿Los documentos se conservan durante los periodos establecidos en la normatividad aplicable?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_sgsst_archive_exists",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_descripcion_sociodemografica_salud",
+      "name": "Descripción sociodemográfica y diagnóstico de condiciones de salud",
+
+      "official_criterion": "Identificar las características de la población trabajadora y realizar el diagnóstico de condiciones de salud, recopilando, analizando e interpretando la información correspondiente.",
+
+      "official_verification_method": "Solicitar documento que contenga el perfil sociodemográfico y el diagnóstico de condiciones de salud.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_sociodemographic_profile",
+          "text": "¿La empresa cuenta con una descripción sociodemográfica de su población trabajadora?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_health_conditions_diagnosis",
+          "text": "¿La empresa cuenta con un diagnóstico de las condiciones de salud de los trabajadores?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_health_data_analyzed",
+          "text": "¿La información sobre las condiciones de salud ha sido recopilada, analizada e interpretada?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_health_conditions_diagnosis",
+            "value": true
+          }
+        },
+        {
+          "id": "q_health_diagnosis_document",
+          "text": "¿La empresa dispone del documento que contiene el perfil sociodemográfico y el diagnóstico de condiciones de salud?",
+          "type": "boolean"
+        }
+      ]
+    },
+
+    {
+      "id": "art9_medicina_prevencion_promocion",
+      "name": "Actividades de medicina del trabajo y de prevención y promoción de la salud",
+
+      "official_criterion": "Desarrollar actividades de medicina del trabajo, prevención y promoción de la salud conforme con las prioridades identificadas en el diagnóstico de condiciones de salud y con los peligros o riesgos prioritarios.",
+
+      "official_verification_method": "Solicitar evidencias que constaten la definición y ejecución de las actividades de medicina del trabajo, promoción y prevención.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_occupational_health_activities_defined",
+          "text": "¿La empresa ha definido actividades de medicina del trabajo, prevención y promoción de la salud?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_occupational_health_activities_priorities",
+          "text": "¿Estas actividades responden a las prioridades identificadas en las condiciones de salud y los riesgos prioritarios?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_occupational_health_activities_defined",
+            "value": true
+          }
+        },
+        {
+          "id": "q_occupational_health_activities_executed",
+          "text": "¿Las actividades definidas han sido ejecutadas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_occupational_health_activities_defined",
+            "value": true
+          }
+        },
+        {
+          "id": "q_occupational_health_activities_support",
+          "text": "¿La empresa dispone de evidencias de la definición y ejecución de estas actividades?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_occupational_health_activities_executed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_evaluaciones_medicas",
+      "name": "Evaluaciones médicas ocupacionales",
+
+      "official_criterion": "Realizar las evaluaciones médicas ocupacionales de acuerdo con la normatividad y los peligros o riesgos a los cuales se encuentre expuesto el trabajador.",
+
+      "official_verification_method": "Conceptos emitidos por el médico evaluador en los cuales se informen recomendaciones y restricciones laborales.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_medical_evaluations_performed",
+          "text": "¿La empresa realiza las evaluaciones médicas ocupacionales que corresponden a sus trabajadores?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_medical_evaluations_risk_based",
+          "text": "¿Las evaluaciones se realizan considerando los peligros o riesgos a los que están expuestos los trabajadores?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_evaluations_performed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_medical_concepts",
+          "text": "¿La empresa dispone de los conceptos emitidos por el médico evaluador?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_evaluations_performed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_restricciones_recomendaciones",
+      "name": "Restricciones y recomendaciones médicas laborales",
+
+      "official_criterion": "Cumplir las recomendaciones y restricciones emitidas por EPS, ARL o médicos tratantes y realizar las actuaciones correspondientes cuando se requiera.",
+
+      "official_verification_method": "Solicitar las recomendaciones emitidas y los soportes de las actuaciones realizadas por la empresa.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_medical_recommendations_exist",
+          "text": "¿Algún trabajador tiene actualmente recomendaciones o restricciones médicas laborales aplicables?",
+          "type": "boolean",
+          "role": "applicability_screening"
+        },
+        {
+          "id": "q_medical_recommendations_followed",
+          "text": "¿La empresa ha cumplido las recomendaciones o restricciones médicas laborales emitidas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_recommendations_exist",
+            "value": true
+          }
+        },
+        {
+          "id": "q_medical_recommendations_actions",
+          "text": "¿La empresa ha realizado las adecuaciones, reubicaciones o acciones requeridas cuando han sido necesarias?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_recommendations_exist",
+            "value": true
+          }
+        },
+        {
+          "id": "q_medical_recommendations_support",
+          "text": "¿La empresa dispone de los documentos y soportes de las actuaciones realizadas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_medical_recommendations_exist",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_reporte_accidentes_enfermedades",
+      "name": "Reporte de accidentes de trabajo y enfermedades laborales",
+
+      "official_criterion": "Reportar a la ARL y EPS los accidentes de trabajo y enfermedades laborales diagnosticadas y, cuando corresponda, reportar a la Dirección Territorial del Ministerio del Trabajo los eventos establecidos por la norma.",
+
+      "official_verification_method": "Indagar si se han presentado accidentes o enfermedades laborales y verificar los reportes correspondientes y su oportunidad.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_work_events_occurred",
+          "text": "¿Durante el periodo evaluado se han presentado accidentes de trabajo o enfermedades laborales diagnosticadas?",
+          "type": "boolean",
+          "role": "event_screening"
+        },
+        {
+          "id": "q_work_events_reported",
+          "text": "¿Los accidentes de trabajo y enfermedades laborales ocurridos fueron reportados a las entidades correspondientes?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_work_events_occurred",
+            "value": true
+          }
+        },
+        {
+          "id": "q_work_events_reported_on_time",
+          "text": "¿Los reportes se realizaron dentro de los plazos correspondientes?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_work_events_occurred",
+            "value": true
+          }
+        },
+        {
+          "id": "q_work_events_report_support",
+          "text": "¿La empresa dispone de los soportes de los reportes realizados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_work_events_occurred",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_investigacion_incidentes_accidentes",
+      "name": "Investigación de incidentes, accidentes de trabajo y enfermedades laborales",
+
+      "official_criterion": "Investigar los incidentes y todos los accidentes de trabajo y enfermedades diagnosticadas como laborales, con participación del COPASST, previniendo nuevos casos.",
+
+      "official_verification_method": "Verificar mediante muestreo si se realizan las investigaciones correspondientes con participación del COPASST.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_investigable_events_occurred",
+          "text": "¿Durante el periodo evaluado se presentaron incidentes, accidentes de trabajo o enfermedades diagnosticadas como laborales que requirieran investigación?",
+          "type": "boolean",
+          "role": "event_screening"
+        },
+        {
+          "id": "q_events_investigated",
+          "text": "¿Los eventos ocurridos fueron investigados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_investigable_events_occurred",
+            "value": true
+          }
+        },
+        {
+          "id": "q_copasst_participated_in_investigation",
+          "text": "¿El COPASST participó en las investigaciones cuando correspondía?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_investigable_events_occurred",
+            "value": true
+          }
+        },
+        {
+          "id": "q_investigation_actions",
+          "text": "¿Como resultado de las investigaciones se definieron acciones para prevenir la repetición de los eventos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_events_investigated",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_identificacion_peligros",
+      "name": "Identificación de peligros y evaluación y valoración de riesgos",
+
+      "official_criterion": "Identificar peligros, evaluar y valorar los riesgos y establecer controles que prevengan efectos adversos en la salud de los trabajadores.",
+
+      "official_verification_method": "Solicitar documento donde se encuentre la identificación de peligros y valoración de riesgos y evidencias de las medidas de control implementadas.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_hazards_identified",
+          "text": "¿La empresa ha identificado los peligros presentes en sus actividades y lugares de trabajo?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_risks_evaluated",
+          "text": "¿Los riesgos asociados a los peligros identificados han sido evaluados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_hazards_identified",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risks_valued",
+          "text": "¿Los riesgos evaluados han sido valorados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_risks_evaluated",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risk_controls_established",
+          "text": "¿La empresa ha establecido controles para los riesgos identificados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_risks_valued",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risk_document",
+          "text": "¿La empresa dispone del documento de identificación de peligros, evaluación y valoración de riesgos?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_hazards_identified",
+            "value": true
+          }
+        },
+        {
+          "id": "q_risk_controls_support",
+          "text": "¿La empresa dispone de evidencias de las medidas de control implementadas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_risk_controls_established",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_mantenimiento",
+      "name": "Mantenimiento periódico de instalaciones, equipos, máquinas y herramientas",
+
+      "official_criterion": "Realizar mantenimientos periódicos de instalaciones, equipos, máquinas y herramientas de acuerdo con los manuales o fichas técnicas.",
+
+      "official_verification_method": "Solicitar documento con los reportes del mantenimiento realizado.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_periodic_maintenance",
+          "text": "¿La empresa realiza mantenimiento periódico a las instalaciones, equipos, máquinas y herramientas que lo requieren?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_maintenance_technical_guidance",
+          "text": "¿Los mantenimientos se realizan teniendo en cuenta los manuales o fichas técnicas correspondientes?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_periodic_maintenance",
+            "value": true
+          }
+        },
+        {
+          "id": "q_maintenance_records",
+          "text": "¿La empresa dispone de registros o reportes de los mantenimientos realizados?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_periodic_maintenance",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_epp",
+      "name": "Entrega de elementos de protección personal y capacitación en uso adecuado",
+
+      "official_criterion": "Realizar la entrega de los elementos de protección personal acorde con el oficio u ocupación y capacitar sobre su uso adecuado.",
+
+      "official_verification_method": "Solicitar evidencia de la entrega de elementos de protección personal y de las capacitaciones correspondientes.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_epp_required",
+          "text": "¿De acuerdo con los peligros identificados existen trabajadores que requieren elementos de protección personal?",
+          "type": "boolean",
+          "role": "applicability_screening"
+        },
+        {
+          "id": "q_epp_delivered",
+          "text": "¿La empresa entrega los elementos de protección personal requeridos de acuerdo con el oficio u ocupación?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_epp_required",
+            "value": true
+          }
+        },
+        {
+          "id": "q_epp_training",
+          "text": "¿Los trabajadores reciben capacitación sobre el uso adecuado de los elementos de protección personal?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_epp_required",
+            "value": true
+          }
+        },
+        {
+          "id": "q_epp_support",
+          "text": "¿La empresa dispone de soportes de entrega de EPP y de las capacitaciones realizadas?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_epp_required",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_plan_emergencias",
+      "name": "Plan de prevención, preparación y respuesta ante emergencias",
+
+      "official_criterion": "Elaborar el plan de prevención, preparación y respuesta ante emergencias.",
+
+      "official_verification_method": "Solicitar el plan y constatar evidencias de su divulgación.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_emergency_plan_exists",
+          "text": "¿La empresa cuenta con un Plan de Prevención, Preparación y Respuesta ante Emergencias?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_emergency_plan_communicated",
+          "text": "¿El plan ha sido divulgado a las personas que deben conocerlo?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_emergency_plan_exists",
+            "value": true
+          }
+        },
+        {
+          "id": "q_emergency_plan_support",
+          "text": "¿La empresa dispone del documento del plan y de evidencias de su divulgación?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_emergency_plan_exists",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_brigada_emergencias",
+      "name": "Brigada de prevención, preparación y respuesta ante emergencias",
+
+      "official_criterion": "Conformar, capacitar y dotar la brigada de prevención, preparación y respuesta ante emergencias.",
+
+      "official_verification_method": "Solicitar documento de conformación de la brigada y verificar soportes de capacitación y entrega de dotación.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_emergency_brigade_conformed",
+          "text": "¿La empresa tiene conformada una brigada de prevención, preparación y respuesta ante emergencias?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_emergency_brigade_trained",
+          "text": "¿Los integrantes de la brigada han recibido capacitación para atender emergencias?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_emergency_brigade_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_emergency_brigade_equipped",
+          "text": "¿La brigada cuenta con la dotación requerida para cumplir sus funciones?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_emergency_brigade_conformed",
+            "value": true
+          }
+        },
+        {
+          "id": "q_emergency_brigade_support",
+          "text": "¿La empresa dispone del documento de conformación y de los soportes de capacitación y dotación de la brigada?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_emergency_brigade_conformed",
+            "value": true
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "art9_revision_alta_direccion",
+      "name": "Revisión por la alta dirección",
+
+      "official_criterion": "Revisar como mínimo una vez al año, por parte de la alta dirección, los resultados del Sistema de Gestión de SST.",
+
+      "official_verification_method": "Solicitar soportes que den cuenta de la revisión por la alta dirección de los resultados del Sistema de Gestión de SST.",
+
+      "verification_method_source": "official",
+
+      "questions": [
+        {
+          "id": "q_management_review_performed",
+          "text": "¿La alta dirección realiza al menos una vez al año la revisión de los resultados del SG-SST?",
+          "type": "boolean"
+        },
+        {
+          "id": "q_management_review_support",
+          "text": "¿La empresa dispone de soportes documentales que evidencien esta revisión?",
+          "type": "boolean",
+          "depends_on": {
+            "question_id": "q_management_review_performed",
+            "value": true
+          }
+        }
+      ]
+    }
+  ],
+
+  "metadata": {
+    "question_origin": "Preguntas diagnósticas derivadas de los criterios y modos de verificación establecidos en el artículo 9 de la Resolución 0312 de 2019.",
+    "declarative_assessment": true,
+    "documentary_verification": false,
+    "expert_validation_required": true
+  }
+}

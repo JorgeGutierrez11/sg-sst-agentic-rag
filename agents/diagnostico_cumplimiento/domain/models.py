@@ -1,3 +1,4 @@
+from agents.diagnostico_cumplimiento.domain.enums import RiskClass
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -17,9 +18,11 @@ class CompanyProfile(BaseModel):
         description="Número actual de trabajadores de la empresa.",
     )
 
-    risk_class: Literal["I"] = Field(
-        default="I",
-        description="Clase de riesgo de la empresa. El alcance actual es riesgo I.",
+    risk_class: RiskClass = Field(
+        description=(
+            "Clase de riesgo declarada por la empresa. "
+            "El Agente 2 únicamente realiza diagnósticos para riesgo I."
+        ),
     )
 
     economic_activity: str | None = Field(
@@ -31,6 +34,46 @@ class CompanyProfile(BaseModel):
         default=None,
         description="Código CIIU de la actividad económica, si está disponible.",
     )
+
+    is_agricultural_production_unit: bool = Field(
+        default=False,
+        description=(
+            "Indica si la empresa corresponde a una Unidad de "
+            "Producción Agropecuaria (UPA)."
+        ),
+    )
+
+    permanent_worker_count: int | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Número de trabajadores permanentes de la UPA. "
+            "Se utiliza para determinar el paquete normativo "
+            "aplicable cuando la empresa es una UPA."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_agricultural_profile(self) -> "CompanyProfile":
+        if (
+            self.is_agricultural_production_unit
+            and self.permanent_worker_count is None
+        ):
+            raise ValueError(
+                "Una Unidad de Producción Agropecuaria debe informar "
+                "la cantidad de trabajadores permanentes."
+            )
+
+        if (
+            self.permanent_worker_count is not None
+            and self.permanent_worker_count > self.worker_count
+        ):
+            raise ValueError(
+                "La cantidad de trabajadores permanentes no puede "
+                "ser mayor que la cantidad total de trabajadores."
+            )
+
+        return self
 
 
 class NormativeSource(BaseModel):

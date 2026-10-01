@@ -1,0 +1,541 @@
+{
+  "schema_version": "1.0",
+  "catalog_id": "res0312_art27_scoring_table",
+  "name": "Tabla de Valores y Calificación de los Estándares Mínimos SG-SST",
+  "norm": {
+    "name": "Resolución 0312 de 2019",
+    "article": 27
+  },
+  "total_weight_percent": 100.0,
+  "scoring_rules": {
+    "complies": "maximum_item_value",
+    "does_not_comply": 0.0,
+    "not_applicable_less_than_50_risk_i_ii_iii": "maximum_item_value"
+  },
+  "cycles": [
+    {
+      "id": "PLANEAR",
+      "name": "I. PLANEAR",
+      "weight_percent": 25.0,
+      "components": [
+        {
+          "id": "RECURSOS",
+          "name": "RECURSOS",
+          "weight_percent": 10.0,
+          "standards": [
+            {
+              "id": "1.1",
+              "name": "Recursos financieros, técnicos, humanos y de otra índole requeridos para coordinar y desarrollar el Sistema de Gestión de la Seguridad y la Salud en el Trabajo (SG-SST)",
+              "weight_percent": 4.0,
+              "items": [
+                {
+                  "official_item_id": "1.1.1",
+                  "description": "Responsable del Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.2",
+                  "description": "Responsabilidades en el Sistema de Gestión de Seguridad y Salud en el Trabajo – SG-SST",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.3",
+                  "description": "Asignación de recursos para el Sistema de Gestión en Seguridad y Salud en el Trabajo – SG-SST",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.4",
+                  "description": "Afiliación al Sistema General de Riesgos Laborales",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.5",
+                  "description": "Pago de pensión trabajadores alto riesgo",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.6",
+                  "description": "Conformación COPASST",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.7",
+                  "description": "Capacitación COPASST",
+                  "item_value": 0.5
+                },
+                {
+                  "official_item_id": "1.1.8",
+                  "description": "Conformación Comité de Convivencia",
+                  "item_value": 0.5
+                }
+              ]
+            },
+            {
+              "id": "1.2",
+              "name": "Capacitación en el Sistema de Gestión de la Seguridad y la Salud en el Trabajo",
+              "weight_percent": 6.0,
+              "items": [
+                {
+                  "official_item_id": "1.2.1",
+                  "description": "Programa Capacitación promoción y prevención PYP",
+                  "item_value": 2.0
+                },
+                {
+                  "official_item_id": "1.2.2",
+                  "description": "Capacitación, Inducción y Reinducción en Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST, actividades de Promoción y Prevención PyP",
+                  "item_value": 2.0
+                },
+                {
+                  "official_item_id": "1.2.3",
+                  "description": "Responsables del Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST con curso virtual de 50 horas",
+                  "item_value": 2.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GESTION_INTEGRAL_SGSST",
+          "name": "GESTIÓN INTEGRAL DEL SISTEMA DE GESTIÓN DE LA SEGURIDAD Y LA SALUD EN EL TRABAJO",
+          "weight_percent": 15.0,
+          "standards": [
+            {
+              "id": "2.1",
+              "name": "Política de Seguridad y Salud en el Trabajo",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.1.1",
+                  "description": "Política del Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST firmada, fechada y comunicada al COPASST",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.2",
+              "name": "Objetivos del Sistema de Gestión de la Seguridad y la Salud en el Trabajo SG-SST",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.2.1",
+                  "description": "Objetivos definidos, claros, medibles, cuantificables, con metas, documentados, revisados del SG-SST",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.3",
+              "name": "Evaluación inicial del SG-SST",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.3.1",
+                  "description": "Evaluación e identificación de prioridades",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.4",
+              "name": "Plan Anual de Trabajo",
+              "weight_percent": 2.0,
+              "items": [
+                {
+                  "official_item_id": "2.4.1",
+                  "description": "Plan que identifica objetivos, metas, responsabilidad, recursos con cronograma y firmado",
+                  "item_value": 2.0
+                }
+              ]
+            },
+            {
+              "id": "2.5",
+              "name": "Conservación de la documentación",
+              "weight_percent": 2.0,
+              "items": [
+                {
+                  "official_item_id": "2.5.1",
+                  "description": "Archivo o retención documental del Sistema de Gestión en Seguridad y Salud en el Trabajo SG-SST",
+                  "item_value": 2.0
+                }
+              ]
+            },
+            {
+              "id": "2.6",
+              "name": "Rendición de cuentas",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.6.1",
+                  "description": "Rendición sobre el desempeño",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.7",
+              "name": "Normatividad nacional vigente y aplicable en materia de seguridad y salud en el trabajo",
+              "weight_percent": 2.0,
+              "items": [
+                {
+                  "official_item_id": "2.7.1",
+                  "description": "Matriz legal",
+                  "item_value": 2.0
+                }
+              ]
+            },
+            {
+              "id": "2.8",
+              "name": "Comunicación",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.8.1",
+                  "description": "Mecanismos de comunicación, auto reporte en Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.9",
+              "name": "Adquisiciones",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.9.1",
+                  "description": "Identificación, evaluación, para adquisición de productos y servicios en Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "2.10",
+              "name": "Contratación",
+              "weight_percent": 2.0,
+              "items": [
+                {
+                  "official_item_id": "2.10.1",
+                  "description": "Evaluación y selección de proveedores y contratistas",
+                  "item_value": 2.0
+                }
+              ]
+            },
+            {
+              "id": "2.11",
+              "name": "Gestión del cambio",
+              "weight_percent": 1.0,
+              "items": [
+                {
+                  "official_item_id": "2.11.1",
+                  "description": "Evaluación del impacto de cambios internos y externos en el Sistema de Gestión de Seguridad y Salud en el Trabajo SG-SST",
+                  "item_value": 1.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "HACER",
+      "name": "II. HACER",
+      "weight_percent": 60.0,
+      "components": [
+        {
+          "id": "GESTION_DE_LA_SALUD",
+          "name": "GESTIÓN DE LA SALUD",
+          "weight_percent": 20.0,
+          "standards": [
+            {
+              "id": "3.1",
+              "name": "Condiciones de salud en el trabajo",
+              "weight_percent": 9.0,
+              "items": [
+                {
+                  "official_item_id": "3.1.1",
+                  "description": "Descripción sociodemográfica y diagnóstico de condiciones de salud",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.2",
+                  "description": "Actividades de Promoción y Prevención en Salud",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.3",
+                  "description": "Información al médico de los perfiles de cargo",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.4",
+                  "description": "Realización de los exámenes médicos ocupacionales: preingreso, periódicos",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.5",
+                  "description": "Custodia de Historias Clínicas",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.6",
+                  "description": "Restricciones y recomendaciones médico-laborales",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.7",
+                  "description": "Estilos de vida y entornos saludables (controles tabaquismo, alcoholismo, farmacodependencia y otros)",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.8",
+                  "description": "Agua potable, servicios sanitarios y disposición de basuras",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.1.9",
+                  "description": "Eliminación adecuada de residuos sólidos, líquidos o gaseosos",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "3.2",
+              "name": "Registro, reporte e investigación de las enfermedades laborales, los incidentes y accidentes del trabajo",
+              "weight_percent": 5.0,
+              "items": [
+                {
+                  "official_item_id": "3.2.1",
+                  "description": "Reporte de los accidentes de trabajo y enfermedad laboral a la ARL, EPS y Dirección Territorial del Ministerio de Trabajo",
+                  "item_value": 2.0
+                },
+                {
+                  "official_item_id": "3.2.2",
+                  "description": "Investigación de Accidentes, Incidentes y Enfermedad Laboral",
+                  "item_value": 2.0
+                },
+                {
+                  "official_item_id": "3.2.3",
+                  "description": "Registro y análisis estadístico de Incidentes, Accidentes de Trabajo y Enfermedad Laboral",
+                  "item_value": 1.0
+                }
+              ]
+            },
+            {
+              "id": "3.3",
+              "name": "Mecanismos de vigilancia de las condiciones de salud de los trabajadores",
+              "weight_percent": 6.0,
+              "items": [
+                {
+                  "official_item_id": "3.3.1",
+                  "description": "Medición de la frecuencia de la accidentalidad",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.3.2",
+                  "description": "Medición de la severidad de la accidentalidad",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.3.3",
+                  "description": "Medición de la mortalidad por Accidente de Trabajo",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.3.4",
+                  "description": "Medición de la prevalencia de Enfermedad Laboral",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.3.5",
+                  "description": "Medición de la incidencia de Enfermedad Laboral",
+                  "item_value": 1.0
+                },
+                {
+                  "official_item_id": "3.3.6",
+                  "description": "Medición del ausentismo por causa médica",
+                  "item_value": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GESTION_DE_PELIGROS_Y_RIESGOS",
+          "name": "GESTIÓN DE PELIGROS Y RIESGOS",
+          "weight_percent": 30.0,
+          "standards": [
+            {
+              "id": "4.1",
+              "name": "Identificación de peligros, evaluación y valoración de riesgos",
+              "weight_percent": 15.0,
+              "items": [
+                {
+                  "official_item_id": "4.1.1",
+                  "description": "Metodología para la identificación de peligros, evaluación y valoración de los riesgos",
+                  "item_value": 4.0
+                },
+                {
+                  "official_item_id": "4.1.2",
+                  "description": "Identificación de peligros con participación de todos los niveles de la empresa",
+                  "item_value": 4.0
+                },
+                {
+                  "official_item_id": "4.1.3",
+                  "description": "Identificación de sustancias catalogadas como carcinógenas o con toxicidad aguda",
+                  "item_value": 3.0
+                },
+                {
+                  "official_item_id": "4.1.4",
+                  "description": "Realización mediciones ambientales, químicos, físicos y biológicos",
+                  "item_value": 4.0
+                }
+              ]
+            },
+            {
+              "id": "4.2",
+              "name": "Medidas de prevención y control para intervenir los peligros/riesgos",
+              "weight_percent": 15.0,
+              "items": [
+                {
+                  "official_item_id": "4.2.1",
+                  "description": "Implementación de medidas de prevención y control de peligros/riesgos identificados",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "4.2.2",
+                  "description": "Verificación de aplicación de medidas de prevención y control por parte de los trabajadores",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "4.2.3",
+                  "description": "Elaboración de procedimientos, instructivos, fichas, protocolos",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "4.2.4",
+                  "description": "Realización de inspecciones sistemáticas a las instalaciones, maquinaria o equipos con la participación del COPASST",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "4.2.5",
+                  "description": "Mantenimiento periódico de instalaciones, equipos, máquinas, herramientas",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "4.2.6",
+                  "description": "Entrega de Elementos de Protección Personal EPP, se verifica con contratistas y subcontratistas",
+                  "item_value": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "GESTION_DE_AMENAZAS",
+          "name": "GESTIÓN DE AMENAZAS",
+          "weight_percent": 10.0,
+          "standards": [
+            {
+              "id": "5.1",
+              "name": "Plan de prevención, preparación y respuesta ante emergencias",
+              "weight_percent": 10.0,
+              "items": [
+                {
+                  "official_item_id": "5.1.1",
+                  "description": "Se cuenta con el Plan de Prevención y Preparación ante emergencias",
+                  "item_value": 5.0
+                },
+                {
+                  "official_item_id": "5.1.2",
+                  "description": "Brigada de prevención conformada, capacitada y dotada",
+                  "item_value": 5.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "VERIFICAR",
+      "name": "III. VERIFICAR",
+      "weight_percent": 5.0,
+      "components": [
+        {
+          "id": "VERIFICACION_DEL_SGSST",
+          "name": "VERIFICACIÓN DEL SG-SST",
+          "weight_percent": 5.0,
+          "standards": [
+            {
+              "id": "6.1",
+              "name": "Gestión y resultados del SG-SST",
+              "weight_percent": 5.0,
+              "items": [
+                {
+                  "official_item_id": "6.1.1",
+                  "description": "Definición de indicadores del SG-SST de acuerdo con las condiciones de la empresa",
+                  "item_value": 1.25
+                },
+                {
+                  "official_item_id": "6.1.2",
+                  "description": "Las empresa adelanta auditoría por lo menos una vez al año",
+                  "item_value": 1.25
+                },
+                {
+                  "official_item_id": "6.1.3",
+                  "description": "Revisión anual por la alta dirección, resultados y alcance de la auditoría",
+                  "item_value": 1.25
+                },
+                {
+                  "official_item_id": "6.1.4",
+                  "description": "Planificar auditoría con el COPASST",
+                  "item_value": 1.25
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ACTUAR",
+      "name": "IV. ACTUAR",
+      "weight_percent": 10.0,
+      "components": [
+        {
+          "id": "MEJORAMIENTO",
+          "name": "MEJORAMIENTO",
+          "weight_percent": 10.0,
+          "standards": [
+            {
+              "id": "7.1",
+              "name": "Acciones preventivas y correctivas con base en los resultados del SG-SST",
+              "weight_percent": 10.0,
+              "items": [
+                {
+                  "official_item_id": "7.1.1",
+                  "description": "Definir acciones preventivas y correctivas con base en los resultados del SG-SST",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "7.1.2",
+                  "description": "Acciones de mejora conforme a revisión de la alta dirección",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "7.1.3",
+                  "description": "Acciones de mejora con base en investigaciones de accidentes de trabajo y enfermedades laborales",
+                  "item_value": 2.5
+                },
+                {
+                  "official_item_id": "7.1.4",
+                  "description": "Elaboración Plan de Mejoramiento e implementación de medidas y acciones correctivas solicitadas por autoridades y ARL",
+                  "item_value": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

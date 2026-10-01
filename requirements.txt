@@ -14,3 +14,4 @@ pypandoc==1.17
 sentence-transformers==5.6.0
 tiktoken==0.13.0
 pillow==12.3.0
+reportlab
