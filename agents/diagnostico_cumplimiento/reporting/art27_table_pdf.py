@@ -3,8 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import BinaryIO
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
@@ -13,7 +16,9 @@ from reportlab.platypus import (
     Paragraph,
     SimpleDocTemplate,
     Spacer,
+    Table,
     TableStyle,
+    PageBreak,
 )
 
 from agents.diagnostico_cumplimiento.domain.declarative_assessment import (
@@ -25,13 +30,386 @@ from agents.diagnostico_cumplimiento.reporting.art27_scoring_matrix import (
 )
 
 
-PAGE_SIZE = landscape(A3)
+PAGE_WIDTH = 349 * mm
+PAGE_HEIGHT = 297 * mm
+
+PAGE_SIZE = (
+    PAGE_WIDTH,
+    PAGE_HEIGHT,
+)
 
 LEFT_MARGIN = 12 * mm
 RIGHT_MARGIN = 12 * mm
 TOP_MARGIN = 16 * mm
 BOTTOM_MARGIN = 14 * mm
 
+BRAND_GREEN = colors.HexColor("#00E699")
+BRAND_GREEN_SOFT = colors.HexColor("#D9FFF2")
+
+TEXT_PRIMARY = colors.HexColor("#0F172A")
+#TEXT_SECONDARY = colors.HexColor("#3D4858")
+TEXT_SECONDARY = colors.HexColor("#0F172A")
+
+SURFACE = colors.HexColor("#F8FAFC")
+BORDER = colors.HexColor("#E2E8F0")
+
+SUCCESS_BG = colors.HexColor("#DCFCE7")
+SUCCESS_TEXT = colors.HexColor("#166534")
+
+WARNING_BG = colors.HexColor("#FEF3C7")
+WARNING_TEXT = colors.HexColor("#92400E")
+
+CRITICAL_BG = colors.HexColor("#FEE2E2")
+CRITICAL_TEXT = colors.HexColor("#991B1B")
+
+def _build_normative_criteria(
+    *,
+    matrix: Article27ScoringMatrix,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    content: list[object] = [
+        Paragraph(
+            "CRITERIOS NORMATIVOS - RESOLUCIÓN 0312 DE 2019",
+            styles["section_title"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+
+        Paragraph(
+            (
+                "<b>Artículo 26 - Autoevaluación de los "
+                "Estándares Mínimos.</b> "
+                "Las empresas deben realizar anualmente la "
+                "autoevaluación de los Estándares Mínimos "
+                "del SG-SST mediante la Tabla de Valores y "
+                "Calificación, y formular las acciones de "
+                "mejora correspondientes."
+            ),
+            styles["summary_explanation"],
+        ),
+
+        Spacer(
+            1,
+            4 * mm,
+        ),
+
+        Paragraph(
+            (
+                "<b>Artículo 27 - Tabla de Valores y "
+                "Calificación.</b> "
+                "Establece los valores y la forma de "
+                "calificar los Estándares Mínimos del SG-SST."
+            ),
+            styles["summary_explanation"],
+        ),
+    ]
+
+    if matrix.catalog_id in {
+        "res0312_riesgo_i_1_10_general",
+        "res0312_riesgo_i_11_50",
+    }:
+        content.extend(
+            [
+                Spacer(
+                    1,
+                    2 * mm,
+                ),
+                Paragraph(
+                    (
+                        "<b>Artículo 27 - Ítems “No aplica”.</b> "
+                        "Para empresas de menos de cincuenta "
+                        "(50) trabajadores clasificadas en "
+                        "riesgo I, II o III, los ítems que no "
+                        "resulten aplicables reciben el "
+                        "porcentaje máximo correspondiente en "
+                        "la columna “No Aplica”."
+                    ),
+                    styles["summary_explanation"],
+                ),
+            ]
+        )
+
+    content.extend(
+        [
+            Spacer(
+                1,
+                4 * mm,
+            ),
+
+            Paragraph(
+                (
+                    "<b>Artículo 28 - Interpretación "
+                    "del resultado.</b>"
+                ),
+                styles["summary_explanation"],
+            ),
+
+            Spacer(
+                1,
+                2 * mm,
+            ),
+
+            Paragraph(
+                "Menor de 60 %: <b>CRÍTICO</b>",
+                styles["summary_explanation"],
+            ),
+            Paragraph(
+                (
+                    "Entre 60 % y 85 %: "
+                    "<b>MODERADAMENTE ACEPTABLE</b>"
+                ),
+                styles["summary_explanation"],
+            ),
+            Paragraph(
+                "Mayor de 85 %: <b>ACEPTABLE</b>",
+                styles["summary_explanation"],
+            ),
+
+            Spacer(1, 3 * mm),
+
+
+            Paragraph(
+                "REGISTRO ANUAL - CIRCULAR 0027 DE 2026",
+                styles["section_title"],
+            ),
+            
+            Spacer(1, 3 * mm),
+
+            Paragraph(
+                "La Circular 0027 del 26 de febrero de 2026 reitera el deber de realizar anualmente la"
+                " autoevaluación de los Estándares Mínimos del SG-SST y registrar la autoevaluación y el respectivo"
+                " plan de mejoramiento en la aplicación dispuesta para tal fin. Para la vigencia 2026, estableció el"
+                " registro de la autoevaluación correspondiente al año 2025.",
+                styles["summary_explanation"],
+            ),
+        ]
+    )
+
+    
+    return content
+
+def _build_card(
+    content,
+    *,
+    width: float,
+) -> Table:
+    card = Table(
+        [[content]],
+        colWidths=[width],
+        hAlign="LEFT",
+    )
+
+    card.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, -1),
+                    colors.white,
+                ),
+                (
+                    "BOX",
+                    (0, 0),
+                    (-1, -1),
+                    0.6,
+                    BORDER,
+                ),
+                (
+                    "LINEABOVE",
+                    (0, 0),
+                    (-1, 0),
+                    2.5,
+                    BRAND_GREEN,
+                ),
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    12,
+                ),
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    12,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    11,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    11,
+                ),
+            ]
+        )
+    )
+
+    return card
+
+def _build_first_page_layout(
+    *,
+    matrix: Article27ScoringMatrix,
+    styles: dict[str, ParagraphStyle],
+) -> Table:
+    summary_block = _build_card(
+        _build_evaluation_summary(
+            matrix=matrix,
+            styles=styles,
+        ),
+        width=160 * mm,
+    )
+
+    normative_block = _build_card(
+        _build_normative_criteria(
+            matrix=matrix,
+            styles=styles,
+        ),
+        width=157 * mm,
+    )
+
+    score_block = _build_score_summary(
+        matrix=matrix,
+        styles=styles,
+    )
+
+    layout = Table(
+        [
+            [
+                summary_block,
+                "",
+                normative_block,
+            ],
+            [
+                score_block,
+                "",
+                "",
+            ],
+        ],
+        colWidths=[
+            160 * mm,
+            8 * mm,
+            157 * mm,
+        ],
+        hAlign="CENTER",
+    )
+
+    layout.setStyle(
+        TableStyle(
+            [
+                (
+                    "SPAN",
+                    (2, 0),
+                    (2, 1),
+                ),
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "TOP",
+                ),
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    0,
+                ),
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    0,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    0,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+            ]
+        )
+    )
+    return layout
+
+def _build_report_information(
+    *,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    generated_at = datetime.now(
+        ZoneInfo("America/Bogota")
+    )
+
+    official_resolution_url = (
+        "https://www1.funcionpublica.gov.co/"
+        "documents/34645357/34703621/"
+        "Resolucion_0312_de_2019.pdf/"
+        "3c93008d-dd8e-8b0d-e5ea-ec6699db86e7"
+    )
+
+    return [
+        Paragraph(
+            "MARCO DE INTERPRETACIÓN DEL INFORME",
+            styles["section_title"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+        Paragraph(
+            (
+                "<b>Alcance del diagnóstico.</b> "
+                "Este informe se construye a partir de la "
+                "información declarada durante la evaluación. "
+                "No constituye auditoría, verificación oficial, "
+                "certificación de cumplimiento ni asesoría "
+                "jurídica o profesional en Seguridad y Salud "
+                "en el Trabajo."
+            ),
+            styles["summary_explanation"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+        Paragraph(
+            (
+                "<b>Fuente normativa oficial.</b> "
+                "Resolución 0312 de 2019 del Ministerio del "
+                "Trabajo - Por la cual se definen los "
+                "Estándares Mínimos del Sistema de Gestión "
+                "de la Seguridad y Salud en el Trabajo SG-SST. "
+                f'<link href="{official_resolution_url}" '
+                'color="#2563EB">'
+                "Consultar resolución oficial"
+                "</link>."
+            ),
+            styles["summary_explanation"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+        Paragraph(
+            (
+                "<b>Fecha de generación:</b> "
+                f"{generated_at.strftime('%d/%m/%Y')}"
+            ),
+            styles["summary_explanation"],
+        ),
+    ]
 
 def build_article27_table_pdf(
     matrix: Article27ScoringMatrix,
@@ -86,6 +464,64 @@ def build_article27_table_pdf(
 
     story.append(
         Paragraph(
+            "INFORME ORIENTATIVO DE DIAGNÓSTICO SG-SST",
+            styles["title"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "Resumen de evaluación y criterios normativos",
+            styles["subtitle"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            (
+                "Basado en la información declarada "
+                "por la empresa."
+            ),
+            styles["scope"],
+        )
+    )
+
+    story.append(
+        Spacer(
+            1,
+            6 * mm,
+        )
+    )
+
+    story.append(
+        _build_first_page_layout(
+            matrix=matrix,
+            styles=styles,
+        )
+    )
+
+    story.append(
+        Spacer(
+            1,
+            6 * mm,
+        )
+    )
+
+    story.append(
+        _build_card(
+            _build_report_information(
+                styles=styles,
+            ),
+            width=325 * mm,
+        )
+    )
+
+    story.append(
+        PageBreak()
+    )
+
+    story.append(
+        Paragraph(
             "ESTÁNDARES MÍNIMOS SG-SST",
             styles["title"],
         )
@@ -95,6 +531,13 @@ def build_article27_table_pdf(
         Paragraph(
             "TABLA DE VALORES Y CALIFICACIÓN",
             styles["subtitle"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "Artículo 27 - Resolución 0312 de 2019",
+            styles["scope"],
         )
     )
 
@@ -123,16 +566,15 @@ def build_article27_table_pdf(
     table = LongTable(
         table_data,
         colWidths=[
-            22 * mm,   # Ciclo
-            45 * mm,   # Estándar
-            75 * mm,   # Ítem
-            13 * mm,   # Valor
-            15 * mm,   # Peso
-            17 * mm,   # Cumple
-            17 * mm,   # No cumple
-            17 * mm,   # No aplica
-            21 * mm,   # Calificación
-            120 * mm,  # Comentario
+            24 * mm,    # Ciclo
+            64 * mm,    # Estándar
+            110 * mm,   # Ítem del estándar
+            15 * mm,    # Valor
+            18 * mm,    # Peso porcentual
+            21 * mm,    # Cumple totalmente
+            21 * mm,    # No cumple
+            21 * mm,    # No aplica
+            31 * mm,    # Calificación de la empresa
         ],
         repeatRows=2,
         hAlign="CENTER",
@@ -159,6 +601,24 @@ def build_article27_table_pdf(
         )
     )
 
+    story.append(
+        PageBreak()
+    )
+
+    story.append(
+        Paragraph(
+            "BRECHAS IDENTIFICADAS",
+            styles["title"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "ASPECTOS QUE REQUIEREN ATENCIÓN",
+            styles["subtitle"],
+        )
+    )
+
     document.build(
         story,
         onFirstPage=_draw_page_footer,
@@ -167,6 +627,294 @@ def build_article27_table_pdf(
 
     return output
 
+def _build_evaluation_summary(
+    *,
+    matrix: Article27ScoringMatrix,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    summary = matrix.summary
+
+    data = [
+        [
+            Paragraph(
+                "Evaluación aplicable",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                matrix.evaluation_scope,
+                styles["summary_value"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Base normativa",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                "Resolución 0312 de 2019",
+                styles["summary_value"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Requisitos evaluados",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                str(summary.evaluated_items),
+                styles["summary_number"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Cumple según declaración",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                str(summary.complies_items),
+                styles["summary_number"],
+            ),
+        ],
+        [
+            Paragraph(
+                "No cumple según declaración",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                str(summary.does_not_comply_items),
+                styles["summary_number"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Información insuficiente",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                str(summary.insufficient_information_items),
+                styles["summary_number"],
+            ),
+        ],
+    ]
+
+    table = Table(
+        data,
+        colWidths=[
+            65 * mm,
+            115 * mm,
+        ],
+        hAlign="LEFT",
+    )
+
+    table.setStyle(
+        TableStyle(
+            [
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "MIDDLE",
+                ),
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+            ]
+        )
+    )
+
+    return [
+        Paragraph(
+            "RESUMEN DE EVALUACIÓN",
+            styles["section_title"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+        table,
+        Spacer(
+            1,
+            4 * mm,
+        ),
+        Paragraph(
+            (
+                "<b>Cumple según declaración:</b> "
+                "la información suministrada permite concluir "
+                "que el requisito se satisface."
+            ),
+            styles["summary_explanation"],
+        ),
+        Paragraph(
+            (
+                "<b>No cumple según declaración:</b> "
+                "la información suministrada permite identificar "
+                "una condición requerida que no se satisface."
+            ),
+            styles["summary_explanation"],
+        ),
+        Paragraph(
+            (
+                "<b>Información insuficiente:</b> "
+                "la información suministrada no permite determinar "
+                "el cumplimiento del requisito; por tanto, debe ser "
+                "verificado por la empresa."
+            ),
+            styles["summary_explanation"],
+        ),
+    ]
+
+def _build_score_summary(
+    *,
+    matrix: Article27ScoringMatrix,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    summary = matrix.summary
+    rating = summary.article28_rating.value
+
+    if rating == "ACEPTABLE":
+        dot_color = "#16A34A"
+    elif rating == "MODERADAMENTE ACEPTABLE":
+        dot_color = "#D97706"
+    else:
+        dot_color = "#DC2626"
+
+    score_card = Table(
+        [
+            [
+                Paragraph(
+                    "PUNTAJE OBTENIDO",
+                    styles["result_eyebrow"],
+                ),
+            ],
+            [
+                Paragraph(
+                    (
+                        f"<b>{_format_number(summary.total_score)}"
+                        " / 100</b>"
+                    ),
+                    styles["score_big"],
+                ),
+            ],
+            [
+                Paragraph(
+                    "Tabla de Valores y Calificación",
+                    styles["result_caption"],
+                ),
+            ],
+        ],
+        colWidths=[74 * mm],
+    )
+
+    score_card.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.6, BORDER),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+
+    rating_card = Table(
+        [
+            [
+                Paragraph(
+                    "VALORACIÓN ARTÍCULO 28",
+                    styles["result_eyebrow"],
+                ),
+            ],
+            [
+                Paragraph(
+                    (
+                        f'<font color="{dot_color}">●</font> '
+                        f"<b>{rating}</b>"
+                    ),
+                    styles["rating_status"],
+                ),
+            ],
+            [
+                Paragraph(
+                    "Según la Resolución 0312 de 2019",
+                    styles["result_caption"],
+                ),
+            ],
+        ],
+        colWidths=[74 * mm],
+    )
+
+    rating_card.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.6, BORDER),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+
+    indicators = Table(
+        [
+            [
+                score_card,
+                "",
+                rating_card,
+            ]
+        ],
+        colWidths=[
+            74 * mm,
+            6 * mm,
+            74 * mm,
+        ],
+        hAlign="LEFT",
+    )
+
+    indicators.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+
+    return [
+        Paragraph(
+            "RESULTADO DE LA CALIFICACIÓN",
+            styles["section_title"],
+        ),
+        Spacer(1, 3 * mm),
+        indicators,
+    ]
 
 def _build_table(
     *,
@@ -196,10 +944,6 @@ def _build_table(
                 "Calificación de la empresa",
                 styles["header"],
             ),
-            Paragraph(
-                "Comentario",
-                styles["header"],
-            ),
         ],
         [
             "",
@@ -219,7 +963,6 @@ def _build_table(
                 "No<br/>aplica",
                 styles["header_small"],
             ),
-            "",
             "",
         ],
     ]
@@ -308,10 +1051,6 @@ def _build_table(
                     ),
                     styles["number"],
                 ),
-                Paragraph(
-                    _display_comment(row),
-                    styles["comment"],
-                ),
             ]
         )
 
@@ -342,12 +1081,6 @@ def _build_table(
             Paragraph(
                 f"<b>{_format_number(matrix.summary.total_score)}</b>",
                 styles["total"],
-            ),
-            Paragraph(
-                (
-                    "<b>Calificación total sobre 100.</b>"
-                ),
-                styles["total_comment"],
             ),
         ]
     )
@@ -390,11 +1123,6 @@ def _build_table(
             "SPAN",
             (8, 0),
             (8, 1),
-        ),
-        (
-            "SPAN",
-            (9, 0),
-            (9, 1),
         ),
         (
             "BACKGROUND",
@@ -518,13 +1246,6 @@ def _build_table(
             0.35,
             colors.HexColor("#94A3B8"),
         ),
-        (
-            "LINEBEFORE",
-            (9, 0),
-            (9, -1),
-            0.35,
-            colors.HexColor("#94A3B8"),
-        ),
 
         # -------------------------------------------------
         # Total.
@@ -622,82 +1343,6 @@ def _build_table(
         TableStyle(style_commands),
     )
 
-
-def _display_comment(
-    row: Article27ScoringRow,
-) -> str:
-    """
-    Obtiene una versión compacta del comentario para la tabla.
-
-    El detalle completo permanece disponible en la matriz
-    y en el informe orientativo.
-    """
-
-    if row.requirement_id is None:
-        return row.comment
-
-    if (
-        row.assessment_status
-        == DeclarativeAssessmentStatus.COMPLIES_AS_DECLARED
-    ):
-        return (
-            "Cumple según la información declarada "
-            "por la empresa."
-        )
-
-    if (
-        row.assessment_status
-        == DeclarativeAssessmentStatus.INSUFFICIENT_INFORMATION
-    ):
-        detail = row.comment
-
-        marker = (
-            "Para efectos de la tabla de calificación"
-        )
-
-        if marker in detail:
-            detail = detail.split(
-                marker,
-                1,
-            )[0].strip()
-
-        return detail
-
-    if (
-        row.assessment_status
-        == DeclarativeAssessmentStatus.DOES_NOT_COMPLY_AS_DECLARED
-    ):
-        comment = row.comment.replace(
-            (
-                "Las declaraciones recopiladas permiten "
-                "identificar al menos una condición "
-                "evaluativa no satisfecha."
-            ),
-            "",
-        ).strip()
-
-        comment = comment.replace(
-            (
-                "La empresa declaró una situación "
-                "negativa respecto de: "
-            ),
-            "Declaración negativa: ",
-        )
-
-        return (
-            comment
-            or "No cumple según la información declarada."
-        )
-
-    if (
-        row.assessment_status
-        == DeclarativeAssessmentStatus.NOT_APPLICABLE
-    ):
-        return row.comment
-
-    return row.comment
-
-
 def _build_footer_note(
     matrix: Article27ScoringMatrix,
 ) -> str:
@@ -714,113 +1359,235 @@ def _build_footer_note(
         f"{_format_number(matrix.summary.total_score)} / 100.</b>"
     )
 
-
 def _build_styles() -> dict[str, ParagraphStyle]:
     return {
         "title": ParagraphStyle(
-            name="Art27Title",
+            name="Title",
             fontName="Helvetica-Bold",
-            fontSize=12,
-            leading=14,
+            fontSize=18,
+            leading=22,
             alignment=TA_CENTER,
-            spaceAfter=2,
+            textColor=TEXT_PRIMARY,
+            spaceAfter=4,
         ),
+
         "subtitle": ParagraphStyle(
-            name="Art27Subtitle",
-            fontName="Helvetica-Bold",
-            fontSize=10,
-            leading=12,
+            name="Subtitle",
+            fontName="Helvetica",
+            fontSize=12,
+            leading=15,
             alignment=TA_CENTER,
+            textColor=TEXT_SECONDARY,
             spaceAfter=3,
         ),
+
         "scope": ParagraphStyle(
-            name="Art27Scope",
+            name="Scope",
             fontName="Helvetica",
-            fontSize=7.5,
-            leading=9,
+            fontSize=11,
+            leading=14,
             alignment=TA_CENTER,
-            textColor=colors.HexColor("#475569"),
+            textColor=TEXT_SECONDARY,
         ),
+
         "header": ParagraphStyle(
             name="Art27Header",
             fontName="Helvetica-Bold",
-            fontSize=6.2,
-            leading=7.2,
+            fontSize=11,
+            leading=13,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
+
         "header_small": ParagraphStyle(
             name="Art27HeaderSmall",
             fontName="Helvetica-Bold",
-            fontSize=5.8,
-            leading=6.6,
+            fontSize=11,
+            leading=13,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
+
         "cycle": ParagraphStyle(
             name="Art27Cycle",
             fontName="Helvetica-Bold",
-            fontSize=6.1,
-            leading=7.2,
+            fontSize=11,
+            leading=13,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
+
         "standard": ParagraphStyle(
             name="Art27Standard",
             fontName="Helvetica",
-            fontSize=5.7,
-            leading=6.8,
+            fontSize=11,
+            leading=14,
             alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
         ),
+
         "cell": ParagraphStyle(
             name="Art27Cell",
             fontName="Helvetica",
-            fontSize=5.8,
-            leading=6.9,
-            alignment=TA_LEFT,
+            fontSize=11,
+            leading=14,
+            alignment=TA_JUSTIFY,
+            textColor=TEXT_PRIMARY,
         ),
+
         "number": ParagraphStyle(
             name="Art27Number",
             fontName="Helvetica",
-            fontSize=6.2,
-            leading=7.2,
+            fontSize=11,
+            leading=14,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
+
         "mark": ParagraphStyle(
             name="Art27Mark",
             fontName="Helvetica-Bold",
-            fontSize=7,
-            leading=8,
+            fontSize=11,
+            leading=14,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
-        "comment": ParagraphStyle(
-            name="Art27Comment",
-            fontName="Helvetica",
-            fontSize=5.6,
-            leading=6.7,
-            alignment=TA_LEFT,
-        ),
+
         "total": ParagraphStyle(
             name="Art27Total",
             fontName="Helvetica-Bold",
-            fontSize=7,
-            leading=8,
+            fontSize=11,
+            leading=14,
             alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
         ),
-        "total_comment": ParagraphStyle(
-            name="Art27TotalComment",
-            fontName="Helvetica-Bold",
-            fontSize=6.2,
-            leading=7.2,
-            alignment=TA_LEFT,
-        ),
+
         "note": ParagraphStyle(
             name="Art27Note",
             fontName="Helvetica",
-            fontSize=6.5,
-            leading=8,
-            alignment=TA_LEFT,
+            fontSize=11,
+            leading=14,
+            alignment=TA_JUSTIFY,
             textColor=colors.HexColor("#334155"),
         ),
-    }
+        "section_title": ParagraphStyle(
+            name="SectionTitle",
+            fontName="Helvetica-Bold",
+            fontSize=12,
+            leading=15,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+            spaceAfter=2,
+        ),
 
+        "summary_label": ParagraphStyle(
+            name="SummaryLabel",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_SECONDARY,
+        ),
+
+        "summary_value": ParagraphStyle(
+            name="SummaryValue",
+            fontName="Helvetica-Bold",
+            fontSize=11.5,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
+        "summary_number": ParagraphStyle(
+            name="SummaryNumber",
+            fontName="Helvetica-Bold",
+            fontSize=12,
+            leading=15,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
+    "summary_explanation": ParagraphStyle(
+        name="SummaryExplanation",
+        fontName="Helvetica",
+        fontSize=11,
+        leading=14,
+        alignment=TA_JUSTIFY,
+        textColor=TEXT_SECONDARY,
+        spaceAfter=4,
+    ),
+        "score_label": ParagraphStyle(
+            name="ScoreLabel",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_SECONDARY,
+        ),
+
+        "score_value": ParagraphStyle(
+            name="ScoreValue",
+            fontName="Helvetica-Bold",
+            fontSize=13,
+            leading=16,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
+        "score_big": ParagraphStyle(
+            name="ScoreBig",
+            fontName="Helvetica-Bold",
+            fontSize=22,
+            leading=26,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
+        "score_badge": ParagraphStyle(
+            name="ScoreBadge",
+            fontName="Helvetica-Bold",
+            fontSize=15,
+            leading=18,
+            alignment=TA_CENTER,
+            textColor=TEXT_PRIMARY,
+        ),
+
+        "result_eyebrow": ParagraphStyle(
+            name="ResultEyebrow",
+            fontName="Helvetica-Bold",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_SECONDARY,
+        ),
+
+        "result_caption": ParagraphStyle(
+            name="ResultCaption",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_SECONDARY,
+        ),
+
+        "rating_big": ParagraphStyle(
+            name="RatingBig",
+            fontName="Helvetica-Bold",
+            fontSize=15,
+            leading=18,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
+        "rating_status": ParagraphStyle(
+            name="RatingStatus",
+            fontName="Helvetica-Bold",
+            fontSize=15,
+            leading=18,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+    }
 
 def _format_number(
     value: float,
@@ -840,7 +1607,6 @@ def _format_number(
         ".",
         ",",
     )
-
 
 def _draw_page_footer(
     canvas,

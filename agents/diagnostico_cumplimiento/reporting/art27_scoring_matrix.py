@@ -16,6 +16,8 @@ from agents.diagnostico_cumplimiento.reporting.orientative_report import (
 )
 
 
+
+
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
 DEFAULT_ART27_TABLE_PATH = (
@@ -102,6 +104,10 @@ class Article27ScoringRow(BaseModel):
 
     comment: str
 
+class Article28Rating(StrEnum):
+    CRITICAL = "CRÍTICO"
+    MODERATELY_ACCEPTABLE = "MODERADAMENTE ACEPTABLE"
+    ACCEPTABLE = "ACEPTABLE"
 
 class Article27ScoringSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -117,8 +123,42 @@ class Article27ScoringSummary(BaseModel):
     insufficient_information_items: int
 
     total_score: float
+    article28_rating: Article28Rating
     maximum_score: float = 100.0
 
+def _build_evaluation_scope(
+    catalog_id: str,
+) -> str:
+    scopes = {
+        "res0312_riesgo_i_1_10_general": (
+            "Empresas de 1 a 10 trabajadores - Riesgo I"
+        ),
+        "res0312_riesgo_i_11_50": (
+            "Empresas de 11 a 50 trabajadores - Riesgo I"
+        ),
+        "res0312_riesgo_i_51_plus": (
+            "Empresas de más de 50 trabajadores - Riesgo I"
+        ),
+    }
+
+    try:
+        return scopes[catalog_id]
+    except KeyError as exc:
+        raise ValueError(
+            "No existe una descripción de alcance para "
+            f"el catálogo {catalog_id!r}."
+        ) from exc
+
+def _classify_article28(
+    score: float,
+) -> Article28Rating:
+    if score < 60:
+        return Article28Rating.CRITICAL
+
+    if score <= 85:
+        return Article28Rating.MODERATELY_ACCEPTABLE
+
+    return Article28Rating.ACCEPTABLE
 
 class Article27ScoringMatrix(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -126,6 +166,8 @@ class Article27ScoringMatrix(BaseModel):
     table_id: str
     mapping_id: str
     catalog_id: str
+
+    evaluation_scope: str
 
     rows: list[Article27ScoringRow] = Field(
         min_length=60,
@@ -243,6 +285,9 @@ def build_article27_scoring_matrix(
         catalog_id=mapping["catalog_id"],
         rows=rows,
         summary=summary,
+        evaluation_scope=_build_evaluation_scope(
+            mapping["catalog_id"]
+        ),
     )
 
 
@@ -550,29 +595,42 @@ def _build_summary(
         if row.requirement_id is not None
     ]
 
+    total_score = round(
+        sum(row.score for row in rows),
+        2,
+    )
+
     return Article27ScoringSummary(
         total_items=len(rows),
+
         evaluated_items=len(evaluated_rows),
+
         not_applicable_items=sum(
             row.not_applicable
             for row in rows
         ),
+
         complies_items=sum(
             row.complies_fully
             for row in rows
         ),
+
         does_not_comply_items=sum(
-            row.does_not_comply
+            row.assessment_status
+            == DeclarativeAssessmentStatus.DOES_NOT_COMPLY_AS_DECLARED
             for row in rows
         ),
+
         insufficient_information_items=sum(
             row.assessment_status
             == DeclarativeAssessmentStatus.INSUFFICIENT_INFORMATION
             for row in rows
         ),
-        total_score=round(
-            sum(row.score for row in rows),
-            2,
+
+        total_score=total_score,
+
+        article28_rating=_classify_article28(
+            total_score
         ),
     )
 
