@@ -11,9 +11,23 @@ from dataclasses import dataclass
 from typing import Any
 from langchain_core.embeddings import Embeddings
 
-
-
-from agents.consulta_normativa.langchain_rag.config import DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME, HYBRID_CANDIDATE_TOP_K, HYBRID_RRF_K, RERANKER_MODEL_NAME, RERANKER_MAX_LENGTH, RERANKER_CANDIDATE_POOL_SIZE, RERANKER_FINAL_TOP_K, DEFAULT_PARENT_CHUNKS_PATH
+from agents.consulta_normativa.langchain_rag.config import (
+    DEFAULT_CHROMA_PATH,
+    DEFAULT_COLLECTION_NAME,
+    DEFAULT_PARENT_CHUNKS_PATH,
+    HYBRID_RRF_K,
+    HYBRID_RRF_OUTPUT_TOP_K,
+    HYBRID_SOURCE_CANDIDATE_TOP_K,
+    RERANKER_BATCH_SIZE,
+    RERANKER_CANDIDATE_POOL_SIZE,
+    RERANKER_DEVICE,
+    RERANKER_FINAL_TOP_K,
+    RERANKER_MAX_LENGTH,
+    RERANKER_MODEL_NAME,
+)
+from agents.consulta_normativa.langchain_rag.retrieval.table_complement import (
+    DEFAULT_TABLE_DOCUMENTS_PATH,
+)
 
 logging.getLogger(
     "agents.consulta_normativa.langchain_rag.validation.retrieval_relevance_grading"
@@ -42,6 +56,7 @@ class RuntimeDependencies:
     hybrid_retriever: Callable[..., Retriever]
     get_reranker: Callable[..., Any]
     load_parent_documents: Callable[..., Any]
+    load_first_table_parts: Callable[..., Any]
     
 
 
@@ -153,17 +168,21 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         retriever = dependencies.hybrid_retriever(
             collection,
             bm25_index,
-            candidate_top_k=HYBRID_CANDIDATE_TOP_K,
+            candidate_top_k=HYBRID_SOURCE_CANDIDATE_TOP_K,
             rrf_k=HYBRID_RRF_K,
         )
 
         reranker = dependencies.get_reranker(
-            RERANKER_MODEL_NAME,
-            RERANKER_MAX_LENGTH,
+            model_name=RERANKER_MODEL_NAME,
+            max_length=RERANKER_MAX_LENGTH,
+            device=RERANKER_DEVICE,
         )
 
         parent_lookup = dependencies.load_parent_documents(
             DEFAULT_PARENT_CHUNKS_PATH
+        )
+        first_table_parts = dependencies.load_first_table_parts(
+            DEFAULT_TABLE_DOCUMENTS_PATH
         )
 
         # Memoria de corto plazo asociada al thread.
@@ -192,15 +211,19 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         )
 
         graph = dependencies.build_langgraph_rag(
-            llm,
-            retriever,
-            RERANKER_CANDIDATE_POOL_SIZE,
+            llm=llm,
+            retriever=retriever,
+            top_k=HYBRID_RRF_OUTPUT_TOP_K,
             checkpointer=checkpointer,
             store=memory_store,
             reranker=reranker,
             reranker_candidate_pool_size=RERANKER_CANDIDATE_POOL_SIZE,
             reranker_final_top_k=RERANKER_FINAL_TOP_K,
-            parent_lookup=parent_lookup
+            reranker_batch_size=RERANKER_BATCH_SIZE,
+            reranker_device=RERANKER_DEVICE,
+            reranker_input_max_length=RERANKER_MAX_LENGTH,
+            parent_lookup=parent_lookup,
+            first_table_parts=first_table_parts,
         )
 
         if write_graph_image:
@@ -241,6 +264,7 @@ def load_dependencies() -> RuntimeDependencies:
         from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
         from agents.consulta_normativa.langchain_rag.retrieval.reranking import (get_reranker)
         from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (load_parent_documents)
+        from agents.consulta_normativa.langchain_rag.retrieval.table_complement import load_first_table_parts
     except ModuleNotFoundError as error:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
@@ -253,6 +277,7 @@ def load_dependencies() -> RuntimeDependencies:
         hybrid_retriever=hybrid_retriever,
         get_reranker=get_reranker,
         load_parent_documents=load_parent_documents,
+        load_first_table_parts=load_first_table_parts,
     )
 
 

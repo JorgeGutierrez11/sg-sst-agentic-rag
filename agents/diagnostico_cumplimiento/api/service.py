@@ -41,6 +41,14 @@ from agents.diagnostico_cumplimiento.reporting.art27_scoring_matrix import (
 from agents.diagnostico_cumplimiento.reporting.art27_table_pdf import (
     build_article27_table_pdf,
 )
+
+from agents.diagnostico_cumplimiento.reporting.normative_gap_analysis import (
+    build_normative_gap_candidates,
+)
+from agents.diagnostico_cumplimiento.reporting.normative_gap_enrichment import (
+    enrich_normative_gaps,
+)
+
 from agents.diagnostico_cumplimiento.reporting.scoring_matrix import (
     build_scoring_matrix,
 )
@@ -384,11 +392,20 @@ class DiagnosticService:
                     "the Article 27 scoring matrix."
                 )
 
+            gap_candidates = build_normative_gap_candidates(
+                result.report
+            )
+
+            gap_analysis = enrich_normative_gaps(
+                gap_candidates
+            )
+
             buffer = BytesIO()
 
             build_article27_table_pdf(
                 matrix,
                 buffer,
+                gap_analysis=gap_analysis,
             )
 
             pdf_bytes = buffer.getvalue()

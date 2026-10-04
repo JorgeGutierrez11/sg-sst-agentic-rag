@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from html import escape
 from typing import BinaryIO
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
+from agents.diagnostico_cumplimiento.domain.declarative_assessment import (
+    DeclarativeAssessmentStatus,
+)
+from agents.diagnostico_cumplimiento.reporting.normative_gap_analysis import (
+    NormativeGapAnalysis,
+)
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A3, landscape
@@ -411,9 +417,191 @@ def _build_report_information(
         ),
     ]
 
+
+def _gap_status_label(
+    status: DeclarativeAssessmentStatus,
+) -> str:
+    if (
+        status
+        == DeclarativeAssessmentStatus.DOES_NOT_COMPLY_AS_DECLARED
+    ):
+        return "No cumple según declaración"
+
+    if (
+        status
+        == DeclarativeAssessmentStatus.INSUFFICIENT_INFORMATION
+    ):
+        return "Información insuficiente"
+
+    raise ValueError(
+        f"Estado no válido para una brecha: {status}"
+    )
+
+
+def _format_gap_sources(finding) -> str:
+    return "<br/>".join(
+        (
+            f"{escape(source.norm)}, "
+            f"{escape(source.reference)}"
+        )
+        for source in finding.sources
+    )
+
+
+def _build_normative_gap_table(
+    gap_analysis: NormativeGapAnalysis,
+    styles: dict[str, ParagraphStyle],
+) -> LongTable | Paragraph:
+    if not gap_analysis.findings:
+        return Paragraph(
+            (
+                "No se identificaron requisitos con estado "
+                "<b>No cumple según declaración</b> o "
+                "<b>Información insuficiente</b>."
+            ),
+            styles["cell"],
+        )
+
+    data = [
+        [
+            Paragraph("ESTADO", styles["header"]),
+            Paragraph("REQUISITO EVALUADO", styles["header"]),
+            Paragraph("MOTIVO DEL HALLAZGO", styles["header"]),
+            Paragraph("QUÉ ESTABLECE LA NORMA", styles["header"]),
+            Paragraph("ACCIÓN ORIENTATIVA", styles["header"]),
+            Paragraph("FUENTE", styles["header"]),
+        ]
+    ]
+
+    for finding in gap_analysis.findings:
+        requirement_label = (
+            f"<b>{escape(finding.official_item_id)}</b><br/>"
+            if finding.official_item_id
+            else ""
+        )
+
+        requirement_label += escape(
+            finding.requirement_name
+        )
+
+        data.append(
+            [
+                Paragraph(
+                    escape(
+                        _gap_status_label(
+                            finding.status
+                        )
+                    ),
+                    styles["cell"],
+                ),
+                Paragraph(
+                    requirement_label,
+                    styles["cell"],
+                ),
+                Paragraph(
+                    escape(finding.finding_reason),
+                    styles["cell"],
+                ),
+                Paragraph(
+                    escape(finding.normative_requirement),
+                    styles["cell"],
+                ),
+                Paragraph(
+                    escape(finding.orientative_action),
+                    styles["cell"],
+                ),
+                Paragraph(
+                    _format_gap_sources(finding),
+                    styles["cell"],
+                ),
+            ]
+        )
+
+    table = LongTable(
+        data,
+        colWidths=[
+            36 * mm,  # Estado
+            58 * mm,  # Requisito
+            63 * mm,  # Motivo
+            63 * mm,  # Norma
+            65 * mm,  # Acción
+            40 * mm,  # Fuente
+        ],
+        repeatRows=1,
+        hAlign="CENTER",
+        splitByRow=1,
+    )
+
+    table.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#D9E2F3"),
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, -1),
+                    TEXT_PRIMARY,
+                ),
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "TOP",
+                ),
+                (
+                    "BOX",
+                    (0, 0),
+                    (-1, -1),
+                    0.6,
+                    BORDER,
+                ),
+                (
+                    "INNERGRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.35,
+                    BORDER,
+                ),
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+            ]
+        )
+    )
+
+    return table
+
 def build_article27_table_pdf(
     matrix: Article27ScoringMatrix,
     output_path: str | Path | BinaryIO,
+    *,
+    gap_analysis: NormativeGapAnalysis | None = None,
 ) -> Path | BinaryIO:
     """
     Genera un PDF con la Tabla de Valores y Calificación
@@ -618,6 +806,21 @@ def build_article27_table_pdf(
             styles["subtitle"],
         )
     )
+
+    story.append(
+        Spacer(
+            1,
+            6 * mm,
+        )
+    )
+
+    if gap_analysis is not None:
+        story.append(
+            _build_normative_gap_table(
+                gap_analysis,
+                styles,
+            )
+        )
 
     document.build(
         story,
