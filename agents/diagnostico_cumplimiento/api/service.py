@@ -48,7 +48,9 @@ from agents.diagnostico_cumplimiento.reporting.normative_gap_analysis import (
 from agents.diagnostico_cumplimiento.reporting.normative_gap_enrichment import (
     enrich_normative_gaps,
 )
-
+from agents.diagnostico_cumplimiento.reporting.report_context import (
+    CompanyReportInfo,
+)
 from agents.diagnostico_cumplimiento.reporting.scoring_matrix import (
     build_scoring_matrix,
 )
@@ -400,12 +402,23 @@ class DiagnosticService:
                 gap_candidates
             )
 
+            company_info = CompanyReportInfo(
+                company_name=session.profile.company_name,
+                worker_count=session.profile.worker_count,
+                risk_class=session.profile.risk_class.value,
+                norm=session.catalog.norm,
+                requirements_article=(
+                    session.catalog.requirements_article
+                ),
+            )
+
             buffer = BytesIO()
 
             build_article27_table_pdf(
                 matrix,
                 buffer,
                 gap_analysis=gap_analysis,
+                company_info=company_info,
             )
 
             pdf_bytes = buffer.getvalue()
@@ -449,7 +462,8 @@ class DiagnosticService:
         """
 
         return CompanyProfile(
-            economic_activity="No especificada",
+            company_name=payload.company_name,
+            economic_activity=None,
             ciiu_code=None,
             worker_count=payload.worker_count,
             risk_class=RiskClass("I"),

@@ -15,6 +15,8 @@ class HealthResponse(BaseModel):
 class CreateDiagnosticRequest(BaseModel):
     worker_count: Annotated[int, Field(gt=0)]
 
+    company_name: str | None = None
+
 
 class QuestionResponse(BaseModel):
     requirement_id: str

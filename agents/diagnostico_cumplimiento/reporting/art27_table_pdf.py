@@ -12,6 +12,10 @@ from agents.diagnostico_cumplimiento.domain.declarative_assessment import (
 from agents.diagnostico_cumplimiento.reporting.normative_gap_analysis import (
     NormativeGapAnalysis,
 )
+
+from agents.diagnostico_cumplimiento.reporting.report_context import (
+    CompanyReportInfo,
+)
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A3, landscape
@@ -25,7 +29,13 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     PageBreak,
+    BaseDocTemplate,
+    Frame,
+    PageTemplate,
+    NextPageTemplate,
 )
+
+
 
 from agents.diagnostico_cumplimiento.domain.declarative_assessment import (
     DeclarativeAssessmentStatus,
@@ -38,11 +48,17 @@ from agents.diagnostico_cumplimiento.reporting.art27_scoring_matrix import (
 
 PAGE_WIDTH = 349 * mm
 PAGE_HEIGHT = 297 * mm
-
+FIRST_PAGE_HEIGHT = 195 * mm
+FIRST_PAGE_SIZE = (
+    PAGE_WIDTH,
+    FIRST_PAGE_HEIGHT,
+)
 PAGE_SIZE = (
     PAGE_WIDTH,
     PAGE_HEIGHT,
 )
+
+FINAL_PAGE_SIZE = FIRST_PAGE_SIZE
 
 LEFT_MARGIN = 12 * mm
 RIGHT_MARGIN = 12 * mm
@@ -67,6 +83,46 @@ WARNING_TEXT = colors.HexColor("#92400E")
 
 CRITICAL_BG = colors.HexColor("#FEE2E2")
 CRITICAL_TEXT = colors.HexColor("#991B1B")
+
+
+TABLE_MARK_COMPLIES = "#16A34A"
+TABLE_MARK_DOES_NOT_COMPLY = "#DC2626"
+TABLE_MARK_NOT_APPLICABLE = "#64748B"
+
+# ---------------------------------------------------------
+# Paleta visual de tablas
+# Cambiar estos valores modifica las tablas sin tocar
+# su estructura ni la lógica del reporte.
+# ---------------------------------------------------------
+
+TABLE_HEADER_BG = BRAND_GREEN_SOFT
+TABLE_HEADER_TEXT = TEXT_PRIMARY
+
+TABLE_TOTAL_BG = colors.HexColor("#ECFDF5")
+
+TABLE_BORDER_STRONG = colors.HexColor("#64748B")
+TABLE_BORDER = colors.HexColor("#CBD5E1")
+
+# Estados visuales de la tabla de brechas
+GAP_NONCOMPLIANCE_COLOR = "#DC2626"
+GAP_NONCOMPLIANCE_BG = colors.HexColor("#FEF2F2")
+
+GAP_INSUFFICIENT_COLOR = "#D97706"
+GAP_INSUFFICIENT_BG = colors.HexColor("#FFF7ED")
+
+def _format_orientative_action(
+    value: str,
+) -> str:
+    lines = [
+        line.strip()
+        for line in value.splitlines()
+        if line.strip()
+    ]
+
+    return "<br/>".join(
+        escape(line)
+        for line in lines
+    )
 
 def _build_normative_criteria(
     *,
@@ -260,9 +316,139 @@ def _build_card(
 
     return card
 
+def _build_company_information(
+    *,
+    company_info: CompanyReportInfo,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    company_name = (
+        company_info.company_name.strip()
+        if company_info.company_name
+        and company_info.company_name.strip()
+        else "No informada"
+    )
+
+    data = [
+        [
+            Paragraph(
+                "Empresa",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                escape(company_name),
+                styles["summary_value"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Trabajadores declarados",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                str(company_info.worker_count),
+                styles["summary_value"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Clase de riesgo declarada",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                company_info.risk_class,
+                styles["summary_value"],
+            ),
+        ],
+        [
+            Paragraph(
+                "Artículo aplicable",
+                styles["summary_label"],
+            ),
+            Paragraph(
+                (
+                    f"Artículo {company_info.requirements_article} "
+                    f"- {escape(company_info.norm)}"
+                ),
+                styles["summary_value"],
+            ),
+        ],
+    ]
+
+    table = Table(
+        data,
+        colWidths=[
+            62 * mm,
+            82 * mm,
+        ],
+        hAlign="LEFT",
+    )
+
+    table.setStyle(
+        TableStyle(
+            [
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "TOP",
+                ),
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    5,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+            ]
+        )
+    )
+
+    return [
+        Paragraph(
+            "INFORMACIÓN DE LA EMPRESA",
+            styles["section_title"],
+        ),
+        Spacer(
+            1,
+            3 * mm,
+        ),
+        table,
+        Spacer(
+            1,
+            4 * mm,
+        ),
+        Paragraph(
+            (
+                "Los datos presentados corresponden al perfil "
+                "utilizado para determinar los Estándares "
+                "Mínimos aplicables al diagnóstico."
+            ),
+            styles["summary_explanation"],
+        ),
+    ]
+
 def _build_first_page_layout(
     *,
     matrix: Article27ScoringMatrix,
+    company_info: CompanyReportInfo,
+    generated_at: datetime,
     styles: dict[str, ParagraphStyle],
 ) -> Table:
     summary_block = _build_card(
@@ -273,9 +459,9 @@ def _build_first_page_layout(
         width=160 * mm,
     )
 
-    normative_block = _build_card(
-        _build_normative_criteria(
-            matrix=matrix,
+    company_block = _build_card(
+        _build_company_information(
+            company_info=company_info,
             styles=styles,
         ),
         width=157 * mm,
@@ -283,6 +469,7 @@ def _build_first_page_layout(
 
     score_block = _build_score_summary(
         matrix=matrix,
+        generated_at=generated_at,
         styles=styles,
     )
 
@@ -291,7 +478,7 @@ def _build_first_page_layout(
             [
                 summary_block,
                 "",
-                normative_block,
+                company_block,
             ],
             [
                 score_block,
@@ -312,7 +499,7 @@ def _build_first_page_layout(
             [
                 (
                     "SPAN",
-                    (2, 0),
+                    (0, 1),
                     (2, 1),
                 ),
                 (
@@ -354,9 +541,7 @@ def _build_report_information(
     *,
     styles: dict[str, ParagraphStyle],
 ) -> list[object]:
-    generated_at = datetime.now(
-        ZoneInfo("America/Bogota")
-    )
+    
 
     official_resolution_url = (
         "https://www1.funcionpublica.gov.co/"
@@ -404,19 +589,8 @@ def _build_report_information(
             ),
             styles["summary_explanation"],
         ),
-        Spacer(
-            1,
-            3 * mm,
-        ),
-        Paragraph(
-            (
-                "<b>Fecha de generación:</b> "
-                f"{generated_at.strftime('%d/%m/%Y')}"
-            ),
-            styles["summary_explanation"],
-        ),
+        
     ]
-
 
 def _gap_status_label(
     status: DeclarativeAssessmentStatus,
@@ -437,6 +611,40 @@ def _gap_status_label(
         f"Estado no válido para una brecha: {status}"
     )
 
+def _gap_status_visual(
+    status: DeclarativeAssessmentStatus,
+) -> tuple[str, colors.Color]:
+    if (
+        status
+        == DeclarativeAssessmentStatus.DOES_NOT_COMPLY_AS_DECLARED
+    ):
+        return (
+            (
+                f'<font color="{GAP_NONCOMPLIANCE_COLOR}">'
+                "<b>●</b>"
+                "</font> "
+                "<b>No cumple según declaración</b>"
+            ),
+            GAP_NONCOMPLIANCE_BG,
+        )
+
+    if (
+        status
+        == DeclarativeAssessmentStatus.INSUFFICIENT_INFORMATION
+    ):
+        return (
+            (
+                f'<font color="{GAP_INSUFFICIENT_COLOR}">'
+                "<b>●</b>"
+                "</font> "
+                "<b>Información insuficiente</b>"
+            ),
+            GAP_INSUFFICIENT_BG,
+        )
+
+    raise ValueError(
+        f"Estado no válido para una brecha: {status}"
+    )
 
 def _format_gap_sources(finding) -> str:
     return "<br/>".join(
@@ -446,7 +654,6 @@ def _format_gap_sources(finding) -> str:
         )
         for source in finding.sources
     )
-
 
 def _build_normative_gap_table(
     gap_analysis: NormativeGapAnalysis,
@@ -462,18 +669,45 @@ def _build_normative_gap_table(
             styles["cell"],
         )
 
-    data = [
+    data: list[list[object]] = [
         [
-            Paragraph("ESTADO", styles["header"]),
-            Paragraph("REQUISITO EVALUADO", styles["header"]),
-            Paragraph("MOTIVO DEL HALLAZGO", styles["header"]),
-            Paragraph("QUÉ ESTABLECE LA NORMA", styles["header"]),
-            Paragraph("ACCIÓN ORIENTATIVA", styles["header"]),
-            Paragraph("FUENTE", styles["header"]),
+            Paragraph(
+                "ESTADO",
+                styles["header"],
+            ),
+            Paragraph(
+                "REQUISITO EVALUADO",
+                styles["header"],
+            ),
+            Paragraph(
+                "ACCIÓN ORIENTATIVA",
+                styles["header"],
+            ),
+            Paragraph(
+                "FUENTE",
+                styles["header"],
+            ),
         ]
     ]
 
+    status_backgrounds: list[
+        tuple[int, colors.Color]
+    ] = []
+
     for finding in gap_analysis.findings:
+        status_html, status_background = _gap_status_visual(
+            finding.status
+        )
+
+        row_index = len(data)
+
+        status_backgrounds.append(
+            (
+                row_index,
+                status_background,
+            )
+        )
+
         requirement_label = (
             f"<b>{escape(finding.official_item_id)}</b><br/>"
             if finding.official_item_id
@@ -487,59 +721,86 @@ def _build_normative_gap_table(
         data.append(
             [
                 Paragraph(
-                    escape(
-                        _gap_status_label(
-                            finding.status
-                        )
-                    ),
+                    status_html,
                     styles["cell"],
                 ),
                 Paragraph(
                     requirement_label,
-                    styles["cell"],
+                    styles["gap_requirement"],
                 ),
                 Paragraph(
-                    escape(finding.finding_reason),
-                    styles["cell"],
+                    _format_orientative_action(
+                        finding.orientative_action
+                    ),
+                    styles["gap_action"],
                 ),
                 Paragraph(
-                    escape(finding.normative_requirement),
-                    styles["cell"],
-                ),
-                Paragraph(
-                    escape(finding.orientative_action),
-                    styles["cell"],
-                ),
-                Paragraph(
-                    _format_gap_sources(finding),
+                    _format_gap_sources(
+                        finding
+                    ),
                     styles["cell"],
                 ),
             ]
         )
 
+    # ---------------------------------------------------------
+    # Nota metodológica al final de la tabla.
+    # ---------------------------------------------------------
+
+    note_row_index = len(data)
+
+    data.append(
+        [
+            Paragraph(
+                (
+                    "<b>Nota:</b> Las acciones orientativas se "
+                    "elaboran a partir del estado del requisito, "
+                    "la información declarada por la empresa, "
+                    "el criterio normativo aplicable y su método "
+                    "de verificación."
+                ),
+                styles["note"],
+            ),
+            "",
+            "",
+            "",
+        ]
+    )
+
     table = LongTable(
         data,
         colWidths=[
-            36 * mm,  # Estado
-            58 * mm,  # Requisito
-            63 * mm,  # Motivo
-            63 * mm,  # Norma
-            65 * mm,  # Acción
-            40 * mm,  # Fuente
+            32 * mm,   # Estado
+            66 * mm,   # Requisito evaluado
+            188 * mm,  # Acción orientativa
+            39 * mm,   # Fuente
         ],
         repeatRows=1,
         hAlign="CENTER",
         splitByRow=1,
     )
 
+    status_style_commands = [
+        (
+            "BACKGROUND",
+            (0, row_index),
+            (0, row_index),
+            background,
+        )
+        for row_index, background in status_backgrounds
+    ]
+
     table.setStyle(
         TableStyle(
             [
+                # -------------------------------------------------
+                # Encabezado.
+                # -------------------------------------------------
                 (
                     "BACKGROUND",
                     (0, 0),
                     (-1, 0),
-                    colors.HexColor("#D9E2F3"),
+                    TABLE_HEADER_BG,
                 ),
                 (
                     "TEXTCOLOR",
@@ -547,6 +808,10 @@ def _build_normative_gap_table(
                     (-1, -1),
                     TEXT_PRIMARY,
                 ),
+
+                # -------------------------------------------------
+                # Contenido.
+                # -------------------------------------------------
                 (
                     "VALIGN",
                     (0, 0),
@@ -563,7 +828,7 @@ def _build_normative_gap_table(
                 (
                     "INNERGRID",
                     (0, 0),
-                    (-1, -1),
+                    (-1, note_row_index - 1),
                     0.35,
                     BORDER,
                 ),
@@ -571,25 +836,64 @@ def _build_normative_gap_table(
                     "LEFTPADDING",
                     (0, 0),
                     (-1, -1),
-                    5,
+                    6,
                 ),
                 (
                     "RIGHTPADDING",
                     (0, 0),
                     (-1, -1),
-                    5,
+                    6,
                 ),
                 (
                     "TOPPADDING",
                     (0, 0),
                     (-1, -1),
-                    6,
+                    7,
                 ),
                 (
                     "BOTTOMPADDING",
                     (0, 0),
                     (-1, -1),
-                    6,
+                    7,
+                ),
+
+                # -------------------------------------------------
+                # Colores semánticos de ESTADO.
+                # -------------------------------------------------
+                *status_style_commands,
+
+                # -------------------------------------------------
+                # Nota metodológica.
+                # -------------------------------------------------
+                (
+                    "SPAN",
+                    (0, note_row_index),
+                    (-1, note_row_index),
+                ),
+                (
+                    "BACKGROUND",
+                    (0, note_row_index),
+                    (-1, note_row_index),
+                    colors.HexColor("#F8FAFC"),
+                ),
+                (
+                    "LINEABOVE",
+                    (0, note_row_index),
+                    (-1, note_row_index),
+                    0.6,
+                    BORDER,
+                ),
+                (
+                    "TOPPADDING",
+                    (0, note_row_index),
+                    (-1, note_row_index),
+                    8,
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, note_row_index),
+                    (-1, note_row_index),
+                    8,
                 ),
             ]
         )
@@ -597,11 +901,155 @@ def _build_normative_gap_table(
 
     return table
 
+def _build_final_reference_page(
+    *,
+    styles: dict[str, ParagraphStyle],
+) -> list[object]:
+    return [
+        Paragraph(
+            "REFERENCIAS NORMATIVAS Y ALCANCE DEL INFORME",
+            styles["title"],
+        ),
+        Paragraph(
+            "Información complementaria del diagnóstico",
+            styles["subtitle"],
+        ),
+        Spacer(
+            1,
+            6 * mm,
+        ),
+
+        # -----------------------------------------------------
+        # Resolución 0312 de 2019
+        # -----------------------------------------------------
+
+        _build_card(
+            [
+                Paragraph(
+                    "CRITERIOS NORMATIVOS — RESOLUCIÓN 0312 DE 2019",
+                    styles["section_title"],
+                ),
+                Spacer(
+                    1,
+                    3 * mm,
+                ),
+                Paragraph(
+                    (
+                        "<b>Artículo 26.</b> "
+                        "La empresa debe realizar anualmente la "
+                        "autoevaluación de los Estándares Mínimos "
+                        "y formular las acciones de mejora "
+                        "correspondientes."
+                    ),
+                    styles["summary_explanation"],
+                ),
+                Spacer(
+                    1,
+                    2 * mm,
+                ),
+                Paragraph(
+                    (
+                        "<b>Artículo 27.</b> "
+                        "La Tabla de Valores y Calificación define "
+                        "la asignación del puntaje. Para empresas de "
+                        "menos de 50 trabajadores clasificadas en "
+                        "riesgo I, II o III, los ítems no aplicables "
+                        "reciben el porcentaje máximo correspondiente."
+                    ),
+                    styles["summary_explanation"],
+                ),
+                Spacer(
+                    1,
+                    2 * mm,
+                ),
+                Paragraph(
+                    (
+                        "<b>Artículo 28.</b> "
+                        "Menor de 60 %: <b>CRÍTICO</b> · "
+                        "Entre 60 % y 85 %: "
+                        "<b>MODERADAMENTE ACEPTABLE</b> · "
+                        "Mayor de 85 %: <b>ACEPTABLE</b>."
+                    ),
+                    styles["summary_explanation"],
+                ),
+            ],
+            width=325 * mm,
+        ),
+
+        Spacer(
+            1,
+            5 * mm,
+        ),
+
+        # -----------------------------------------------------
+        # Circular 0027 de 2026
+        # -----------------------------------------------------
+
+        _build_card(
+            [
+                Paragraph(
+                    "REGISTRO ANUAL — CIRCULAR 0027 DE 2026",
+                    styles["section_title"],
+                ),
+                Spacer(
+                    1,
+                    3 * mm,
+                ),
+                Paragraph(
+                    (
+                        "La Circular 0027 de 2026 reitera el registro "
+                        "anual de la autoevaluación de los Estándares "
+                        "Mínimos y del respectivo plan de mejoramiento. "
+                        "Para la vigencia 2026, corresponde registrar "
+                        "la autoevaluación del año 2025."
+                    ),
+                    styles["summary_explanation"],
+                ),
+            ],
+            width=325 * mm,
+        ),
+
+        Spacer(
+            1,
+            5 * mm,
+        ),
+
+        # -----------------------------------------------------
+        # Alcance
+        # -----------------------------------------------------
+
+        _build_card(
+            [
+                Paragraph(
+                    "MARCO DE INTERPRETACIÓN DEL INFORME",
+                    styles["section_title"],
+                ),
+                Spacer(
+                    1,
+                    3 * mm,
+                ),
+                Paragraph(
+                    (
+                        "Este informe tiene carácter orientativo y "
+                        "no constituye auditoría, certificación de "
+                        "cumplimiento ni verificación documental del "
+                        "SG-SST. Cuando corresponda, los resultados "
+                        "deben contrastarse con los soportes y las "
+                        "condiciones reales de la empresa."
+                    ),
+                    styles["summary_explanation"],
+                ),
+            ],
+            width=325 * mm,
+        ),
+    ]
+
 def build_article27_table_pdf(
     matrix: Article27ScoringMatrix,
     output_path: str | Path | BinaryIO,
     *,
     gap_analysis: NormativeGapAnalysis | None = None,
+    company_info: CompanyReportInfo | None = None,
 ) -> Path | BinaryIO:
     """
     Genera un PDF con la Tabla de Valores y Calificación
@@ -618,6 +1066,14 @@ def build_article27_table_pdf(
     Su responsabilidad es exclusivamente de presentación.
     """
 
+    if company_info is None:
+        raise ValueError(
+            "Company report information is required "
+            "to generate the diagnostic report."
+        )
+    generated_at = datetime.now(
+        ZoneInfo("America/Bogota")
+    )
     if isinstance(output_path, (str, Path)):
         output: Path | BinaryIO = Path(output_path)
 
@@ -632,7 +1088,7 @@ def build_article27_table_pdf(
         output = output_path
         document_target = output
 
-    document = SimpleDocTemplate(
+    document = BaseDocTemplate(
         document_target,
         pagesize=PAGE_SIZE,
         leftMargin=LEFT_MARGIN,
@@ -644,6 +1100,53 @@ def build_article27_table_pdf(
             "- Artículo 27"
         ),
         author="Sistema inteligente de asistencia SG-SST",
+    )
+
+    first_page_frame = Frame(
+        LEFT_MARGIN,
+        BOTTOM_MARGIN,
+        PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN,
+        FIRST_PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN,
+        id="first_page_frame",
+    )
+
+    later_pages_frame = Frame(
+        LEFT_MARGIN,
+        BOTTOM_MARGIN,
+        PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN,
+        PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN,
+        id="later_pages_frame",
+    )
+
+    final_page_frame = Frame(
+        LEFT_MARGIN,
+        BOTTOM_MARGIN,
+        PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN,
+        FIRST_PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN,
+        id="final_page_frame",
+    )
+
+    document.addPageTemplates(
+        [
+            PageTemplate(
+                id="first_page",
+                frames=[first_page_frame],
+                pagesize=FIRST_PAGE_SIZE,
+                onPage=_draw_page_footer,
+            ),
+            PageTemplate(
+                id="later_pages",
+                frames=[later_pages_frame],
+                pagesize=PAGE_SIZE,
+                onPage=_draw_page_footer,
+            ),
+            PageTemplate(
+                id="final_page",
+                frames=[final_page_frame],
+                pagesize=FINAL_PAGE_SIZE,
+                onPage=_draw_page_footer,
+            ),
+        ]
     )
 
     story = []
@@ -659,7 +1162,7 @@ def build_article27_table_pdf(
 
     story.append(
         Paragraph(
-            "Resumen de evaluación y criterios normativos",
+            "Resumen del diagnóstico",
             styles["subtitle"],
         )
     )
@@ -684,24 +1187,14 @@ def build_article27_table_pdf(
     story.append(
         _build_first_page_layout(
             matrix=matrix,
+            company_info=company_info,
+            generated_at=generated_at,
             styles=styles,
         )
     )
 
     story.append(
-        Spacer(
-            1,
-            6 * mm,
-        )
-    )
-
-    story.append(
-        _build_card(
-            _build_report_information(
-                styles=styles,
-            ),
-            width=325 * mm,
-        )
+        NextPageTemplate("later_pages")
     )
 
     story.append(
@@ -822,11 +1315,21 @@ def build_article27_table_pdf(
             )
         )
 
-    document.build(
-        story,
-        onFirstPage=_draw_page_footer,
-        onLaterPages=_draw_page_footer,
-    )
+        story.append(
+            NextPageTemplate("final_page")
+        )
+
+        story.append(
+            PageBreak()
+        )
+
+        story.extend(
+            _build_final_reference_page(
+                styles=styles,
+            )
+        )
+
+    document.build(story)
 
     return output
 
@@ -960,36 +1463,13 @@ def _build_evaluation_summary(
             1,
             4 * mm,
         ),
-        Paragraph(
-            (
-                "<b>Cumple según declaración:</b> "
-                "la información suministrada permite concluir "
-                "que el requisito se satisface."
-            ),
-            styles["summary_explanation"],
-        ),
-        Paragraph(
-            (
-                "<b>No cumple según declaración:</b> "
-                "la información suministrada permite identificar "
-                "una condición requerida que no se satisface."
-            ),
-            styles["summary_explanation"],
-        ),
-        Paragraph(
-            (
-                "<b>Información insuficiente:</b> "
-                "la información suministrada no permite determinar "
-                "el cumplimiento del requisito; por tanto, debe ser "
-                "verificado por la empresa."
-            ),
-            styles["summary_explanation"],
-        ),
+        
     ]
 
 def _build_score_summary(
     *,
     matrix: Article27ScoringMatrix,
+    generated_at: datetime,
     styles: dict[str, ParagraphStyle],
 ) -> list[object]:
     summary = matrix.summary
@@ -1026,7 +1506,7 @@ def _build_score_summary(
                 ),
             ],
         ],
-        colWidths=[74 * mm],
+        colWidths=[101 * mm],
     )
 
     score_card.setStyle(
@@ -1065,11 +1545,51 @@ def _build_score_summary(
                     styles["result_caption"],
                 ),
             ],
+            
         ],
-        colWidths=[74 * mm],
+        colWidths=[107 * mm],
     )
 
     rating_card.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.6, BORDER),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+
+    date_card = Table(
+        [
+            [
+                Paragraph(
+                    "FECHA DE EVALUACIÓN",
+                    styles["result_eyebrow"],
+                ),
+            ],
+            [
+                Paragraph(
+                    (
+                        f"<b>{generated_at.strftime('%d/%m/%Y · %H:%M')}</b>"
+                    ),
+                    styles["score_big"],
+                ),
+            ],
+            [
+                Paragraph(
+                    "Fecha de generación del diagnóstico",
+                    styles["result_caption"],
+                ),
+            ],
+        ],
+        colWidths=[101 * mm],
+    )
+
+    date_card.setStyle(
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, -1), colors.white),
@@ -1088,14 +1608,18 @@ def _build_score_summary(
                 score_card,
                 "",
                 rating_card,
+                "",
+                date_card,
             ]
         ],
         colWidths=[
-            74 * mm,
-            6 * mm,
-            74 * mm,
+            101 * mm,
+            8 * mm,
+            107 * mm,
+            8 * mm,
+            101 * mm,
         ],
-        hAlign="LEFT",
+        hAlign="CENTER",
     )
 
     indicators.setStyle(
@@ -1111,6 +1635,7 @@ def _build_score_summary(
     )
 
     return [
+        Spacer(1, 3 * mm),
         Paragraph(
             "RESULTADO DE LA CALIFICACIÓN",
             styles["section_title"],
@@ -1237,15 +1762,33 @@ def _build_table(
                     styles["number"],
                 ),
                 Paragraph(
-                    "X" if row.complies_fully else "",
+                    (
+                        f'<font color="{TABLE_MARK_COMPLIES}">'
+                        "<b>X</b>"
+                        "</font>"
+                        if row.complies_fully
+                        else ""
+                    ),
                     styles["mark"],
                 ),
                 Paragraph(
-                    "X" if row.does_not_comply else "",
+                    (
+                        f'<font color="{TABLE_MARK_DOES_NOT_COMPLY}">'
+                        "<b>X</b>"
+                        "</font>"
+                        if row.does_not_comply
+                        else ""
+                    ),
                     styles["mark"],
                 ),
                 Paragraph(
-                    "X" if row.not_applicable else "",
+                    (
+                        f'<font color="{TABLE_MARK_NOT_APPLICABLE}">'
+                        "<b>X</b>"
+                        "</font>"
+                        if row.not_applicable
+                        else ""
+                    ),
                     styles["mark"],
                 ),
                 Paragraph(
@@ -1331,13 +1874,13 @@ def _build_table(
             "BACKGROUND",
             (0, 0),
             (-1, 1),
-            colors.HexColor("#D9E2F3"),
+            TABLE_HEADER_BG,
         ),
         (
             "TEXTCOLOR",
             (0, 0),
             (-1, 1),
-            colors.HexColor("#111827"),
+            TABLE_HEADER_TEXT,
         ),
         (
             "VALIGN",
@@ -1462,7 +2005,7 @@ def _build_table(
             "BACKGROUND",
             (0, -1),
             (-1, -1),
-            colors.HexColor("#E2E8F0"),
+            TABLE_TOTAL_BG,
         ),
         (
             "LINEABOVE",
@@ -1638,6 +2181,15 @@ def _build_styles() -> dict[str, ParagraphStyle]:
             textColor=TEXT_PRIMARY,
         ),
 
+        "gap_requirement": ParagraphStyle(
+            name="GapRequirement",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
+
         "number": ParagraphStyle(
             name="Art27Number",
             fontName="Helvetica",
@@ -1710,15 +2262,15 @@ def _build_styles() -> dict[str, ParagraphStyle]:
             textColor=TEXT_PRIMARY,
         ),
 
-    "summary_explanation": ParagraphStyle(
-        name="SummaryExplanation",
-        fontName="Helvetica",
-        fontSize=11,
-        leading=14,
-        alignment=TA_JUSTIFY,
-        textColor=TEXT_SECONDARY,
-        spaceAfter=4,
-    ),
+        "summary_explanation": ParagraphStyle(
+            name="SummaryExplanation",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_JUSTIFY,
+            textColor=TEXT_SECONDARY,
+            spaceAfter=4,
+        ),
         "score_label": ParagraphStyle(
             name="ScoreLabel",
             fontName="Helvetica",
@@ -1740,8 +2292,8 @@ def _build_styles() -> dict[str, ParagraphStyle]:
         "score_big": ParagraphStyle(
             name="ScoreBig",
             fontName="Helvetica-Bold",
-            fontSize=22,
-            leading=26,
+            fontSize=15,
+            leading=18,
             alignment=TA_LEFT,
             textColor=TEXT_PRIMARY,
         ),
@@ -1790,6 +2342,15 @@ def _build_styles() -> dict[str, ParagraphStyle]:
             alignment=TA_LEFT,
             textColor=TEXT_PRIMARY,
         ),
+
+        "gap_action": ParagraphStyle(
+            name="GapAction",
+            fontName="Helvetica",
+            fontSize=11,
+            leading=14,
+            alignment=TA_LEFT,
+            textColor=TEXT_PRIMARY,
+        ),
     }
 
 def _format_number(
@@ -1817,29 +2378,88 @@ def _draw_page_footer(
 ) -> None:
     canvas.saveState()
 
-    page_width, _ = PAGE_SIZE
+    page_width, _ = canvas._pagesize
+
+    footer_y = 7 * mm
 
     canvas.setFont(
         "Helvetica",
-        6.5,
+        8,
     )
 
     canvas.setFillColor(
         colors.HexColor("#64748B")
     )
 
+    # Información normativa
     canvas.drawString(
         LEFT_MARGIN,
-        7 * mm,
+        footer_y,
         (
             "Resolución 0312 de 2019 - "
             "Artículo 27 - Resultado orientativo"
         ),
     )
 
+    # Marca y enlace
+    brand_text = "Generado por NormIA · Visítanos en "
+    link_text = "normia.com"
+
+    brand_x = page_width / 2
+
+    brand_width = canvas.stringWidth(
+        brand_text,
+        "Helvetica",
+        8,
+    )
+
+    link_width = canvas.stringWidth(
+        link_text,
+        "Helvetica",
+        8,
+    )
+
+    total_width = brand_width + link_width
+    start_x = brand_x - (total_width / 2)
+
+    canvas.drawString(
+        start_x,
+        footer_y,
+        brand_text,
+    )
+
+    link_x = start_x + brand_width
+
+    canvas.setFillColor(
+        BRAND_GREEN
+    )
+
+    canvas.drawString(
+        link_x,
+        footer_y,
+        link_text,
+    )
+
+    canvas.linkURL(
+        "https://normia.com",
+        (
+            link_x,
+            footer_y - 1,
+            link_x + link_width,
+            footer_y + 7,
+        ),
+        relative=0,
+        thickness=0,
+    )
+
+    # Número de página
+    canvas.setFillColor(
+        colors.HexColor("#64748B")
+    )
+
     canvas.drawRightString(
         page_width - RIGHT_MARGIN,
-        7 * mm,
+        footer_y,
         f"Página {document.page}",
     )
 

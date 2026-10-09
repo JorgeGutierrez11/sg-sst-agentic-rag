@@ -12,6 +12,10 @@ class CompanyProfile(BaseModel):
     El alcance actual del Agente 2 está limitado a empresas
     clasificadas en riesgo I.
     """
+    company_name: str | None = Field(
+        default=None,
+        description="Nombre o razón social declarada por la empresa.",
+    )
 
     worker_count: int = Field(
         gt=0,
