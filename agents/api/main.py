@@ -1,0 +1,58 @@
+from collections.abc import Callable
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator
+
+# pyrefly: ignore [missing-import]
+from fastapi import FastAPI
+# pyrefly: ignore [missing-import]
+from fastapi.middleware.cors import CORSMiddleware
+
+from agents.consulta_normativa.api.routes import router as query_router
+from agents.consulta_normativa.api.service import QueryService
+from agents.consulta_normativa.langchain_rag.main import build_runtime
+from agents.diagnostico_cumplimiento.api.routes import router as diagnostic_router
+from agents.diagnostico_cumplimiento.api.service import DiagnosticService
+
+
+ALLOWED_ORIGINS = ["http://localhost:3000"]
+
+
+def create_app(
+    runtime_builder: Callable[[], Any] | None = None,
+    diagnostic_service_builder: Callable[[], DiagnosticService] | None = None,
+) -> FastAPI:
+    """Create the shared API without initializing services before startup."""
+    build_rag_runtime = runtime_builder or (
+        lambda: build_runtime(write_graph_image=False)
+    )
+    build_diagnostic_service = diagnostic_service_builder or DiagnosticService
+
+    @asynccontextmanager
+    async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+        runtime = build_rag_runtime()
+        application.state.query_service = QueryService(runtime)
+        application.state.diagnostic_service = build_diagnostic_service()
+        yield
+
+    application = FastAPI(
+        title="SG-SST Agent API",
+        lifespan=lifespan,
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @application.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    application.include_router(query_router)
+    application.include_router(diagnostic_router)
+    return application
+
+
+app = create_app()

@@ -6,17 +6,12 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from agents.consulta_normativa.api.dependencies import get_query_service
-from agents.consulta_normativa.api.schemas import HealthResponse, QueryRequest, QueryResponse
+from agents.consulta_normativa.api.schemas import QueryRequest, QueryResponse
 from agents.consulta_normativa.api.service import QueryService
 
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-@router.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok")
 
 
 @router.post("/api/v1/query", response_model=QueryResponse)

@@ -1,99 +1,17 @@
 # Guía de ejecución del backend
 
-Esta guía describe cómo preparar y levantar localmente los dos servicios backend del proyecto SG-SST:
-
-- **Agente 1 — Consulta normativa**
-- **Agente 2 — Diagnóstico de cumplimiento**
-
-Los dos servicios se ejecutan desde el mismo repositorio y comparten el mismo entorno virtual de Python.
-
----
+Esta guía explica cómo preparar y ejecutar localmente la API unificada de los agentes de consulta normativa y diagnóstico de cumplimiento del SG-SST.
 
 ## 1. Requisitos previos
 
-Antes de iniciar, se requiere:
-
 - Git.
-- Python **3.12**.
+- Python 3.12.
 - `pip`.
-- Conexión a Internet, al menos durante la primera ejecución.
-- Una clave válida de DeepSeek en la variable de entorno `DEEPSEEK_API_KEY`.
+- Los artefactos locales de recuperación del agente de consulta.
+- Conexión a Internet durante la descarga inicial de modelos.
+- Una clave válida de DeepSeek en `DEEPSEEK_API_KEY`.
 
-Verificar Python:
-
-```bash
-python3 --version
-```
-
-La versión utilizada durante el desarrollo es Python 3.12.
-
----
-
-## 2. Preparar el entorno por primera vez
-
-Ubicarse en la raíz del repositorio:
-
-```bash
-cd sg-sst-agentic-rag
-```
-
-Crear el entorno virtual:
-
-```bash
-python3 -m venv .venv-rag
-```
-
-Activarlo:
-
-```bash
-source .venv-rag/bin/activate
-```
-
-Actualizar `pip`:
-
-```bash
-python -m pip install --upgrade pip
-```
-
-Instalar las dependencias declaradas por el proyecto:
-
-```bash
-pip install -r requirements.txt
-```
-
-> El entorno virtual solo debe crearse una vez. En ejecuciones posteriores basta con activarlo.
-
-### Dependencias de ejecución que deben estar declaradas
-
-El backend utiliza, entre otras, FastAPI, Uvicorn, ChromaDB, Sentence Transformers, LangChain/LangGraph y ReportLab. La instalación reproducible debe realizarse mediante `requirements.txt`; no se recomienda mantener instalaciones manuales fuera de este archivo.
-
-Si aparece un `ModuleNotFoundError` durante una instalación limpia, se debe corregir `requirements.txt` para incluir la dependencia faltante.
-
----
-
-## 3. Configurar DeepSeek
-
-El sistema utiliza DeepSeek para las operaciones que requieren un LLM. Antes de levantar los servicios, exportar la clave en la terminal correspondiente:
-
-```bash
-export DEEPSEEK_API_KEY="TU_CLAVE"
-```
-
-Comprobar que la variable existe sin imprimir su contenido:
-
-```bash
-test -n "$DEEPSEEK_API_KEY" && echo "DEEPSEEK_API_KEY configurada"
-```
-
-No se deben subir claves privadas al repositorio.
-
-> Si los agentes se levantan desde dos terminales independientes, cada terminal debe disponer de la variable `DEEPSEEK_API_KEY`.
-
----
-
-## 4. Datos y modelos requeridos por el Agente 1
-
-El Agente 1 utiliza los artefactos de recuperación almacenados en el repositorio, principalmente:
+Los principales artefactos requeridos son:
 
 ```text
 data/processed/chroma/
@@ -101,53 +19,53 @@ data/processed/bm25/
 data/processed/chunks/parents.jsonl
 ```
 
-Estos archivos deben existir antes de levantar el servicio.
+## 2. Preparar el entorno
 
-Durante la primera ejecución también pueden descargarse modelos desde Hugging Face, entre ellos los modelos usados para embeddings y reranking. Esta descarga puede tardar y requiere conexión a Internet.
-
-Actualmente se utilizan modelos como:
-
-```text
-Qwen/Qwen3-Embedding-0.6B
-BAAI/bge-reranker-v2-m3
-```
-
-Las siguientes ejecuciones normalmente reutilizan la caché local de Hugging Face.
-
----
-
-## 5. Levantar el Agente 1 — Consulta normativa
-
-Abrir una terminal en la raíz del repositorio.
-
-Activar el entorno:
+Desde la raíz del repositorio:
 
 ```bash
+python3 -m venv .venv-rag
 source .venv-rag/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-Configurar la clave si no está disponible en esa terminal:
+El entorno virtual solo debe crearse una vez. En ejecuciones posteriores basta con activarlo.
+
+El backend usa FastAPI, Uvicorn, ChromaDB, Sentence Transformers, LangChain/LangGraph y ReportLab. Las dependencias de ejecución deben estar declaradas en `requirements.txt`; si una instalación limpia produce `ModuleNotFoundError`, se debe corregir ese manifiesto.
+
+## 3. Configurar DeepSeek
 
 ```bash
 export DEEPSEEK_API_KEY="TU_CLAVE"
+test -n "$DEEPSEEK_API_KEY" && echo "DEEPSEEK_API_KEY configurada"
 ```
 
-Levantar la API:
+No imprima ni suba claves privadas al repositorio.
+
+## 4. Levantar la API unificada
+
+Active el entorno, configure la clave y ejecute un único proceso Uvicorn:
 
 ```bash
-uvicorn agents.consulta_normativa.api.main:app \
+source .venv-rag/bin/activate
+export DEEPSEEK_API_KEY="TU_CLAVE"
+
+uvicorn agents.api.main:app \
   --host 127.0.0.1 \
   --port 8000 \
   --reload
 ```
 
-El servicio queda disponible en:
+La única URL base del backend es:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-Comprobar salud:
+La inicialización puede tardar mientras carga ChromaDB, BM25, embeddings y el reranker. La primera ejecución también puede descargar modelos como `Qwen/Qwen3-Embedding-0.6B` y `BAAI/bge-reranker-v2-m3`.
+
+## 5. Comprobar salud
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -159,7 +77,11 @@ Respuesta esperada:
 {"status":"ok"}
 ```
 
-La consulta normativa se expone mediante:
+`GET /health` es el único endpoint de salud. No existe un endpoint de salud separado bajo `/api/v1/diagnostics`.
+
+## 6. Consulta normativa
+
+La consulta normativa conserva el endpoint:
 
 ```text
 POST /api/v1/query
@@ -174,113 +96,45 @@ curl -X POST \
   -d '{"question":"¿Qué es el SG-SST?"}'
 ```
 
-> La primera inicialización del Agente 1 puede tardar mientras carga ChromaDB, BM25, embeddings y reranker.
+Para continuar una conversación, reutilice el `conversation_id` retornado por la primera respuesta.
 
----
+## 7. Diagnóstico de cumplimiento
 
-## 6. Levantar el Agente 2 — Diagnóstico de cumplimiento
-
-Mantener el Agente 1 ejecutándose y abrir una **segunda terminal**.
-
-Desde la raíz del mismo repositorio:
-
-```bash
-source .venv-rag/bin/activate
-```
-
-Configurar la clave si no está disponible en esa terminal:
-
-```bash
-export DEEPSEEK_API_KEY="TU_CLAVE"
-```
-
-Levantar la API del diagnóstico en otro puerto:
-
-```bash
-uvicorn agents.diagnostico_cumplimiento.api.main:app \
-  --host 127.0.0.1 \
-  --port 8001 \
-  --reload
-```
-
-El servicio queda disponible en:
+Todos los endpoints de diagnóstico usan la misma URL base:
 
 ```text
-http://127.0.0.1:8001
+POST /api/v1/diagnostics
+POST /api/v1/diagnostics/{diagnosis_id}/answers
+POST /api/v1/diagnostics/{diagnosis_id}/complete
+GET  /api/v1/diagnostics/{diagnosis_id}/report
 ```
 
-Comprobar salud:
-
-```bash
-curl http://127.0.0.1:8001/api/v1/diagnostics/health
-```
-
-Para comprobar la creación de un diagnóstico:
+Crear un diagnóstico para una empresa de riesgo I con cinco trabajadores:
 
 ```bash
 curl -X POST \
-  http://127.0.0.1:8001/api/v1/diagnostics \
+  http://127.0.0.1:8000/api/v1/diagnostics \
   -H 'Content-Type: application/json' \
   -d '{"worker_count":5}'
 ```
 
-Para una empresa con 5 trabajadores y riesgo I, la respuesta debe iniciar un diagnóstico con el catálogo aplicable de 1 a 10 trabajadores.
+Use el `diagnosis_id` y la siguiente pregunta de la respuesta para enviar respuestas, completar el diagnóstico y descargar el informe PDF.
 
----
+## 8. Limitación de sesiones de diagnóstico
 
-## 7. Estado esperado de los servicios
+Las sesiones de diagnóstico se guardan únicamente en la memoria del proceso:
 
-Para ejecutar el prototipo completo deben permanecer activos simultáneamente:
+- Ejecute Uvicorn con **un solo worker**.
+- Reiniciar el backend elimina todos los diagnósticos en curso.
+- `--reload` reinicia el proceso al detectar cambios y también elimina esas sesiones.
+- Dos workers no comparten sesiones; una solicitud dirigida a otro worker no encontrará el diagnóstico.
+- Las sesiones no son persistentes ni recuperables después de un reinicio.
 
-| Servicio | Dirección |
-|---|---|
-| Agente 1 — Consulta normativa | `http://127.0.0.1:8000` |
-| Agente 2 — Diagnóstico | `http://127.0.0.1:8001` |
-| Frontend | `http://localhost:3000` |
-
-Se recomienda utilizar una terminal independiente para cada proceso.
-
----
-
-## 8. Ejecuciones posteriores
-
-Después de la instalación inicial no es necesario reinstalar las dependencias en cada ejecución.
-
-Para levantar nuevamente el backend:
-
-**Terminal 1 — Agente 1**
-
-```bash
-cd sg-sst-agentic-rag
-source .venv-rag/bin/activate
-export DEEPSEEK_API_KEY="TU_CLAVE"
-
-uvicorn agents.consulta_normativa.api.main:app \
-  --host 127.0.0.1 \
-  --port 8000 \
-  --reload
-```
-
-**Terminal 2 — Agente 2**
-
-```bash
-cd sg-sst-agentic-rag
-source .venv-rag/bin/activate
-export DEEPSEEK_API_KEY="TU_CLAVE"
-
-uvicorn agents.diagnostico_cumplimiento.api.main:app \
-  --host 127.0.0.1 \
-  --port 8001 \
-  --reload
-```
-
----
+No use `--workers` mientras el almacenamiento de diagnósticos siga siendo local al proceso.
 
 ## 9. Problemas frecuentes
 
 ### `DEEPSEEK_API_KEY is not configured`
-
-La clave no está disponible en la terminal actual.
 
 ```bash
 export DEEPSEEK_API_KEY="TU_CLAVE"
@@ -288,48 +142,26 @@ export DEEPSEEK_API_KEY="TU_CLAVE"
 
 ### `Address already in use`
 
-El puerto ya está ocupado. Consultar el proceso correspondiente:
+Compruebe el único puerto del backend:
 
 ```bash
 ss -ltnp | grep ':8000'
 ```
 
-o:
-
-```bash
-ss -ltnp | grep ':8001'
-```
-
 ### Error al abrir ChromaDB
 
-Verificar que exista:
+Verifique que existan los artefactos requeridos en `data/processed/` y que `chromadb` esté instalado en el entorno activo.
 
-```bash
-ls data/processed/chroma
-```
+### El frontend no puede comunicarse con el backend
 
-### Descarga lenta en la primera ejecución
+Compruebe que el frontend use `http://127.0.0.1:8000` como única URL base. La configuración CORS permite el origen de desarrollo `http://localhost:3000`.
 
-Es normal que la primera inicialización tarde más debido a la descarga y carga de modelos de Hugging Face.
+## 10. Detener el backend
 
-### El frontend no puede comunicarse con un agente
-
-Comprobar que los tres procesos estén activos en sus puertos esperados:
-
-```text
-Frontend  → 3000
-Agente 1  → 8000
-Agente 2  → 8001
-```
-
----
-
-## 10. Detener los servicios
-
-En cada terminal donde se está ejecutando Uvicorn:
+En la terminal donde se ejecuta Uvicorn:
 
 ```text
 Ctrl + C
 ```
 
-Esto detiene el servidor correspondiente.
+Esto detiene ambos agentes porque forman parte de la misma aplicación y elimina las sesiones de diagnóstico en memoria.

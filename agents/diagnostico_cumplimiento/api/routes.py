@@ -18,7 +18,6 @@ from agents.diagnostico_cumplimiento.api.schemas import (
     CompleteDiagnosticResponse,
     CreateDiagnosticRequest,
     CreateDiagnosticResponse,
-    HealthResponse,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
 )
@@ -36,14 +35,6 @@ router = APIRouter(
     prefix="/api/v1/diagnostics",
     tags=["diagnostics"],
 )
-
-
-@router.get(
-    "/health",
-    response_model=HealthResponse,
-)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok")
 
 
 @router.post(

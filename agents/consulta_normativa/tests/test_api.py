@@ -1,15 +1,12 @@
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
 from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from agents.consulta_normativa.api import main as api_main
 from agents.consulta_normativa.api.dependencies import get_query_service
-from agents.consulta_normativa.api.main import create_app
 from agents.consulta_normativa.api.routes import router
 from agents.consulta_normativa.api.schemas import QueryRequest, QueryResponse
 from agents.consulta_normativa.api.service import QueryService
@@ -121,15 +118,6 @@ def create_test_app(service: QueryService) -> FastAPI:
 
 
 class ApiRouteTests(unittest.TestCase):
-    def test_health_returns_ok(self) -> None:
-        app = create_test_app(QueryService(FakeRuntime()))
-        client = TestClient(app)
-
-        response = client.get("/health")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok"})
-
     def test_query_returns_answer(self) -> None:
         app = create_test_app(QueryService(FakeRuntime()))
         client = TestClient(app)
@@ -166,49 +154,6 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {"detail": "The normative consultation service is temporarily unavailable."})
         self.assertNotIn("secret details", response.text)
-
-
-class ApiAppTests(unittest.TestCase):
-    def test_default_lifespan_suppresses_graph_image_generation(self) -> None:
-        with patch.object(api_main, "build_runtime", return_value=FakeRuntime()) as build_runtime:
-            app = create_app()
-
-            with TestClient(app) as client:
-                response = client.get("/health")
-
-        self.assertEqual(response.status_code, 200)
-        build_runtime.assert_called_once_with(write_graph_image=False)
-
-    def test_app_lifespan_builds_query_service_once(self) -> None:
-        calls = []
-
-        def runtime_builder() -> FakeRuntime:
-            calls.append("built")
-            return FakeRuntime()
-
-        app = create_app(runtime_builder=runtime_builder)
-
-        with TestClient(app) as client:
-            response = client.get("/health")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(calls, ["built"])
-
-    def test_app_allows_localhost_frontend_origin(self) -> None:
-        app = create_app(runtime_builder=FakeRuntime)
-
-        with TestClient(app) as client:
-            response = client.options(
-                "/api/v1/query",
-                headers={
-                    "Origin": "http://localhost:3000",
-                    "Access-Control-Request-Method": "POST",
-                },
-            )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers["access-control-allow-origin"], "http://localhost:3000")
-
 
 if __name__ == "__main__":
     unittest.main()
