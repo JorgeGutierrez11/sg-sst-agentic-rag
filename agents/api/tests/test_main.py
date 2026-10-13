@@ -1,3 +1,4 @@
+import os
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -5,10 +6,14 @@ from unittest.mock import patch
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
-from agents.api import main as api_main
-from agents.api.main import create_app
-from agents.consulta_normativa.api.service import QueryService
-from agents.diagnostico_cumplimiento.api.service import DiagnosticService
+with (
+    patch.dict(os.environ, {"IP_ADDRESS": "https://test.example"}),
+    patch("dotenv.load_dotenv"),
+):
+    from agents.api import main as api_main
+    from agents.api.main import create_app
+    from agents.consulta_normativa.api.service import QueryService
+    from agents.diagnostico_cumplimiento.api.service import DiagnosticService
 
 
 class FakeRuntime:
@@ -123,31 +128,33 @@ class UnifiedApiAppTests(unittest.TestCase):
             },
         )
 
-    def test_configures_cors_once_for_local_frontend(self) -> None:
-        application = create_app(
-            runtime_builder=FakeRuntime,
-            diagnostic_service_builder=DiagnosticService,
-        )
-        cors_middleware = [
-            middleware
-            for middleware in application.user_middleware
-            if middleware.cls is CORSMiddleware
-        ]
-
-        with TestClient(application) as client:
-            response = client.options(
-                "/api/v1/query",
-                headers={
-                    "Origin": "http://localhost:3000",
-                    "Access-Control-Request-Method": "POST",
-                },
+    def test_configures_cors_once_for_environment_origin(self) -> None:
+        configured_origin = "https://frontend.example.test"
+        with patch.dict(os.environ, {"IP_ADDRESS": configured_origin}):
+            application = create_app(
+                runtime_builder=FakeRuntime,
+                diagnostic_service_builder=DiagnosticService,
             )
+            cors_middleware = [
+                middleware
+                for middleware in application.user_middleware
+                if middleware.cls is CORSMiddleware
+            ]
+
+            with TestClient(application) as client:
+                response = client.options(
+                    "/api/v1/query",
+                    headers={
+                        "Origin": configured_origin,
+                        "Access-Control-Request-Method": "POST",
+                    },
+                )
 
         self.assertEqual(len(cors_middleware), 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.headers["access-control-allow-origin"],
-            "http://localhost:3000",
+            configured_origin,
         )
         self.assertEqual(
             response.headers["access-control-allow-credentials"],
