@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
 
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,10 +30,15 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
-        runtime = build_rag_runtime()
-        application.state.query_service = QueryService(runtime)
-        application.state.diagnostic_service = build_diagnostic_service()
-        yield
+        application.state.is_ready = False
+        try:
+            runtime = build_rag_runtime()
+            application.state.query_service = QueryService(runtime)
+            application.state.diagnostic_service = build_diagnostic_service()
+            application.state.is_ready = True
+            yield
+        finally:
+            application.state.is_ready = False
 
     application = FastAPI(
         title="SG-SST Agent API",
@@ -50,6 +55,21 @@ def create_app(
     @application.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @application.get("/health/ready")
+    def readiness(request: Request) -> dict[str, str]:
+        state = request.app.state
+        if not (
+            getattr(state, "is_ready", False)
+            and hasattr(state, "query_service")
+            and hasattr(state, "diagnostic_service")
+        ):
+            raise HTTPException(
+                status_code=503,
+                detail="Service unavailable.",
+            )
+
+        return {"status": "ready"}
 
     application.include_router(query_router)
     application.include_router(diagnostic_router)

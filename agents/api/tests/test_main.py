@@ -55,12 +55,17 @@ class UnifiedApiAppTests(unittest.TestCase):
         )
 
         with TestClient(application) as client:
-            response = client.get("/health")
+            liveness_response = client.get("/health")
+            readiness_response = client.get("/health/ready")
             query_service = application.state.query_service
             stored_diagnostic_service = application.state.diagnostic_service
+            self.assertTrue(application.state.is_ready)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok"})
+        self.assertEqual(liveness_response.status_code, 200)
+        self.assertEqual(liveness_response.json(), {"status": "ok"})
+        self.assertEqual(readiness_response.status_code, 200)
+        self.assertEqual(readiness_response.json(), {"status": "ready"})
+        self.assertFalse(application.state.is_ready)
         self.assertEqual(runtime_calls, ["built"])
         self.assertEqual(diagnostic_calls, ["built"])
         self.assertIsInstance(query_service, QueryService)
@@ -104,6 +109,65 @@ class UnifiedApiAppTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     with TestClient(application):
                         pass
+                self.assertFalse(application.state.is_ready)
+
+    def test_liveness_ignores_readiness_and_missing_services(self) -> None:
+        application = create_app(
+            runtime_builder=lambda: self.fail("runtime builder called"),
+            diagnostic_service_builder=lambda: self.fail(
+                "diagnostic service builder called"
+            ),
+        )
+        application.state.is_ready = True
+
+        client = TestClient(application)
+        response = client.get("/health")
+        client.close()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_readiness_does_not_build_or_call_services(self) -> None:
+        builder_calls: list[str] = []
+
+        def build_runtime() -> FakeRuntime:
+            builder_calls.append("runtime")
+            return FakeRuntime()
+
+        def build_diagnostic_service() -> DiagnosticService:
+            builder_calls.append("diagnostic")
+            return DiagnosticService()
+
+        application = create_app(
+            runtime_builder=build_runtime,
+            diagnostic_service_builder=build_diagnostic_service,
+        )
+
+        client = TestClient(application)
+        response = client.get("/health/ready")
+        client.close()
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"detail": "Service unavailable."})
+        self.assertEqual(builder_calls, [])
+
+    def test_readiness_requires_both_service_attributes(self) -> None:
+        application = create_app(
+            runtime_builder=lambda: self.fail("runtime builder called"),
+            diagnostic_service_builder=lambda: self.fail(
+                "diagnostic service builder called"
+            ),
+        )
+        application.state.is_ready = True
+
+        client = TestClient(application)
+        missing_both_response = client.get("/health/ready")
+        application.state.query_service = object()
+        missing_diagnostic_response = client.get("/health/ready")
+        client.close()
+
+        self.assertEqual(missing_both_response.status_code, 503)
+        self.assertEqual(missing_diagnostic_response.status_code, 503)
 
     def test_registers_exact_functional_route_inventory(self) -> None:
         application = create_app(
@@ -120,6 +184,7 @@ class UnifiedApiAppTests(unittest.TestCase):
             route_inventory,
             {
                 ("GET", "/health"),
+                ("GET", "/health/ready"),
                 ("POST", "/api/v1/query"),
                 ("POST", "/api/v1/diagnostics"),
                 ("POST", "/api/v1/diagnostics/{diagnosis_id}/answers"),

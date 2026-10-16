@@ -65,7 +65,9 @@ http://127.0.0.1:8000
 
 La inicialización puede tardar mientras carga ChromaDB, BM25, embeddings y el reranker. La primera ejecución también puede descargar modelos como `Qwen/Qwen3-Embedding-0.6B` y `BAAI/bge-reranker-v2-m3`.
 
-## 5. Comprobar salud
+## 5. Comprobar salud y disponibilidad
+
+La sonda de vida confirma únicamente que el proceso HTTP responde:
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -77,7 +79,23 @@ Respuesta esperada:
 {"status":"ok"}
 ```
 
-`GET /health` es el único endpoint de salud. No existe un endpoint de salud separado bajo `/api/v1/diagnostics`.
+`GET /health` no consulta servicios, índices ni proveedores externos. Por ello, una respuesta correcta no significa que los agentes ya estén disponibles.
+
+La sonda de disponibilidad confirma que los servicios de consulta normativa y diagnóstico fueron inicializados correctamente:
+
+```bash
+curl http://127.0.0.1:8000/health/ready
+```
+
+Respuesta esperada después de completar la inicialización:
+
+```json
+{"status":"ready"}
+```
+
+Mientras la aplicación inicia o si falta alguno de los dos servicios, `GET /health/ready` responde `503` sin reconstruir runtimes, consultar ChromaDB o BM25, invocar servicios ni realizar solicitudes a DeepSeek. La disponibilidad **nunca debe depender de DeepSeek**: solo representa que ambos servicios locales fueron asignados durante el ciclo de vida de la aplicación.
+
+En un despliegue futuro con contenedores, use `GET /health` como sonda de vida y `GET /health/ready` como sonda de disponibilidad. No existe `/health/live` ni un endpoint de salud separado bajo `/api/v1/diagnostics`.
 
 ## 6. Consulta normativa
 
