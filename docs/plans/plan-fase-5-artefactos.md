@@ -84,20 +84,26 @@ Hallazgos nuevos:
 
 ## Parte 2 — Catálogos de diagnóstico al arrancar
 
+**Estado:** implementada el 2026-10-18, sin commit. Suites en verde: diagnóstico 202, API 14.
+
+**Ajuste acordado:** el agente no contempla Unidades de Producción Agropecuaria (`_build_company_profile` fija `is_agricultural_production_unit=False`), así que la API carga solo tres catálogos. Si se cargara el agropecuario, un error en un archivo que la API no puede usar impediría el arranque.
+
 **Resuelve:** 5.
 
 **Cambios:**
 
-1. Al construir `DiagnosticService`, cargar y validar con `load_catalog` los cuatro catálogos `res0312_riesgo_i_*.json` de `catalog/data/`. Se excluyen `catalog_schema_reference_v2_1.json` y la carpeta `Respaldo/`.
+1. Al construir `DiagnosticService`, cargar y validar con `load_catalog` los tres catálogos que usa la API, tomados de `CATALOG_FILES` en `selector.py`: `res0312_riesgo_i_1_10_general.json`, `res0312_riesgo_i_11_50.json` y `res0312_riesgo_i_51_plus.json`. Quedan fuera el catálogo agropecuario, `catalog_schema_reference_v2_1.json` y la carpeta `Respaldo/`.
 2. Un `CatalogLoadError` impide el arranque, con el mismo patrón de log de la Parte 1.
 3. Guardar los catálogos validados en memoria y servirlos desde ahí en `create_diagnostic`, en lugar de leer el JSON en cada petición.
 
 **Pruebas** (`agents/diagnostico_cumplimiento/tests/test_api.py`, con `pytest`):
 
-- [ ] Un catálogo con JSON inválido o fuera del schema impide construir el servicio.
-- [ ] Regresión: crear un diagnóstico devuelve el mismo `catalog_id` y la misma primera pregunta para cada tramo de trabajadores.
+- [x] Un catálogo con JSON inválido o fuera del schema impide construir el servicio.
+- [x] Un catálogo agropecuario roto no impide construir el servicio.
+- [x] Crear un diagnóstico no vuelve a leer ningún archivo de catálogo.
+- [x] Regresión: crear un diagnóstico devuelve el mismo `catalog_id`, la misma primera pregunta y el mismo número de requisitos en los límites 1, 10, 11, 50 y 51 trabajadores.
 
-**Riesgo:** item 3. Editar un catálogo con la API en marcha ya no tiene efecto hasta reiniciarla. Hay que documentarlo.
+**Riesgo:** item 3. Editar un catálogo con la API en marcha ya no tiene efecto hasta reiniciarla. Documentado en [`getting-started.md`](../getting-started.md), sección 8.
 
 ## Parte 3 — Coherencia entre índices
 

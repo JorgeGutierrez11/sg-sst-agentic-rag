@@ -1,5 +1,7 @@
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from io import BytesIO
+from pathlib import Path
 from threading import RLock
 from uuid import uuid4
 
@@ -15,12 +17,16 @@ from agents.diagnostico_cumplimiento.api.schemas import (
     SubmitAnswerResponse,
 )
 from agents.diagnostico_cumplimiento.catalog.loader import (
-    load_catalog_for_profile,
+    load_catalog,
 )
 from agents.diagnostico_cumplimiento.catalog.schemas import (
     AssessmentCatalog,
     CatalogRequirementDefinition,
     CatalogQuestionDefinition,
+)
+from agents.diagnostico_cumplimiento.catalog.selector import (
+    CATALOG_FILES,
+    select_catalog_path,
 )
 from agents.diagnostico_cumplimiento.domain.answers import (
     QuestionAnswer,
@@ -65,6 +71,15 @@ from agents.diagnostico_cumplimiento.rules.applicability import (
 )
 
 
+# The API never builds agricultural profiles (see _build_company_profile),
+# so only these catalogs are reachable through it.
+API_CATALOG_PATHS: tuple[Path, ...] = (
+    CATALOG_FILES["risk_i_1_10_general"],
+    CATALOG_FILES["risk_i_11_50"],
+    CATALOG_FILES["risk_i_51_plus"],
+)
+
+
 @dataclass
 class DiagnosticSession:
     diagnosis_id: str
@@ -83,9 +98,19 @@ class DiagnosticService:
     expone resultados mediante los contratos de la API.
 
     Las sesiones se almacenan temporalmente en memoria.
+
+    Los catálogos se cargan y validan una sola vez al construir el
+    servicio: un catálogo inválido impide el arranque, y editar un
+    catálogo no tiene efecto hasta reiniciar la API.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        catalog_paths: Iterable[Path] = API_CATALOG_PATHS,
+    ) -> None:
+        self._catalogs: dict[Path, AssessmentCatalog] = {
+            Path(path): load_catalog(path) for path in catalog_paths
+        }
         self._sessions: dict[str, DiagnosticSession] = {}
         self._lock = RLock()
 
@@ -95,7 +120,7 @@ class DiagnosticService:
     ) -> CreateDiagnosticResponse:
         profile = self._build_company_profile(payload)
 
-        catalog = load_catalog_for_profile(profile)
+        catalog = self._catalogs[select_catalog_path(profile)]
 
         requirements = select_applicable_requirements(
             profile=profile,

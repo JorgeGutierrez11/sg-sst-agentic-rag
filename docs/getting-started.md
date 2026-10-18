@@ -176,6 +176,12 @@ Missing runtime artifact: Chroma database (/ruta/al/repo/data/processed/chroma/c
 
 Si fallan varios artefactos, aparecen todos en el mismo mensaje, separados por `;`. Regenere cada artefacto indicado con los runbooks de [`operations/`](operations/corpus-build.md) y reinicie Uvicorn. La comprobación se ejecuta antes de abrir ChromaDB, así que un directorio `chroma/` vacío no se modifica.
 
+### `Catalog contains invalid JSON` o `Catalog does not match the expected schema`
+
+El servicio de diagnóstico carga y valida al arrancar los tres catálogos que usa la API (`res0312_riesgo_i_1_10_general.json`, `res0312_riesgo_i_11_50.json` y `res0312_riesgo_i_51_plus.json`, en `agents/diagnostico_cumplimiento/catalog/data/`). Si alguno falla, Uvicorn registra `API startup failed; the service will not report readiness.` con la ruta del catálogo, y la API no arranca. Corrija el archivo indicado y reinicie Uvicorn.
+
+Los catálogos se leen una sola vez: editar uno con la API en marcha no tiene efecto hasta reiniciarla. El catálogo agropecuario no se carga, porque la API no admite Unidades de Producción Agropecuaria.
+
 ### `Address already in use`
 
 Compruebe el único puerto del backend:
