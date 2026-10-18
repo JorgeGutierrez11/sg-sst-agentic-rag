@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from agents.diagnostico_cumplimiento.domain.answers import (
     QuestionAnswer,
@@ -9,20 +8,14 @@ from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
 from agents.diagnostico_cumplimiento.preliminary_diagnosis import (
     run_preliminary_diagnosis,
 )
-from agents.diagnostico_cumplimiento.rules.routing.affiliation_question_routing import (
-    AFFILIATION_REQUIREMENT_ID,
-)
-
 from agents.diagnostico_cumplimiento.questionnaire.questionnaire import (
     run_questionnaire,
 )
 
-CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v6.json"
-)
+AFFILIATION_REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
+
+# In v2.1 the routing is not a separate result list: it lives in each
+# question's ``routing_state`` inside the RequirementSnapshot.
 
 
 def answer(question_id, value):
@@ -33,148 +26,169 @@ def answer(question_id, value):
     )
 
 
-def run_diagnosis(answers=None):
+def build_profile():
+    return CompanyProfile(
+        worker_count=8,
+        risk_class=RiskClass.I,
+    )
+
+
+def run_diagnosis(catalog_path, answers=None):
     return run_preliminary_diagnosis(
-        profile=CompanyProfile(
-            worker_count=8,
-            risk_class=RiskClass.I,
-        ),
+        profile=build_profile(),
         answers=answers or [],
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
-def get_affiliation_routing(result):
+
+def get_affiliation_requirement(result):
     return next(
-        routing
-        for routing in result.routing
-        if routing.requirement_id
-        == AFFILIATION_REQUIREMENT_ID
+        requirement
+        for requirement in result.questionnaire.requirements
+        if requirement.requirement_id == AFFILIATION_REQUIREMENT_ID
     )
 
-def test_integrated_result_contains_affiliation_routing():
-    result = run_diagnosis()
 
-    routing = get_affiliation_routing(result)
+def question_ids_in_state(requirement, state):
+    return [
+        question.question_id
+        for question in requirement.questions
+        if question.routing_state.value == state
+    ]
 
-    assert routing.requirement_id == AFFILIATION_REQUIREMENT_ID
 
-    assert routing.questions_to_ask == [
+def test_integrated_result_contains_affiliation_routing(catalog_path):
+    result = run_diagnosis(catalog_path)
+
+    requirement = get_affiliation_requirement(result)
+
+    assert question_ids_in_state(requirement, "active") == [
         "q_health_affiliation",
         "q_pension_affiliation",
         "q_occupational_risk_affiliation",
     ]
 
-    assert routing.answered_questions == []
+    assert [
+        question.question_id
+        for question in requirement.questions
+        if question.answer is not None
+    ] == []
 
-    assert len(routing.omitted_questions) == 6
+    # Dependent questions wait for their (still unanswered) parent.
+    assert len(question_ids_in_state(requirement, "blocked")) == 6
+    assert question_ids_in_state(requirement, "skipped") == []
+
+    # The legacy top-level routing list is intentionally empty.
+    assert result.routing == []
 
 
-def test_integrated_routing_preserves_mixed_branches():
-    result = run_diagnosis([
-        answer("q_health_affiliation", True),
-        answer("q_pension_affiliation", False),
-    ])
+def test_integrated_routing_preserves_mixed_branches(catalog_path):
+    result = run_diagnosis(
+        catalog_path,
+        [
+            answer("q_health_affiliation", True),
+            answer("q_pension_affiliation", False),
+        ],
+    )
 
-    routing = get_affiliation_routing(result)
+    requirement = get_affiliation_requirement(result)
 
-    assert routing.answered_questions == [
+    assert [
+        question.question_id
+        for question in requirement.questions
+        if question.answer is not None
+    ] == [
         "q_health_affiliation",
         "q_pension_affiliation",
     ]
 
-    assert routing.questions_to_ask == [
+    assert question_ids_in_state(requirement, "active") == [
+        "q_health_affiliation",
         "q_health_affiliation_support",
         "q_health_payment_support",
+        "q_pension_affiliation",
         "q_occupational_risk_affiliation",
     ]
 
-    assert routing.omitted_questions == [
+    assert question_ids_in_state(requirement, "skipped") == [
         "q_pension_affiliation_support",
         "q_pension_payment_support",
+    ]
+
+    assert question_ids_in_state(requirement, "blocked") == [
         "q_occupational_risk_affiliation_support",
         "q_occupational_risk_payment_support",
     ]
 
 
-def test_routing_is_serialized_with_its_reasons():
-    result = run_diagnosis([
-        answer("q_health_affiliation", False),
-    ])
+def test_routing_is_serialized_with_its_reasons(catalog_path):
+    result = run_diagnosis(
+        catalog_path,
+        [answer("q_health_affiliation", False)],
+    )
 
     data = json.loads(result.model_dump_json())
 
-    assert "routing" in data
-
-
-    routing = next(
+    requirement = next(
         item
-        for item in data["routing"]
-        if item["requirement_id"]
-        == AFFILIATION_REQUIREMENT_ID
+        for item in data["questionnaire"]["requirements"]
+        if item["requirement_id"] == AFFILIATION_REQUIREMENT_ID
     )
-
-    decisions = routing["decisions"]
 
     support = next(
-        decision
-        for decision in decisions
-        if decision["question_id"]
-        == "q_health_affiliation_support"
+        question
+        for question in requirement["questions"]
+        if question["question_id"] == "q_health_affiliation_support"
     )
 
-    assert support["status"] == "omit"
-    assert support["rule_id"] == "health_support_dependency"
-    assert support["triggered_by"] == "q_health_affiliation=False"
-    assert support["reason"]
+    assert support["routing_state"] == "skipped"
+    assert support["depends_on"] == {
+        "question_id": "q_health_affiliation",
+        "value": True,
+    }
+    assert "q_health_affiliation_support" in (
+        requirement["skipped_question_ids"]
+    )
 
 
-def test_routing_does_not_change_normative_evaluation():
+def test_routing_does_not_change_normative_evaluation(catalog_path):
     answers = [
         answer("q_health_affiliation", True),
         answer("q_pension_affiliation", True),
         answer("q_occupational_risk_affiliation", True),
     ]
 
-    result = run_diagnosis(answers)
+    result = run_diagnosis(catalog_path, answers)
 
     direct_questionnaire = run_questionnaire(
-        profile=CompanyProfile(
-            worker_count=8,
-            risk_class=RiskClass.I,
-        ),
+        profile=build_profile(),
         answers=answers,
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
-    integrated_statuses = [
-        condition.evaluation.status
-        for requirement in result.questionnaire.requirements
-        for condition in requirement.conditions
-    ]
-
-    direct_statuses = [
-        condition.evaluation.status
-        for requirement in direct_questionnaire.requirements
-        for condition in requirement.conditions
-    ]
-
-    # Incorporar routing no debe modificar la evaluación
-    # producida por el cuestionario.
-    assert integrated_statuses == direct_statuses
+    # Incorporar routing no debe modificar lo producido por el
+    # cuestionario.
+    assert result.questionnaire.model_dump(mode="json") == (
+        direct_questionnaire.model_dump(mode="json")
+    )
 
     # En este escenario todavía falta información dependiente,
-    # por lo que existen condiciones pendientes.
-    assert any(
-        status.value == "pending_information"
-        for status in integrated_statuses
-    )
+    # por lo que existen requisitos con recolección en progreso.
+    affiliation = get_affiliation_requirement(result)
+
+    assert affiliation.collection_status.value == "in_progress"
+    assert len(affiliation.unanswered_question_ids) == 6
 
     # El routing no autoriza verificación documental
     # ni evaluación normativa.
     assert all(
-        condition.evidence_verified is False
+        requirement.assessment_evidence_verified is not True
         for requirement in result.report.requirements
-        for condition in requirement.conditions
     )
 
-    assert result.coverage.status == "not_established"
+    assert all(
+        assessment.evidence_verified is False
+        for assessment in result.assessments
+    )
+
+    assert result.coverage.status == "selected_package"

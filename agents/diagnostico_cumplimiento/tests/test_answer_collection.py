@@ -108,14 +108,13 @@ def test_identifies_unanswered_questions(
     answered_count: int,
     expected_pending_count: int,
 ) -> None:
-    pilot_path = (
-        Path(__file__).resolve().parents[1]
-        / "catalog"
-        / "data"
-        / "res0312_piloto_v1.json"
+    # Requirement with exactly three questions in the frozen fixture.
+    requirement = next(
+        item
+        for item in load_catalog(FIXTURE_PATH).requirements
+        if item.id == "res0312_art3_medidas_prevencion_control_1_10"
     )
-
-    requirement = load_catalog(pilot_path).requirements[0]
+    assert len(requirement.questions) == 3
 
     answers = [
         QuestionAnswer(

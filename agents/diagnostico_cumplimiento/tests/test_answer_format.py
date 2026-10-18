@@ -15,12 +15,18 @@ from agents.diagnostico_cumplimiento.questionnaire.answer_format import (
 )
 
 
-PILOT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v1.json"
-)
+CATALOG_PATH = Path(__file__).parent / "fixtures" / "valid_catalog.json"
+
+
+def get_requirement():
+    # Affiliation requirement: three primary boolean questions, each with
+    # evidence questions that depend on a True answer.
+    catalog = load_catalog(CATALOG_PATH)
+    return next(
+        requirement
+        for requirement in catalog.requirements
+        if requirement.id == "res0312_art3_afiliacion_1_10"
+    )
 
 
 @pytest.mark.parametrize(
@@ -42,7 +48,7 @@ def test_classifies_boolean_answer_format(
     raw_answer,
     expected_status: AnswerFormatStatus,
 ) -> None:
-    requirement = load_catalog(PILOT_PATH).requirements[0]
+    requirement = get_requirement()
     question = requirement.questions[0]
 
     answer = QuestionAnswer(

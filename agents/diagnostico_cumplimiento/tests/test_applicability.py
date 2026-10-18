@@ -1,16 +1,18 @@
-
+import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
 from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
-from agents.diagnostico_cumplimiento.catalog.schemas import (
-    AssessmentCatalog,
-    RequirementDefinition,
+from agents.diagnostico_cumplimiento.catalog.schemas import AssessmentCatalog
+from agents.diagnostico_cumplimiento.catalog.selector import (
+    CATALOG_FILES,
+    CatalogSelectionError,
+    select_catalog_path,
 )
 from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
 from agents.diagnostico_cumplimiento.rules.applicability import (
-    AmbiguousApplicabilityError,
     CatalogCoverageError,
     OutOfScopeError,
     select_applicable_requirements,
@@ -24,93 +26,71 @@ FIXTURE_PATH = (
 )
 
 
-def build_variant(
-    requirement_id: str,
-    worker_count_min: int,
-    worker_count_max: int | None,
-) -> RequirementDefinition:
-    """
-    Construye una variante sintética a partir del fixture existente.
+def build_empty_catalog() -> AssessmentCatalog:
+    """Valid v2.1 catalog whose sections contain no requirements."""
 
-    Todas las variantes pertenecen al mismo ítem oficial de prueba.
-    """
+    data = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
-    base_requirement = load_catalog(
-        FIXTURE_PATH
-    ).requirements[0]
+    for section in data["sections"]:
+        section["requirements"] = []
 
-    data = base_requirement.model_dump()
-
-    data["id"] = requirement_id
-
-    data["applicability"] = {
-        "risk_classes": ["I"],
-        "worker_count_min": worker_count_min,
-        "worker_count_max": worker_count_max,
-    }
-
-    return RequirementDefinition.model_validate(data)
-
-
-def build_test_catalog() -> AssessmentCatalog:
-    """
-    Catálogo sintético con tres variantes de un mismo ítem.
-    """
-
-    return AssessmentCatalog(
-        catalog_version="test-applicability-v1",
-        regulation="Norma de prueba",
-        requirements=[
-            build_variant(
-                requirement_id="test_1_10",
-                worker_count_min=1,
-                worker_count_max=10,
-            ),
-            build_variant(
-                requirement_id="test_11_50",
-                worker_count_min=11,
-                worker_count_max=50,
-            ),
-            build_variant(
-                requirement_id="test_51_plus",
-                worker_count_min=51,
-                worker_count_max=None,
-            ),
-        ],
-    )
+    return AssessmentCatalog.model_validate(data)
 
 
 @pytest.mark.parametrize(
-    ("worker_count", "expected_requirement_id"),
+    ("worker_count", "expected_catalog_key"),
     [
-        (1, "test_1_10"),
-        (8, "test_1_10"),
-        (10, "test_1_10"),
-        (11, "test_11_50"),
-        (35, "test_11_50"),
-        (50, "test_11_50"),
-        (51, "test_51_plus"),
-        (80, "test_51_plus"),
+        (1, "risk_i_1_10_general"),
+        (8, "risk_i_1_10_general"),
+        (10, "risk_i_1_10_general"),
+        (11, "risk_i_11_50"),
+        (35, "risk_i_11_50"),
+        (50, "risk_i_11_50"),
+        (51, "risk_i_51_plus"),
+        (80, "risk_i_51_plus"),
     ],
 )
 def test_selects_correct_worker_range(
     worker_count: int,
-    expected_requirement_id: str,
+    expected_catalog_key: str,
 ) -> None:
+    # The worker-range variant is chosen by the catalog selector, which
+    # hands one normative package per profile to select_applicable_requirements.
     profile = CompanyProfile(
         worker_count=worker_count,
         risk_class="I",
     )
 
-    catalog = build_test_catalog()
+    assert select_catalog_path(profile) == CATALOG_FILES[expected_catalog_key]
+
+
+def test_selector_rejects_non_risk_i_profile() -> None:
+    profile = CompanyProfile(
+        worker_count=8,
+        risk_class="II",
+    )
+
+    with pytest.raises(CatalogSelectionError):
+        select_catalog_path(profile)
+
+
+def test_returns_every_requirement_of_selected_package() -> None:
+    profile = CompanyProfile(
+        worker_count=8,
+        risk_class="I",
+    )
+
+    catalog = load_catalog(FIXTURE_PATH)
 
     requirements = select_applicable_requirements(
         profile,
         catalog,
     )
 
-    assert len(requirements) == 1
-    assert requirements[0].id == expected_requirement_id
+    assert [requirement.id for requirement in requirements] == [
+        requirement.id for requirement in catalog.requirements
+    ]
+    assert len(requirements) == 7
 
 
 def test_rejects_company_outside_risk_scope() -> None:
@@ -119,7 +99,7 @@ def test_rejects_company_outside_risk_scope() -> None:
         risk_class="II",
     )
 
-    catalog = build_test_catalog()
+    catalog = load_catalog(FIXTURE_PATH)
 
     with pytest.raises(OutOfScopeError):
         select_applicable_requirements(
@@ -134,61 +114,17 @@ def test_rejects_catalog_without_matching_requirements() -> None:
         risk_class="I",
     )
 
-    catalog = AssessmentCatalog(
-        catalog_version="incomplete-test-v1",
-        regulation="Norma de prueba",
-        requirements=[
-            build_variant(
-                requirement_id="only_small_companies",
-                worker_count_min=1,
-                worker_count_max=10,
-            ),
-        ],
-    )
-
     with pytest.raises(CatalogCoverageError):
         select_applicable_requirements(
             profile,
-            catalog,
+            build_empty_catalog(),
         )
 
 
-def test_rejects_overlapping_variants_of_same_item() -> None:
-    profile = CompanyProfile(
-        worker_count=8,
-        risk_class="I",
-    )
-
-    catalog = AssessmentCatalog(
-        catalog_version="overlapping-test-v1",
-        regulation="Norma de prueba",
-        requirements=[
-            build_variant(
-                requirement_id="variant_a",
-                worker_count_min=1,
-                worker_count_max=10,
-            ),
-            build_variant(
-                requirement_id="variant_b",
-                worker_count_min=1,
-                worker_count_max=20,
-            ),
-        ],
-    )
-
-    with pytest.raises(AmbiguousApplicabilityError):
-        select_applicable_requirements(
-            profile,
-            catalog,
-        )
-
-
-
-def test_allows_distinct_requirements_without_general_item_id() -> None:
+def test_allows_distinct_requirements_in_same_package() -> None:
     """
-    Dos requisitos diferentes de un conjunto reducido pueden
-    ser aplicables simultáneamente sin tener identificador
-    asignado en la tabla general.
+    Dos requisitos diferentes del mismo paquete normativo pueden
+    ser aplicables simultáneamente.
     """
 
     profile = CompanyProfile(
@@ -196,90 +132,25 @@ def test_allows_distinct_requirements_without_general_item_id() -> None:
         risk_class="I",
     )
 
+    data = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+    section = data["sections"][0]
+    original = section["requirements"][0]
 
-    first = build_variant(
-        requirement_id="test_affiliation",
-        worker_count_min=1,
-        worker_count_max=10,
-    ).model_copy(
-        update={
-            "requirement_group_id": "test_affiliation",
-            "official_item_id": None,
-        }
-    )
+    extra = deepcopy(original)
+    extra["id"] = "test_extra_requirement"
+    for question in extra["questions"]:
+        question["id"] += "_extra"
+        if question.get("depends_on"):
+            question["depends_on"]["question_id"] += "_extra"
+    section["requirements"].append(extra)
 
-    second = build_variant(
-        requirement_id="test_training",
-        worker_count_min=1,
-        worker_count_max=10,
-    ).model_copy(
-        update={
-            "requirement_group_id": "test_training",
-            "official_item_id": None,
-        }
-    )
-
-
-    catalog = AssessmentCatalog(
-        catalog_version="test-reduced-v1",
-        regulation="Norma de prueba",
-        requirements=[first, second],
-    )
+    catalog = AssessmentCatalog.model_validate(data)
 
     requirements = select_applicable_requirements(
         profile,
         catalog,
     )
 
-    assert len(requirements) == 2
-
-    assert {requirement.id for requirement in requirements} == {
-        "test_affiliation",
-        "test_training",
+    assert {original["id"], "test_extra_requirement"} <= {
+        requirement.id for requirement in requirements
     }
-
-
-def test_rejects_overlapping_variants_without_general_item_id() -> None:
-    """
-    Dos variantes del mismo requisito no pueden seleccionarse
-    simultáneamente, aunque no tengan official_item_id.
-    """
-
-    profile = CompanyProfile(
-        worker_count=8,
-        risk_class="I",
-    )
-
-    first = build_variant(
-        requirement_id="variant_a",
-        worker_count_min=1,
-        worker_count_max=10,
-    ).model_copy(
-        update={
-            "requirement_group_id": "same_requirement",
-            "official_item_id": None,
-        }
-    )
-
-    second = build_variant(
-        requirement_id="variant_b",
-        worker_count_min=1,
-        worker_count_max=20,
-    ).model_copy(
-        update={
-            "requirement_group_id": "same_requirement",
-            "official_item_id": None,
-        }
-    )
-
-    catalog = AssessmentCatalog(
-        catalog_version="test-overlap-v1",
-        regulation="Norma de prueba",
-        requirements=[first, second],
-    )
-
-    with pytest.raises(AmbiguousApplicabilityError):
-        select_applicable_requirements(
-            profile,
-            catalog,
-        )

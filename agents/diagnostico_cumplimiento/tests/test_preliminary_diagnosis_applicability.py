@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from agents.diagnostico_cumplimiento.domain.answers import (
     QuestionAnswer,
@@ -9,27 +8,18 @@ from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
 from agents.diagnostico_cumplimiento.preliminary_diagnosis import (
     run_preliminary_diagnosis,
 )
-from agents.diagnostico_cumplimiento.rules.routing.affiliation_question_routing import (
-    AFFILIATION_REQUIREMENT_ID,
-)
+
+AFFILIATION_REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
 
 
-CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v6.json"
-)
-
-
-def run_diagnosis(answers=None):
+def run_diagnosis(catalog_path, answers=None):
     return run_preliminary_diagnosis(
         profile=CompanyProfile(
             worker_count=8,
             risk_class=RiskClass.I,
         ),
         answers=answers or [],
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
 
@@ -41,8 +31,10 @@ def answer(question_id, value):
     )
 
 
-def test_integrated_result_contains_one_applicability_per_requirement():
-    result = run_diagnosis()
+def test_integrated_result_contains_one_applicability_per_requirement(
+    catalog_path,
+):
+    result = run_diagnosis(catalog_path)
 
     requirement_ids = [
         requirement.requirement_id
@@ -54,20 +46,21 @@ def test_integrated_result_contains_one_applicability_per_requirement():
         for decision in result.applicability
     ]
 
-    assert len(requirement_ids) == 5
+    assert len(requirement_ids) == 7
     assert applicability_ids == requirement_ids
 
 
-def test_selected_requirements_are_registered_as_applicable():
-    result = run_diagnosis()
+def test_selected_requirements_are_registered_as_applicable(catalog_path):
+    result = run_diagnosis(catalog_path)
 
     assert all(
         decision.status.value == "applicable"
         for decision in result.applicability
     )
 
+    # Every requirement of the fixture uses applicability mode "always".
     assert all(
-        decision.rule_id == "catalog_profile_match"
+        decision.rule_id == "catalog_requirement_always_applicable"
         for decision in result.applicability
     )
 
@@ -82,41 +75,44 @@ def test_selected_requirements_are_registered_as_applicable():
     )
 
 
-def test_applicability_records_profile_that_activated_selection():
-    result = run_diagnosis()
+def test_always_applicable_requirements_have_no_screening_trigger(
+    catalog_path,
+):
+    # The v2.1 flow no longer records the profile that activated the
+    # selection: "always" requirements are not decided by any question.
+    result = run_diagnosis(catalog_path)
 
     for decision in result.applicability:
-        assert decision.triggered_by == [
-            "worker_count=8",
-            "risk_class=I",
-        ]
+        assert decision.triggered_by == []
 
 
-def test_applicability_is_serialized_with_traceability():
-    result = run_diagnosis()
+def test_applicability_is_serialized_with_traceability(catalog_path):
+    result = run_diagnosis(catalog_path)
 
     data = json.loads(result.model_dump_json())
 
     assert "applicability" in data
-    assert len(data["applicability"]) == 5
+    assert len(data["applicability"]) == 7
 
     for decision in data["applicability"]:
         assert decision["status"] == "applicable"
-        assert decision["rule_id"] == "catalog_profile_match"
+        assert decision["rule_id"] == (
+            "catalog_requirement_always_applicable"
+        )
         assert decision["reason"]
         assert decision["normative_basis"]
-        assert decision["triggered_by"] == [
-            "worker_count=8",
-            "risk_class=I",
-        ]
+        assert decision["triggered_by"] == []
 
 
-def test_question_routing_does_not_change_requirement_applicability():
-    without_answers = run_diagnosis()
+def test_question_routing_does_not_change_requirement_applicability(
+    catalog_path,
+):
+    without_answers = run_diagnosis(catalog_path)
 
-    with_answers = run_diagnosis([
-        answer("q_health_affiliation", False),
-    ])
+    with_answers = run_diagnosis(
+        catalog_path,
+        [answer("q_health_affiliation", False)],
+    )
 
     applicability_before = [
         decision.model_dump(mode="json")
@@ -133,11 +129,18 @@ def test_question_routing_does_not_change_requirement_applicability():
     # que ya fue determinada por el perfil y el catálogo.
     assert applicability_before == applicability_after
 
-    routing = with_answers.routing[0]
-
-    assert "q_health_affiliation_support" in (
-        routing.omitted_questions
+    # In v2.1 the routing lives in each question's routing_state.
+    affiliation = next(
+        requirement
+        for requirement in with_answers.questionnaire.requirements
+        if requirement.requirement_id == AFFILIATION_REQUIREMENT_ID
     )
+    routing_states = {
+        question.question_id: question.routing_state.value
+        for question in affiliation.questions
+    }
+
+    assert routing_states["q_health_affiliation_support"] == "skipped"
 
     affiliation_applicability = next(
         decision

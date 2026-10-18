@@ -1,13 +1,10 @@
-
-from pathlib import Path
-
 import pytest
 
-from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
-from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
-from agents.diagnostico_cumplimiento.domain.condition_evaluation import (
-    ConditionEvaluationStatus,
+from agents.diagnostico_cumplimiento.catalog.schemas import (
+    AssessmentCatalog,
+    CatalogRequirementDefinition,
 )
+from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
 from agents.diagnostico_cumplimiento.domain.interpretation import (
     InterpretationStatus,
 )
@@ -21,20 +18,22 @@ from agents.diagnostico_cumplimiento.questionnaire.requirement_progress import (
     RequirementCollectionStatus,
 )
 from agents.diagnostico_cumplimiento.questionnaire.requirement_snapshot import (
+    QuestionRoutingState,
     build_requirement_snapshot,
 )
 
 
-PILOT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v1.json"
-)
+REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
 
 
-def get_requirement():
-    return load_catalog(PILOT_PATH).requirements[0]
+def get_requirement(
+    catalog: AssessmentCatalog,
+) -> CatalogRequirementDefinition:
+    return next(
+        requirement
+        for requirement in catalog.requirements
+        if requirement.id == REQUIREMENT_ID
+    )
 
 
 def build_answer(requirement, question_id, raw_answer):
@@ -45,8 +44,14 @@ def build_answer(requirement, question_id, raw_answer):
     )
 
 
-def test_snapshot_preserves_original_answers_and_interpretations() -> None:
-    requirement = get_requirement()
+def questions_by_id(snapshot):
+    return {question.question_id: question for question in snapshot.questions}
+
+
+def test_snapshot_preserves_original_answers_and_interpretations(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     answers = [
         build_answer(requirement, "q_health_affiliation", "Sí"),
@@ -56,14 +61,16 @@ def test_snapshot_preserves_original_answers_and_interpretations() -> None:
     snapshot = build_requirement_snapshot(requirement, answers)
 
     assert snapshot.requirement_id == requirement.id
-    assert snapshot.criterion_name == requirement.criterion.name
+    assert snapshot.criterion_name == requirement.name
     assert snapshot.collection_status == (
         RequirementCollectionStatus.NEEDS_RESOLUTION
     )
 
-    health_question = snapshot.conditions[0].questions[0]
-    pension_question = snapshot.conditions[1].questions[0]
-    risk_question = snapshot.conditions[2].questions[0]
+    questions = questions_by_id(snapshot)
+
+    health_question = questions["q_health_affiliation"]
+    pension_question = questions["q_pension_affiliation"]
+    risk_question = questions["q_occupational_risk_affiliation"]
 
     assert health_question.answer.raw_answer == "Sí"
     assert health_question.interpretation.status == (
@@ -84,28 +91,31 @@ def test_snapshot_preserves_original_answers_and_interpretations() -> None:
     assert [answer.raw_answer for answer in answers] == ["Sí", "No sé"]
 
 
-def test_snapshot_contains_questions_in_catalog_order() -> None:
-    requirement = get_requirement()
+def test_snapshot_contains_questions_in_catalog_order(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     snapshot = build_requirement_snapshot(requirement, [])
 
-    assert [condition.condition_id for condition in snapshot.conditions] == [
-        condition.id for condition in requirement.conditions
-    ]
-
-    question_ids = [
-        question.question_id
-        for condition in snapshot.conditions
-        for question in condition.questions
-    ]
-
-    assert question_ids == [
+    assert [question.question_id for question in snapshot.questions] == [
         question.id for question in requirement.questions
     ]
 
+    # Role and dependency are copied from the catalog definition.
+    for snapshot_question, question in zip(
+        snapshot.questions,
+        requirement.questions,
+        strict=True,
+    ):
+        assert snapshot_question.role == question.role
+        assert snapshot_question.depends_on == question.depends_on
 
-def test_snapshot_with_no_answers_remains_pending() -> None:
-    requirement = get_requirement()
+
+def test_snapshot_with_no_answers_remains_pending(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     snapshot = build_requirement_snapshot(requirement, [])
 
@@ -113,18 +123,22 @@ def test_snapshot_with_no_answers_remains_pending() -> None:
         RequirementCollectionStatus.NOT_STARTED
     )
 
-    for condition in snapshot.conditions:
-        assert condition.evaluation.status == (
-            ConditionEvaluationStatus.PENDING_INFORMATION
+    for question in snapshot.questions:
+        assert question.answer is None
+        assert question.interpretation is None
+
+        expected_state = (
+            QuestionRoutingState.BLOCKED
+            if question.depends_on is not None
+            else QuestionRoutingState.ACTIVE
         )
-
-        for question in condition.questions:
-            assert question.answer is None
-            assert question.interpretation is None
+        assert question.routing_state == expected_state
 
 
-def test_all_affirmative_answers_do_not_imply_compliance() -> None:
-    requirement = get_requirement()
+def test_all_affirmative_answers_do_not_imply_compliance(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     answers = [
         build_answer(requirement, question.id, True)
@@ -137,15 +151,45 @@ def test_all_affirmative_answers_do_not_imply_compliance() -> None:
         RequirementCollectionStatus.ANSWERS_INTERPRETED
     )
 
+    # The snapshot only consolidates declarations: it exposes no
+    # compliance verdict, and every question is simply active.
+    assert not hasattr(snapshot, "compliance_status")
     assert all(
-        condition.evaluation.status
-        == ConditionEvaluationStatus.NOT_EVALUATED
-        for condition in snapshot.conditions
+        question.routing_state == QuestionRoutingState.ACTIVE
+        for question in snapshot.questions
     )
+    assert snapshot.unanswered_question_ids == []
+    assert snapshot.blocked_question_ids == []
 
 
-def test_snapshot_can_be_serialized_to_json() -> None:
-    requirement = get_requirement()
+def test_negative_parent_skips_dependent_questions(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
+
+    answers = [
+        build_answer(requirement, "q_health_affiliation", False),
+    ]
+
+    snapshot = build_requirement_snapshot(requirement, answers)
+    questions = questions_by_id(snapshot)
+
+    assert questions["q_health_affiliation_support"].routing_state == (
+        QuestionRoutingState.SKIPPED
+    )
+    assert questions["q_health_payment_support"].routing_state == (
+        QuestionRoutingState.SKIPPED
+    )
+    assert snapshot.skipped_question_ids == [
+        "q_health_affiliation_support",
+        "q_health_payment_support",
+    ]
+
+
+def test_snapshot_can_be_serialized_to_json(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     answers = [
         build_answer(requirement, "q_health_affiliation", "Sí"),
@@ -159,24 +203,27 @@ def test_snapshot_can_be_serialized_to_json() -> None:
     assert data["requirement_id"] == requirement.id
     assert data["collection_status"] == "in_progress"
 
-    health = data["conditions"][0]
+    health = data["questions"][0]
 
-    assert health["collection_status"] == "answers_interpreted"
-    assert health["evaluation"]["status"] == "not_evaluated"
+    assert health["question_id"] == "q_health_affiliation"
+    assert health["role"] == "primary"
+    assert health["routing_state"] == "active"
+    assert health["answer"]["raw_answer"] == "Sí"
+    assert health["interpretation"]["status"] == "affirmative"
 
-    assert health["questions"][0]["answer"]["raw_answer"] == "Sí"
-    assert health["questions"][0]["interpretation"]["status"] == (
-        "affirmative"
+    pension = next(
+        question
+        for question in data["questions"]
+        if question["question_id"] == "q_pension_affiliation"
     )
-
-    assert data["conditions"][1]["questions"][0]["answer"] is None
+    assert pension["answer"] is None
 
     # Comprueba también que el modelo produce JSON serializable.
     assert isinstance(snapshot.model_dump_json(), str)
 
 
-def test_rejects_duplicate_answers() -> None:
-    requirement = get_requirement()
+def test_rejects_duplicate_answers(catalog: AssessmentCatalog) -> None:
+    requirement = get_requirement(catalog)
 
     answers = [
         build_answer(requirement, "q_health_affiliation", True),
@@ -187,8 +234,10 @@ def test_rejects_duplicate_answers() -> None:
         build_requirement_snapshot(requirement, answers)
 
 
-def test_rejects_answer_for_another_requirement() -> None:
-    requirement = get_requirement()
+def test_rejects_answer_for_another_requirement(
+    catalog: AssessmentCatalog,
+) -> None:
+    requirement = get_requirement(catalog)
 
     answer = QuestionAnswer(
         requirement_id="another_requirement",

@@ -15,12 +15,20 @@ from agents.diagnostico_cumplimiento.domain.models import (
 )
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 from agents.diagnostico_cumplimiento.catalog.loader import (
     CatalogLoadError,
     load_catalog,
 )
+
+
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "valid_catalog.json"
+
+
+def load_fixture_data() -> dict:
+    return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
 
 def build_requirement() -> RequirementDefinition:
@@ -77,14 +85,12 @@ def test_requirement_definition_is_valid() -> None:
 
 
 def test_catalog_is_valid() -> None:
-    catalog = AssessmentCatalog(
-        catalog_version="res0312-riesgo-i-v1",
-        regulation="Resolución 0312 de 2019",
-        requirements=[build_requirement()],
-    )
+    catalog = load_catalog(FIXTURE_PATH)
 
-    assert catalog.catalog_version == "res0312-riesgo-i-v1"
-    assert len(catalog.requirements) == 1
+    assert isinstance(catalog, AssessmentCatalog)
+    assert catalog.catalog_version == catalog.schema_version == "2.1"
+    assert catalog.regulation == catalog.norm
+    assert len(catalog.requirements) == 7
 
 
 def test_requirement_rejects_empty_conditions() -> None:
@@ -201,17 +207,15 @@ def test_requirement_rejects_duplicate_question_ids() -> None:
         )
 
 def test_catalog_rejects_duplicate_requirement_ids() -> None:
-    requirement = build_requirement()
+    data = load_fixture_data()
+    first_section = data["sections"][0]
+    first_section["requirements"].append(
+        deepcopy(first_section["requirements"][0])
+    )
 
     with pytest.raises(ValidationError):
-        AssessmentCatalog(
-            catalog_version="res0312-riesgo-i-v1",
-            regulation="Resolución 0312 de 2019",
-            requirements=[
-                requirement,
-                requirement,
-            ],
-        )
+        AssessmentCatalog.model_validate(data)
+
 
 def test_selection_question_requires_options() -> None:
     with pytest.raises(ValidationError):
@@ -240,18 +244,15 @@ def test_selection_question_accepts_options() -> None:
     ]
 
 def test_load_catalog_from_json() -> None:
-    fixture_path = (
-        Path(__file__).parent
-        / "fixtures"
-        / "valid_catalog.json"
-    )
+    catalog = load_catalog(FIXTURE_PATH)
 
-    catalog = load_catalog(fixture_path)
-
-    assert catalog.catalog_version == "test-v1"
+    assert catalog.catalog_id == "res0312_riesgo_i_1_10_general"
+    assert catalog.schema_version == "2.1"
     assert catalog.regulation == "Resolución 0312 de 2019"
-    assert len(catalog.requirements) == 1
-    assert catalog.requirements[0].id == "test_requirement"
+    assert len(catalog.requirements) == 7
+    assert catalog.requirements[0].id == "art3_asignacion_persona_sgsst"
+    assert catalog.requirements[0].questions[0].id == "q_designer_assigned"
+
 
 def test_load_catalog_rejects_missing_file(
     tmp_path: Path,
@@ -328,26 +329,23 @@ def test_requirement_with_general_table_item_id() -> None:
 
 
 
-def test_catalog_allows_variants_of_same_requirement_group() -> None:
-    first = build_requirement()
+def test_catalog_allows_requirements_with_distinct_ids_and_same_applicability() -> None:
+    data = load_fixture_data()
+    section = data["sections"][0]
 
-    second = first.model_copy(
-        update={
-            "id": "example_requirement_large_company",
-            "applicability": ApplicabilityRule(
-                risk_classes=["I"],
-                worker_count_min=51,
-                worker_count_max=None,
-            ),
-        }
+    extra = deepcopy(section["requirements"][0])
+    extra["id"] = "extra_requirement"
+    for question in extra["questions"]:
+        question["id"] += "_extra"
+        if question.get("depends_on"):
+            question["depends_on"]["question_id"] += "_extra"
+    section["requirements"].append(extra)
+
+    catalog = AssessmentCatalog.model_validate(data)
+
+    assert len(catalog.requirements) == 8
+    assert (
+        catalog.requirements[0].applicability
+        == catalog.requirements[-1].applicability
     )
-
-    catalog = AssessmentCatalog(
-        catalog_version="test-v1",
-        regulation="Norma de prueba",
-        requirements=[first, second],
-    )
-
-    assert len(catalog.requirements) == 2
-    assert first.id != second.id
-    assert first.requirement_group_id == second.requirement_group_id
+    assert catalog.requirements[0].id != catalog.requirements[-1].id
