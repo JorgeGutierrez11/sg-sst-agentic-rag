@@ -5,7 +5,7 @@ Esta guía explica cómo preparar y ejecutar localmente la API unificada de los 
 ## 1. Requisitos previos
 
 - Git.
-- Python 3.12.
+- Python 3.14.
 - `pip`.
 - Los artefactos locales de recuperación del agente de consulta.
 - Conexión a Internet durante la descarga inicial de modelos.
@@ -24,7 +24,7 @@ data/processed/chunks/parents.jsonl
 Desde la raíz del repositorio:
 
 ```bash
-python3 -m venv .venv-rag
+python3.14 -m venv .venv-rag
 source .venv-rag/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt

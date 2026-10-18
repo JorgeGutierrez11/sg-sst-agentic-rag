@@ -8,9 +8,15 @@ from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCT
 class LangChainRagPromptTests(unittest.TestCase):
     """Verify the validation-branch prompt contract remains coherent."""
 
-    def test_system_instructions_keep_reviewed_reference_list_contract(self) -> None:
-        self.assertIn("lista de los\n   fragmentos normativos citados", BASE_SYSTEM_INSTRUCTIONS)
-        self.assertNotIn('Sin sección final de "Fragmentos citados"', BASE_SYSTEM_INSTRUCTIONS)
+    def test_system_instructions_keep_separate_reference_contract(self) -> None:
+        self.assertIn(
+            'No incluyas una lista final de fragmentos o fuentes.',
+            BASE_SYSTEM_INSTRUCTIONS,
+        )
+        self.assertIn(
+            "Las referencias completas\n   se muestran por separado en la interfaz.",
+            BASE_SYSTEM_INSTRUCTIONS,
+        )
 
     def test_base_prompt_contains_one_instruction_block_and_both_contexts(self) -> None:
         prompt = build_base_prompt(
@@ -19,7 +25,10 @@ class LangChainRagPromptTests(unittest.TestCase):
             "Empresa de riesgo I",
         )
 
-        self.assertEqual(prompt.count("Reglas estrictas:"), 1)
+        self.assertEqual(prompt.count("REGLAS:"), 1)
+        self.assertIn("CONTEXTO EMPRESARIAL Y CONVERSACIONAL:", prompt)
+        self.assertIn("CONTEXTO NORMATIVO RECUPERADO:", prompt)
+        self.assertIn("PREGUNTA:", prompt)
         self.assertIn("Empresa de riesgo I", prompt)
         self.assertIn("[1] Evidencia normativa", prompt)
 

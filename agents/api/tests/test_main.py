@@ -35,6 +35,16 @@ class FakeRuntime:
 
 
 class UnifiedApiAppTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.environment = patch.dict(
+            os.environ,
+            {"IP_ADDRESS": "http://localhost:3000"},
+        )
+        self.environment.start()
+
+    def tearDown(self) -> None:
+        self.environment.stop()
+
     def test_lifespan_builds_and_exposes_each_service_once(self) -> None:
         runtime = FakeRuntime()
         diagnostic_service = DiagnosticService()
