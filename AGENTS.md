@@ -8,6 +8,7 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 - The legal corpus is limited to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and the risk classification in Decreto 768/2022.
 - `requirements.txt` is the only manifest. There is no lockfile, task runner, CI, pre-commit, formatter, lint, typecheck, codegen, or repository OpenCode configuration; do not invent project commands for them.
 - Install `requirements.txt` in the active environment. Direct dependencies are pinned to exact versions validated on Python 3.14 (`.python-version`); `pytest` is included there, with no separate dev manifest.
+- Local configuration lives in the git-ignored `.env` (loaded with `override=False`): `DEEPSEEK_API_KEY` and `CORS_ALLOWED_ORIGINS` (comma-separated exact `http(s)://host[:port]` origins; `*` is rejected). See `GUIA_EJECUCION_BACKEND.md` section 3.
 - DOCX ingestion and table conversion require the Pandoc system binary in `PATH`; `pypandoc` alone is insufficient.
 
 ## Verification commands

@@ -7,15 +7,12 @@ from fastapi import FastAPI, HTTPException, Request
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 
+from agents.api.config import get_cors_allowed_origins
 from agents.consulta_normativa.api.routes import router as query_router
 from agents.consulta_normativa.api.service import QueryService
-from agents.consulta_normativa.langchain_rag.config import get_cors_allowed_origins
 from agents.consulta_normativa.langchain_rag.main import build_runtime
 from agents.diagnostico_cumplimiento.api.routes import router as diagnostic_router
 from agents.diagnostico_cumplimiento.api.service import DiagnosticService
-
-
-ALLOWED_ORIGINS = get_cors_allowed_origins()
 
 
 def create_app(

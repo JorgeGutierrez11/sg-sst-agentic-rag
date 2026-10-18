@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
 with (
-    patch.dict(os.environ, {"IP_ADDRESS": "https://test.example"}),
+    patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": "https://test.example"}),
     patch("dotenv.load_dotenv"),
 ):
     from agents.api import main as api_main
@@ -38,7 +38,7 @@ class UnifiedApiAppTests(unittest.TestCase):
     def setUp(self) -> None:
         self.environment = patch.dict(
             os.environ,
-            {"IP_ADDRESS": "http://localhost:3000"},
+            {"CORS_ALLOWED_ORIGINS": "http://localhost:3000"},
         )
         self.environment.start()
 
@@ -205,7 +205,7 @@ class UnifiedApiAppTests(unittest.TestCase):
 
     def test_configures_cors_once_for_environment_origin(self) -> None:
         configured_origin = "https://frontend.example.test"
-        with patch.dict(os.environ, {"IP_ADDRESS": configured_origin}):
+        with patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": configured_origin}):
             application = create_app(
                 runtime_builder=FakeRuntime,
                 diagnostic_service_builder=DiagnosticService,

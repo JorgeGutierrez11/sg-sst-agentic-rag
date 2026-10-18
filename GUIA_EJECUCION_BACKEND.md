@@ -9,7 +9,7 @@ Esta guía explica cómo preparar y ejecutar localmente la API unificada de los 
 - `pip`.
 - Los artefactos locales de recuperación del agente de consulta.
 - Conexión a Internet durante la descarga inicial de modelos.
-- Una clave válida de DeepSeek en `DEEPSEEK_API_KEY`.
+- Un archivo `.env` local con las variables descritas en la sección 3.
 
 Los principales artefactos requeridos son:
 
@@ -34,22 +34,32 @@ El entorno virtual solo debe crearse una vez. En ejecuciones posteriores basta c
 
 El backend usa FastAPI, Uvicorn, ChromaDB, Sentence Transformers, LangChain/LangGraph y ReportLab. Las dependencias de ejecución deben estar declaradas en `requirements.txt`; si una instalación limpia produce `ModuleNotFoundError`, se debe corregir ese manifiesto.
 
-## 3. Configurar DeepSeek
+## 3. Configurar las variables de entorno
+
+La configuración local vive en el archivo `.env` de la raíz del repositorio. Git lo ignora y **nunca debe subirse**. El backend lo carga automáticamente al iniciar (`load_project_environment` en `agents/consulta_normativa/langchain_rag/config.py`). Una variable exportada en la terminal tiene prioridad sobre el valor de `.env`.
+
+| Variable | Obligatoria | Uso | Si falta o no es válida |
+|---|---|---|---|
+| `DEEPSEEK_API_KEY` | Sí | Clave del LLM DeepSeek usado por la consulta normativa y el diagnóstico. | La consulta falla con `DEEPSEEK_API_KEY is not configured in the environment.` |
+| `CORS_ALLOWED_ORIGINS` | Sí | Orígenes del navegador autorizados a llamar la API, separados por comas. Cada uno debe ser exactamente `http(s)://host[:puerto]`, sin ruta ni `/` final. Se rechaza `*` porque la API habilita credenciales CORS. | La API no arranca y muestra un `ValueError` que nombra `CORS_ALLOWED_ORIGINS`. |
+
+Ejemplo de `.env`:
 
 ```bash
-export DEEPSEEK_API_KEY="TU_CLAVE"
-test -n "$DEEPSEEK_API_KEY" && echo "DEEPSEEK_API_KEY configurada"
+DEEPSEEK_API_KEY=TU_CLAVE
+CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
+
+Varios orígenes: `CORS_ALLOWED_ORIGINS=http://localhost:3000,https://app.ejemplo.com`.
 
 No imprima ni suba claves privadas al repositorio.
 
 ## 4. Levantar la API unificada
 
-Active el entorno, configure la clave y ejecute un único proceso Uvicorn:
+Active el entorno y ejecute un único proceso Uvicorn; las variables se toman de `.env`:
 
 ```bash
 source .venv/bin/activate
-export DEEPSEEK_API_KEY="TU_CLAVE"
 
 uvicorn agents.api.main:app \
   --host 127.0.0.1 \
@@ -154,9 +164,11 @@ No use `--workers` mientras el almacenamiento de diagnósticos siga siendo local
 
 ### `DEEPSEEK_API_KEY is not configured`
 
-```bash
-export DEEPSEEK_API_KEY="TU_CLAVE"
-```
+Añada `DEEPSEEK_API_KEY` al archivo `.env` (sección 3) y reinicie Uvicorn.
+
+### `CORS_ALLOWED_ORIGINS is not configured` o `contains an invalid origin`
+
+Defina `CORS_ALLOWED_ORIGINS` en `.env` con orígenes `http(s)://host[:puerto]` separados por comas, sin ruta, sin `/` final y sin `*`.
 
 ### `Address already in use`
 
@@ -172,7 +184,7 @@ Verifique que existan los artefactos requeridos en `data/processed/` y que `chro
 
 ### El frontend no puede comunicarse con el backend
 
-Compruebe que el frontend use `http://127.0.0.1:8000` como única URL base. La configuración CORS permite el origen de desarrollo `http://localhost:3000`.
+Compruebe que el frontend use `http://127.0.0.1:8000` como única URL base. El origen del frontend debe figurar en `CORS_ALLOWED_ORIGINS` (sección 3) con el mismo esquema, host y puerto.
 
 ## 10. Detener el backend
 

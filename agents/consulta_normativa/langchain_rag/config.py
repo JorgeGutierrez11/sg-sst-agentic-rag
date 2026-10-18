@@ -20,11 +20,6 @@ def load_project_environment(dotenv_path: Path | None = None) -> None:
     )
 
 
-def get_cors_allowed_origins() -> list[str]:
-    """Return the browser origin configured for cross-origin API requests."""
-    return [os.environ["IP_ADDRESS"]]
-
-
 load_project_environment()
 
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
