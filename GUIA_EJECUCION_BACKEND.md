@@ -24,8 +24,8 @@ data/processed/chunks/parents.jsonl
 Desde la raíz del repositorio:
 
 ```bash
-python3.14 -m venv .venv-rag
-source .venv-rag/bin/activate
+python3.14 -m venv .venv
+source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -48,7 +48,7 @@ No imprima ni suba claves privadas al repositorio.
 Active el entorno, configure la clave y ejecute un único proceso Uvicorn:
 
 ```bash
-source .venv-rag/bin/activate
+source .venv/bin/activate
 export DEEPSEEK_API_KEY="TU_CLAVE"
 
 uvicorn agents.api.main:app \

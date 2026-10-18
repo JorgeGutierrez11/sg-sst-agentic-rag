@@ -17,17 +17,11 @@ from agents.diagnostico_cumplimiento.catalog.schemas import (
 from agents.diagnostico_cumplimiento.domain.answers import (
     QuestionAnswer,
 )
-from agents.diagnostico_cumplimiento.domain.condition_evaluation import (
-    ConditionEvaluation,
-)
 from agents.diagnostico_cumplimiento.domain.enums import (
     QuestionType,
 )
 from agents.diagnostico_cumplimiento.domain.interpretation import (
     AnswerInterpretation,
-)
-from agents.diagnostico_cumplimiento.questionnaire.condition_progress import (
-    ConditionCollectionStatus,
 )
 from agents.diagnostico_cumplimiento.questionnaire.requirement_progress import (
     RequirementCollectionStatus,
@@ -69,39 +63,6 @@ class QuestionSnapshot(BaseModel):
     answer: QuestionAnswer | None = None
 
     interpretation: AnswerInterpretation | None = None
-
-
-# ============================================================
-# LEGACY
-# ============================================================
-#
-# Se conserva temporalmente porque declarative_findings.py
-# todavía importa ConditionSnapshot.
-#
-# El nuevo flujo ya no construye ConditionSnapshot.
-# ============================================================
-
-
-class ConditionSnapshot(BaseModel):
-    """
-    Modelo legado de condición.
-
-    Se eliminará cuando termine la migración del reporting.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    condition_id: str = Field(min_length=1)
-
-    description: str = Field(min_length=1)
-
-    collection_status: ConditionCollectionStatus
-
-    evaluation: ConditionEvaluation
-
-    questions: list[QuestionSnapshot] = Field(
-        default_factory=list,
-    )
 
 
 class RequirementSnapshot(BaseModel):

@@ -7,7 +7,7 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 - Treat `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` as the methodology source of truth. Use `docs/architecture/` for intended technical contracts and `docs/operations/` for runbooks, but verify current runtime wiring against executable code because some retrieval documentation lags the implementation.
 - The legal corpus is limited to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and the risk classification in Decreto 768/2022.
 - `requirements.txt` is the only manifest. There is no lockfile, task runner, CI, pre-commit, formatter, lint, typecheck, codegen, or repository OpenCode configuration; do not invent project commands for them.
-- Install `requirements.txt` in the active environment. `chromadb` is required by vectorization and runtime retrieval but is not declared there, so verify/install it separately before real Chroma runs.
+- Install `requirements.txt` in the active environment. Direct dependencies are pinned to exact versions validated on Python 3.14 (`.python-version`); `pytest` is included there, with no separate dev manifest.
 - DOCX ingestion and table conversion require the Pandoc system binary in `PATH`; `pypandoc` alone is insufficient.
 
 ## Verification commands
@@ -16,21 +16,25 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 # Broad suites
 python -m unittest discover -s pipeline/tests
 python -m unittest discover -s agents/consulta_normativa/tests
+python -m unittest discover -s agents/api/tests
+pytest agents/diagnostico_cumplimiento/tests
 
 # Tables
 python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents
 
 # Syntax/import-independent compile check
-python -m compileall pipeline agents/consulta_normativa
+python -m compileall pipeline agents
 ```
 
-Install the declared dependencies before treating import failures as regressions. The suites use `unittest`, not pytest.
+Install the declared dependencies before treating import failures as regressions. The pipeline, consultation, and unified API suites use `unittest`; the diagnosis suite uses `pytest`. Root `pytest.ini` sets `pythonpath = .` so bare `pytest` can import the `agents` package. See `docs/testing.md` for the full test inventory.
 
 ## Package boundaries and data safety
 
 - `pipeline/` is offline corpus transformation and index construction; keep online agent behavior out of it.
 - `agents/consulta_normativa/langchain_rag/` is the current online implementation. Its `retrieval/` package owns query-only Chroma/BM25 helpers; collection creation/upsert belongs in `pipeline/vectorization/`, and BM25 construction belongs in `pipeline/sparse_indexing/`.
-- `agents/consulta_normativa/api/` is the FastAPI adapter for the current runtime. `app/backend/`, `app/frontend/`, and `agents/diagnostico_cumplimiento/` remain `.gitkeep` scaffolds; do not add speculative layers there.
+- `agents/api/main.py` is the unified FastAPI composition root (`uvicorn agents.api.main:app`). It mounts the consultation router from `agents/consulta_normativa/api/` and the diagnosis router from `agents/diagnostico_cumplimiento/api/`.
+- `agents/diagnostico_cumplimiento/` is the compliance-diagnosis agent: v2.1 catalogs under `catalog/data/`, questionnaire with `depends_on` question routing, declarative assessment, and reporting. Its tests use a frozen catalog copy in `tests/fixtures/valid_catalog.json`.
+- `app/backend/` and `app/frontend/` remain `.gitkeep` scaffolds; do not add speculative layers there.
 - `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline.
 - `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
 - `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.
@@ -68,7 +72,7 @@ python -m agents.consulta_normativa.langchain_rag.main "<question>"
 ```
 
 - Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
-- The FastAPI adapter's default lifespan calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
+- The unified API lifespan (`agents/api/main.py`) calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
 - The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
 - Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `BAAI/bge-reranker-v2-m3`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
 

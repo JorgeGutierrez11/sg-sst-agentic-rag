@@ -4,17 +4,17 @@
 
 ## 1. Propósito y alcance
 
-Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **84 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
+Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **75 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
 
 | Subsistema | Módulos | Framework principal | Alcance |
 |---|---:|---|---|
 | Pipeline offline del corpus | 13 | `unittest` | Fragmentación, tablas, documentos vectoriales, Chroma e índices BM25 |
 | Consulta normativa y RAG | 33 | `unittest` | API, grafos, recuperación, prompts, contexto empresarial y memoria |
 | API unificada | 1 | `unittest` | Inicialización, endpoints de salud, enrutamiento y ciclo de vida |
-| Diagnóstico de cumplimiento | 37 | Principalmente `pytest`; un módulo de API con `unittest` | Catálogos, cuestionarios, reglas, evaluación y reportes |
-| **Total** | **84** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
+| Diagnóstico de cumplimiento | 28 | Principalmente `pytest`; un módulo de API con `unittest` | Catálogos v2.1, cuestionarios, enrutamiento por dependencias, evaluación declarativa y reportes |
+| **Total** | **75** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
 
-**Configuración actual:** el inventario no identifica archivos globales `pytest.ini`, `pyproject.toml`, `tox.ini`, `setup.cfg` ni `conftest.py`. Cada módulo utiliza las convenciones de su framework y sus propios fixtures, simulaciones y utilidades.
+**Configuración actual:** `pytest.ini` en la raíz declara `pythonpath = .`, de modo que `pytest` resuelve el paquete `agents` aunque `agents/` y `agents/diagnostico_cumplimiento/` no tengan `__init__.py`. La suite de diagnóstico comparte fixtures mediante `agents/diagnostico_cumplimiento/tests/conftest.py`. No existen `pyproject.toml`, `tox.ini` ni `setup.cfg`; las suites de `unittest` siguen usando sus propias utilidades.
 
 ## 2. Requisitos previos
 
@@ -61,7 +61,7 @@ python -m unittest discover -s agents/api/tests
 python -m pytest agents/diagnostico_cumplimiento/tests
 ```
 
-El comando del diagnóstico se deduce de sus pruebas basadas mayoritariamente en funciones y fixtures de `pytest`. **Todavía no consta en `AGENTS.md`**. `pytest` también puede recopilar el módulo de API que utiliza `unittest.TestCase`.
+La suite del diagnóstico usa funciones y fixtures de `pytest`. Gracias a `pytest.ini`, `pytest agents/diagnostico_cumplimiento/tests` y `python -m pytest agents/diagnostico_cumplimiento/tests` son equivalentes; sin ese archivo, `pytest` a secas falla con `ModuleNotFoundError: No module named 'agents'`. **Todavía no consta en `AGENTS.md`**. `pytest` también recopila el módulo de API que utiliza `unittest.TestCase`.
 
 Para ejecutar un módulo puntual:
 
@@ -175,7 +175,7 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 |---|---|
 | `agents/api/tests/test_main.py` | Inicialización de FastAPI, separación entre *liveness* y *readiness*, registro de routers, CORS, ruta raíz, ciclo de vida (*lifespan*) y reutilización de dependencias de consulta/diagnóstico, sin cargar runtimes reales |
 
-### 4.4. Diagnóstico de cumplimiento — 37 módulos
+### 4.4. Diagnóstico de cumplimiento — 28 módulos
 
 **API**
 
@@ -188,11 +188,11 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 | Módulo | Comportamiento que verifica |
 |---|---|
 | `test_models.py` | Construcción y validación de modelos de dominio |
-| `test_catalog.py` | Esquemas, lectura y errores de catálogos |
-| `test_catalog_coverage.py` | Cobertura de requisitos y comportamiento con variantes de catálogo |
-| `test_applicability.py` | Aplicabilidad según perfil empresarial y catálogo |
+| `test_catalog.py` | Esquema v2.1 (`AssessmentCatalog`), lectura y errores de catálogos |
+| `test_catalog_coverage.py` | Cobertura del paquete normativo seleccionado |
+| `test_applicability.py` | Selección del catálogo por perfil (`catalog.selector`) y requisitos del paquete seleccionado |
 | `test_requirement_applicability.py` | Decisiones de aplicabilidad por requisito |
-| `test_requirement_snapshot.py` | Instantáneas estables de requisitos durante el diagnóstico |
+| `test_requirement_snapshot.py` | Instantáneas de requisitos y estado de enrutamiento de cada pregunta |
 
 **Respuestas y cuestionario**
 
@@ -206,27 +206,18 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 | `test_answer_interpreter.py` | Coordinación de interpretación de respuestas |
 | `test_boolean_interpreter.py` | Interpretación de valores booleanos |
 | `test_text_boolean_interpreter.py` | Reglas de interpretación de texto a booleanos |
-| `test_requirement_answer_processor.py` | Procesamiento de respuestas del requisito activo |
+| `test_requirement_answer_processor.py` | Procesamiento de respuestas con enrutamiento por `depends_on` (preguntas activas, bloqueadas y omitidas) |
 | `test_questionnaire.py` | Secuencia, progreso y finalización del cuestionario |
 | `test_questionnaire_findings.py` | Hallazgos derivados de las respuestas |
-| `test_affiliation_question_routing.py` | Enrutamiento de preguntas de afiliación |
-| `test_condition_answer_summary.py` | Agrupación de respuestas por condición |
+| `test_affiliation_question_routing.py` | Enrutamiento de preguntas de afiliación (módulo no conectado a la API) |
 
-**Reglas, progreso y evaluación**
+**Progreso y evaluación declarativa**
 
 | Módulo | Comportamiento que verifica |
 |---|---|
-| `test_evaluation_rule.py` | Modelo y ejecución de reglas |
-| `test_evaluation_rule_validation.py` | Rechazo de reglas, operadores y operandos inválidos |
-| `test_evaluation_operator.py` | Comportamiento de operadores admitidos |
-| `test_evaluation_operator_edge_cases.py` | Casos límite de operadores |
-| `test_condition_evaluation.py` | Evaluación de cumplimiento por condición |
-| `test_condition_evaluation_gate.py` | Condiciones previas para evaluar |
-| `test_rule_execution_gate.py` | Condiciones previas para ejecutar reglas declarativas |
-| `test_declarative_assessment.py` | Evaluación de requisitos a partir de reglas |
-| `test_affiliation_declarative_assessment.py` | Resultados específicos de afiliación |
-| `test_declarative_findings.py` | Generación de hallazgos declarativos |
-| `test_condition_progress.py` | Progreso de respuestas por condición |
+| `test_declarative_assessment.py` | Evaluación declarativa de requisitos |
+| `test_affiliation_declarative_assessment.py` | Resultados específicos de afiliación (módulo no conectado a la API) |
+| `test_declarative_findings.py` | Hallazgos declarativos por requisito, incluidas preguntas omitidas por enrutamiento |
 | `test_requirement_progress.py` | Progreso de respuestas por requisito |
 
 **Diagnóstico preliminar e informes**
@@ -239,6 +230,8 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 | `test_preliminary_diagnosis_routing.py` | Avance entre etapas y finalización |
 | `test_orientative_report.py` | Contenido del informe orientativo y límites de generación de PDF |
 
+**Pruebas retiradas (2026-10):** se eliminaron junto con el código que verificaban, porque ese código no era alcanzable desde la API: el motor de reglas de evaluación (`test_evaluation_rule*.py`, `test_evaluation_operator*.py`, `test_rule_execution_gate.py`, `test_condition_evaluation_gate.py`) y el modelo de catálogo por condiciones (`test_condition_answer_summary.py`, `test_condition_progress.py`, `test_condition_evaluation.py`, y las pruebas de los modelos legados en `test_catalog.py`).
+
 ## 5. Simulaciones, fixtures y datos de prueba
 
 Las suites aíslan deliberadamente los componentes externos o costosos:
@@ -248,9 +241,11 @@ Las suites aíslan deliberadamente los componentes externos o costosos:
 - **FastAPI:** `TestClient` ejecuta rutas con servicios simulados o inicializadores de runtime reemplazados.
 - **LangGraph:** los tests de memoria utilizan checkpointers en memoria e identificadores explícitos de conversación.
 - **Pipeline:** registros pequeños y archivos temporales reemplazan la reconstrucción del corpus completo.
-- **Diagnóstico:** se emplean catálogos locales, `tests/fixtures/valid_catalog.json` y catálogos sintéticos.
+- **Diagnóstico:** `tests/fixtures/valid_catalog.json` es una **copia congelada** del catálogo productivo `catalog/data/res0312_riesgo_i_1_10_general.json` (esquema 2.1, 7 requisitos). `tests/conftest.py` lo expone mediante los fixtures `catalog` y `catalog_path`. Los catálogos sintéticos se construyen copiando ese JSON y modificándolo, para que siempre cumplan el esquema vigente.
 
-Los fixtures son locales a los módulos: no existe un `conftest.py` compartido en la raíz. Cuando un fake registra invocaciones, los tests suelen comprobar tanto el resultado observado como el contrato de colaboración.
+Las pruebas de comportamiento usan la copia congelada y no los catálogos productivos, de modo que editar un catálogo real no rompa pruebas ajenas a ese cambio. Si cambia el esquema del catálogo, hay que regenerar la copia y ajustar las aserciones afectadas. Las funciones que seleccionan el catálogo por perfil empresarial, sin recibir una ruta explícita, sí leen los catálogos productivos.
+
+Fuera del diagnóstico, los fixtures son locales a cada módulo. Cuando un fake registra invocaciones, los tests suelen comprobar tanto el resultado observado como el contrato de colaboración.
 
 ## 6. Qué demuestra y qué no demuestra la suite
 
@@ -293,9 +288,9 @@ En pruebas de prompts, mantener alineadas las referencias numéricas inline `[n]
 
 | Limitación documentada | Impacto |
 |---|---|
-| Uso mixto de `unittest` y `pytest` sin configuración central | No existe un único comando oficial para ejecutar todas las pruebas |
+| Uso mixto de `unittest` y `pytest`; `pytest.ini` solo configura la resolución de imports | No existe un único comando oficial para ejecutar todas las pruebas |
 | `AGENTS.md` omite la suite de diagnóstico y la API unificada | La documentación de ejecución está incompleta |
-| Conteo por módulos, no por aserciones | **84 módulos no equivalen a cobertura porcentual** |
+| Conteo por módulos, no por aserciones | **75 módulos no equivalen a cobertura porcentual** |
 | Ausencia de configuración y umbral de cobertura | No hay un criterio cuantitativo documentado para CI |
 | Omisión condicional de una prueba BM25S | Una ejecución exitosa puede dejar una integración sin verificar |
 | Tests focalizados con servicios y modelos simulados | Pueden aparecer errores al cargar modelos e índices reales |
@@ -319,10 +314,11 @@ Las siguientes son **propuestas adicionales**, no funcionalidades confirmadas de
 | `AGENTS.md` | Convenciones y comandos actualmente documentados |
 | `.python-version` | Versión declarada de Python (3.14) |
 | `requirements.txt` | Manifiesto de dependencias Python |
+| `pytest.ini` | Configuración de `pytest` (`pythonpath = .`) |
 | `pipeline/tests/` | 13 módulos de pruebas del pipeline offline |
 | `agents/consulta_normativa/tests/` | 33 módulos de consulta normativa y RAG |
 | `agents/api/tests/test_main.py` | Pruebas de la API unificada |
-| `agents/diagnostico_cumplimiento/tests/` | 37 módulos de diagnóstico y fixtures |
+| `agents/diagnostico_cumplimiento/tests/` | 28 módulos de diagnóstico, `conftest.py` y fixtures |
 | `agents/diagnostico_cumplimiento/catalog/data/` | Catálogos JSON utilizados por el diagnóstico |
 
 ---
