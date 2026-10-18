@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
@@ -14,6 +15,7 @@ from agents.consulta_normativa.langchain_rag.main import build_runtime
 from agents.diagnostico_cumplimiento.api.routes import router as diagnostic_router
 from agents.diagnostico_cumplimiento.api.service import DiagnosticService
 
+logger = logging.getLogger(__name__)
 
 def create_app(
     runtime_builder: Callable[[], Any] | None = None,
@@ -32,7 +34,12 @@ def create_app(
             runtime = build_rag_runtime()
             application.state.query_service = QueryService(runtime)
             application.state.diagnostic_service = build_diagnostic_service()
-            application.state.is_ready = True
+        except Exception:
+            logger.exception("API startup failed; the service will not report readiness.")
+            raise
+
+        application.state.is_ready = True
+        try:
             yield
         finally:
             application.state.is_ready = False

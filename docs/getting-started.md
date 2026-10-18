@@ -28,6 +28,8 @@ data/processed/table_documents.jsonl
 
 Si faltan, constrúyalos con los runbooks de [`operations/`](operations/corpus-build.md).
 
+Antes de abrir los índices o cargar modelos, el backend comprueba estos archivos: `chroma/chroma.sqlite3`, los seis archivos del índice `bm25/` (`params.index.json`, `vocab.index.json`, `data.csc.index.npy`, `indices.csc.index.npy`, `indptr.csc.index.npy`, `corpus.jsonl`), `parents.jsonl` y `table_documents.jsonl`. Todos deben existir y tener contenido, salvo `table_documents.jsonl`, que puede estar vacío si el corpus no tiene tablas. Si alguno falla, la API no arranca y el log nombra cada artefacto con su ruta absoluta (sección 8).
+
 ## 2. Preparar el entorno
 
 Desde la raíz del repositorio:
@@ -162,6 +164,16 @@ Añada `DEEPSEEK_API_KEY` al archivo `.env` (sección 3) y reinicie Uvicorn.
 ### `CORS_ALLOWED_ORIGINS is not configured` o `contains an invalid origin`
 
 Defina `CORS_ALLOWED_ORIGINS` en `.env` con orígenes `http(s)://host[:puerto]` separados por comas, sin ruta, sin `/` final y sin `*`.
+
+### `Missing runtime artifact` o `Empty runtime artifact`
+
+Uvicorn registra `API startup failed; the service will not report readiness.` seguido de un mensaje como:
+
+```text
+Missing runtime artifact: Chroma database (/ruta/al/repo/data/processed/chroma/chroma.sqlite3)
+```
+
+Si fallan varios artefactos, aparecen todos en el mismo mensaje, separados por `;`. Regenere cada artefacto indicado con los runbooks de [`operations/`](operations/corpus-build.md) y reinicie Uvicorn. La comprobación se ejecuta antes de abrir ChromaDB, así que un directorio `chroma/` vacío no se modifica.
 
 ### `Address already in use`
 

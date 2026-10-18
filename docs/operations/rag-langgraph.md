@@ -50,7 +50,7 @@ Los literales están en inglés porque son las cadenas exactas del código:
 
 Antes de la respuesta, la CLI imprime bloques de depuración: `QUERY EXPANSION`, la traza híbrida con reranking y padres, `RETRIEVAL RELEVANCE GRADING` y `CURRENT BUSINESS CONTEXT`.
 
-La sesión termina con `exit`, `quit`, EOF o `Ctrl+C`. Los errores se imprimen en stderr como `Error during initialization:` o `Error during RAG execution:`. En modo de una sola pregunta devuelven código `2`; en modo interactivo el error de ejecución se imprime y el bucle continúa.
+La sesión termina con `exit`, `quit`, EOF o `Ctrl+C`. Los errores se imprimen en stderr como `Error during initialization:` o `Error during RAG execution:`. Los errores de inicialización incluyen el tipo de la excepción original, por ejemplo `ValueError: DEEPSEEK_API_KEY is not configured in the environment.`. En modo de una sola pregunta devuelven código `2`; en modo interactivo el error de ejecución se imprime y el bucle continúa.
 
 ## Efectos secundarios
 
@@ -63,6 +63,7 @@ La memoria conversacional y de largo plazo es en memoria del proceso: se pierde 
 | Síntoma | Causa probable | Acción |
 |---|---|---|
 | `DEEPSEEK_API_KEY is not configured` | Falta la variable. | Definirla en `.env` o exportarla. |
+| `Missing runtime artifact: <artefacto> (<ruta>)` o `Empty runtime artifact: ...` | La comprobación previa encontró un artefacto ausente o vacío (`table_documents.jsonl` puede estar vacío). Se ejecuta antes de abrir Chroma o cargar modelos. | Regenerar el artefacto indicado con [corpus-build.md](corpus-build.md). |
 | Error al abrir Chroma | Falta `data/processed/chroma` o la colección. | Ejecutar [vectorization.md](vectorization.md). |
 | Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar [bm25-sparse-retrieval.md](bm25-sparse-retrieval.md). |
 | `FileNotFoundError` de `parents.jsonl` | Falta la salida de chunking. | Ejecutar [corpus-build.md](corpus-build.md). |

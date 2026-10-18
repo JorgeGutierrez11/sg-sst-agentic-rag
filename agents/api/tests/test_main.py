@@ -121,6 +121,25 @@ class UnifiedApiAppTests(unittest.TestCase):
                         pass
                 self.assertFalse(application.state.is_ready)
 
+    def test_startup_failure_is_logged_and_readiness_stays_false(self) -> None:
+        def fail_runtime() -> FakeRuntime:
+            raise RuntimeError("runtime unavailable")
+
+        application = create_app(
+            runtime_builder=fail_runtime,
+            diagnostic_service_builder=DiagnosticService,
+        )
+
+        with self.assertLogs("agents.api.main", level="ERROR") as logs:
+            with self.assertRaises(RuntimeError):
+                with TestClient(application):
+                    pass
+
+        self.assertFalse(application.state.is_ready)
+        self.assertEqual(len(logs.records), 1)
+        self.assertIn("API startup failed", logs.output[0])
+        self.assertIn("runtime unavailable", logs.output[0])
+
     def test_liveness_ignores_readiness_and_missing_services(self) -> None:
         application = create_app(
             runtime_builder=lambda: self.fail("runtime builder called"),

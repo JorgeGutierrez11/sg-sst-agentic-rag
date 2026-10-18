@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import io
+import tempfile
 import types
 import unittest
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
+from pathlib import Path
 from unittest.mock import mock_open, patch
 
 from agents.consulta_normativa.langchain_rag import main as cli
+from agents.consulta_normativa.langchain_rag.config import PROJECT_ROOT
 
 
 class LangChainRagMainTest(unittest.TestCase):
@@ -224,6 +227,131 @@ class LangChainRagMainTest(unittest.TestCase):
         )
         self.assertIs(runtime.graph, graph)
 
+    def test_default_runtime_artifacts_cover_required_absolute_paths(self) -> None:
+        bm25_path = cli.DEFAULT_BM25_PATH
+        expected = {
+            cli.DEFAULT_CHROMA_PATH / "chroma.sqlite3": False,
+            bm25_path / "params.index.json": False,
+            bm25_path / "vocab.index.json": False,
+            bm25_path / "data.csc.index.npy": False,
+            bm25_path / "indices.csc.index.npy": False,
+            bm25_path / "indptr.csc.index.npy": False,
+            bm25_path / "corpus.jsonl": False,
+            cli.DEFAULT_PARENT_CHUNKS_PATH: False,
+            cli.DEFAULT_TABLE_DOCUMENTS_PATH: True,
+        }
+
+        self.assertEqual(
+            {artifact.path: artifact.allow_empty for artifact in cli.RUNTIME_ARTIFACTS},
+            expected,
+        )
+        self.assertTrue(all(artifact.path.is_absolute() for artifact in cli.RUNTIME_ARTIFACTS))
+
+    def test_missing_runtime_artifact_raises_error_naming_artifact_and_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            artifacts = self.create_artifacts(Path(directory))
+
+            for artifact in artifacts:
+                with self.subTest(artifact=artifact.label):
+                    content = artifact.path.read_bytes()
+                    artifact.path.unlink()
+                    try:
+                        with self.assertRaises(cli.OperationalError) as raised:
+                            cli.validate_runtime_artifacts(artifacts)
+                    finally:
+                        artifact.path.write_bytes(content)
+
+                    self.assertEqual(
+                        str(raised.exception),
+                        f"Missing runtime artifact: {artifact.label} ({artifact.path})",
+                    )
+
+    def test_empty_required_runtime_artifact_raises_error_naming_artifact_and_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            artifacts = self.create_artifacts(Path(directory))
+
+            for artifact in artifacts:
+                if artifact.allow_empty:
+                    continue
+                with self.subTest(artifact=artifact.label):
+                    content = artifact.path.read_bytes()
+                    artifact.path.write_bytes(b"")
+                    try:
+                        with self.assertRaises(cli.OperationalError) as raised:
+                            cli.validate_runtime_artifacts(artifacts)
+                    finally:
+                        artifact.path.write_bytes(content)
+
+                    self.assertEqual(
+                        str(raised.exception),
+                        f"Empty runtime artifact: {artifact.label} ({artifact.path})",
+                    )
+
+    def test_empty_table_documents_artifact_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            artifacts = self.create_artifacts(Path(directory))
+            table_documents = next(artifact for artifact in artifacts if artifact.allow_empty)
+            table_documents.path.write_bytes(b"")
+
+            cli.validate_runtime_artifacts(artifacts)
+
+    def test_empty_chroma_directory_fails_before_opening_indexes_or_creating_files(self) -> None:
+        opened: list[str] = []
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            artifacts = self.create_artifacts(root)
+            chroma_database = root / "chroma" / "chroma.sqlite3"
+            chroma_database.unlink()
+            dependencies = self.build_dependencies(
+                validate_runtime_artifacts=lambda: cli.validate_runtime_artifacts(artifacts),
+                open_existing_collection=lambda path, name: opened.append("chroma") or object(),
+                open_existing_bm25_index=lambda: opened.append("bm25") or object(),
+            )
+
+            with self.runtime_support_patches(), patch.object(
+                cli, "load_dependencies", return_value=dependencies
+            ), self.assertRaises(cli.OperationalError) as raised:
+                cli.build_runtime(write_graph_image=False)
+
+            self.assertEqual(list((root / "chroma").iterdir()), [])
+
+        self.assertIn(f"Missing runtime artifact: Chroma database ({chroma_database})", str(raised.exception))
+        self.assertEqual(opened, [])
+
+    def test_build_runtime_error_names_original_exception_type_and_keeps_cause(self) -> None:
+        original = ValueError("collection unavailable")
+
+        def fail_open_existing_collection(path: object, collection_name: str) -> object:
+            raise original
+
+        dependencies = self.build_dependencies(open_existing_collection=fail_open_existing_collection)
+
+        with self.runtime_support_patches(), patch.object(
+            cli, "load_dependencies", return_value=dependencies
+        ), self.assertRaises(cli.OperationalError) as raised:
+            cli.build_runtime(write_graph_image=False)
+
+        self.assertEqual(str(raised.exception), "ValueError: collection unavailable")
+        self.assertIs(raised.exception.__cause__, original)
+
+    def create_artifacts(self, root: Path) -> tuple[cli.RuntimeArtifact, ...]:
+        """Create one non-empty file per default runtime artifact under a temporary root."""
+
+        project_root = PROJECT_ROOT
+        artifacts = tuple(
+            cli.RuntimeArtifact(
+                label=artifact.label,
+                path=root / artifact.path.relative_to(project_root / "data" / "processed"),
+                allow_empty=artifact.allow_empty,
+            )
+            for artifact in cli.RUNTIME_ARTIFACTS
+        )
+        for artifact in artifacts:
+            artifact.path.parent.mkdir(parents=True, exist_ok=True)
+            artifact.path.write_bytes(b"content")
+        return artifacts
+
     def build_runtime(self, fail_first: bool = False) -> object:
         calls: list[str] = []
 
@@ -255,8 +383,10 @@ class LangChainRagMainTest(unittest.TestCase):
         open_existing_collection: object | None = None,
         open_existing_bm25_index: object | None = None,
         get_reranker: object | None = None,
+        validate_runtime_artifacts: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
+            validate_runtime_artifacts=validate_runtime_artifacts or (lambda: None),
             build_deepseek_llm=build_deepseek_llm or (lambda: object()),
             build_langgraph_rag=build_langgraph_rag or (lambda llm, retriever, **kwargs: object()),
             answer_with_langgraph=answer_with_langgraph or (lambda question, graph: object()),
