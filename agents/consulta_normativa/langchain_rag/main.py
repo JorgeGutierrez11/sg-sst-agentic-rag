@@ -25,6 +25,7 @@ from agents.consulta_normativa.langchain_rag.config import (
     RERANKER_FINAL_TOP_K,
     RERANKER_MAX_LENGTH,
     RERANKER_MODEL_NAME,
+    get_chroma_working_root,
 )
 from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (
     DEFAULT_BM25_PATH,
@@ -104,6 +105,7 @@ class RuntimeDependencies:
     get_reranker: Callable[..., Any]
     load_parent_documents: Callable[..., Any]
     load_first_table_parts: Callable[..., Any]
+    create_chroma_working_copy: Callable[[Path, Path | None], Any]
     
 
 
@@ -115,6 +117,8 @@ class RagRuntime:
     answer_with_langgraph: Callable[..., Any]
     graph: Any
     thread_id: str
+    # Mantiene viva la copia de Chroma que consulta el grafo; se borra al salir.
+    chroma_working_copy: Any = None
 
 # nueva clase para adaptar los embeddings de Qwen a la memoria a largo plazo basada en recuperación
 class QwenMemoryEmbeddings(Embeddings):
@@ -205,8 +209,12 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.store.memory import InMemoryStore
 
-        collection = dependencies.open_existing_collection(
+        chroma_working_copy = dependencies.create_chroma_working_copy(
             DEFAULT_CHROMA_PATH,
+            get_chroma_working_root(),
+        )
+        collection = dependencies.open_existing_collection(
+            chroma_working_copy.path,
             DEFAULT_COLLECTION_NAME,
         )
         
@@ -298,6 +306,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         answer_with_langgraph=dependencies.answer_with_langgraph,
         graph=graph,
         thread_id=thread_id, # Agregar el identificador único al runtime para su uso en la conversación
+        chroma_working_copy=chroma_working_copy,
     )
 
 
@@ -307,7 +316,10 @@ def load_dependencies() -> RuntimeDependencies:
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
-        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import (
+            create_working_copy as create_chroma_working_copy,
+            open_existing_collection,
+        )
         from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (open_existing_index as open_existing_bm25_index)
         from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
         from agents.consulta_normativa.langchain_rag.retrieval.reranking import (get_reranker)
@@ -327,6 +339,7 @@ def load_dependencies() -> RuntimeDependencies:
         get_reranker=get_reranker,
         load_parent_documents=load_parent_documents,
         load_first_table_parts=load_first_table_parts,
+        create_chroma_working_copy=create_chroma_working_copy,
     )
 
 

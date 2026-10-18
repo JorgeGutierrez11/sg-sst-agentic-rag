@@ -1,5 +1,9 @@
 """Canonical query-only ChromaDB helpers for runtime retrieval."""
 
+import shutil
+import stat
+import tempfile
+import weakref
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -7,7 +11,62 @@ from typing import Any
 from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
 
 DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
+WORKING_COPY_PREFIX = "sg-sst-chroma-"
 Retriever = Callable[[str, int], dict[str, Any]]
+
+
+class ChromaWorkingCopy:
+    """Disposable copy of the published Chroma index, removed on cleanup or at exit."""
+
+    def __init__(self, directory: Path) -> None:
+        # Se borra con rmtree: solo se aceptan directorios creados por create_working_copy.
+        if not directory.name.startswith(WORKING_COPY_PREFIX):
+            raise ValueError(f"Not a Chroma working copy directory: {directory}")
+        self.path = directory / "chroma"
+        self._finalizer = weakref.finalize(self, shutil.rmtree, directory, ignore_errors=True)
+
+    def cleanup(self) -> None:
+        """Remove the copy now instead of waiting for interpreter exit."""
+
+        self._finalizer()
+
+
+def create_working_copy(source_path: Path, working_root: Path | None = None) -> ChromaWorkingCopy:
+    """Copy the published index to a fresh writable directory, never opening the source.
+
+    Chroma rewrites its SQLite and HNSW files even when only querying, and it fails
+    on read-only files, so the runtime must query a private copy.
+
+    Args:
+        source_path: Published Chroma persist directory.
+        working_root: Parent directory for the copy; the system temp dir when None.
+    """
+
+    source = source_path.resolve()
+    if not source.is_dir():
+        raise ValueError(f"ChromaDB persist path does not exist: {source_path}")
+
+    if working_root is not None:
+        working_root = working_root.resolve()
+        if working_root.is_relative_to(source):
+            raise ValueError(
+                "RAG_CHROMA_WORKING_DIR must be outside the published Chroma index: "
+                f"{working_root}"
+            )
+        working_root.mkdir(parents=True, exist_ok=True)
+
+    directory = Path(tempfile.mkdtemp(prefix=WORKING_COPY_PREFIX, dir=working_root))
+    target = directory / "chroma"
+    try:
+        # copyfile no copia permisos: un origen de solo lectura daría una copia inservible.
+        shutil.copytree(source, target, copy_function=shutil.copyfile)
+        for item in (target, *target.rglob("*")):
+            item.chmod(item.stat().st_mode | stat.S_IWUSR)
+    except BaseException:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+
+    return ChromaWorkingCopy(directory)
 
 
 def open_existing_collection(

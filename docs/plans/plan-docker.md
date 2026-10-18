@@ -151,7 +151,7 @@ compose.yaml
 - Configurar inicialmente un único worker.
 - Deshabilitar `--reload` en producción.
 - Excluir `.env` de la imagen.
-- Montar los índices RAG como volúmenes de solo lectura.
+- Montar los índices RAG como volúmenes de solo lectura. ChromaDB no puede abrirse en solo lectura: el runtime copia el índice al arrancar y consulta la copia, así que `RAG_CHROMA_WORKING_DIR` debe apuntar a un volumen o `tmpfs` con escritura (ver [`plan-fase-5-artefactos.md`](plan-fase-5-artefactos.md), Parte 4).
 - Mantener la caché de modelos en un volumen independiente.
 - Configurar el healthcheck utilizando `/health/ready`.
 - Preparar el entorno para el uso posterior de GPU en el reranker.

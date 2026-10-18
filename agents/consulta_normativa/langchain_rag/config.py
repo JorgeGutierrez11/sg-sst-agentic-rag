@@ -23,6 +23,14 @@ def load_project_environment(dotenv_path: Path | None = None) -> None:
 load_project_environment()
 
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
+CHROMA_WORKING_DIR_ENV = "RAG_CHROMA_WORKING_DIR"
+
+
+def get_chroma_working_root() -> Path | None:
+    """Return the optional parent directory for the runtime Chroma working copy."""
+
+    value = os.environ.get(CHROMA_WORKING_DIR_ENV, "").strip()
+    return Path(value) if value else None
 
 # Por que son iguales?
 RETRIEVAL_TOP_K = 8

@@ -58,7 +58,7 @@ Hallazgos nuevos:
 
 ## Parte 1 — Comprobación previa de artefactos
 
-**Estado:** implementada el 2026-10-18, sin commit. Suites en verde: pipeline 124, consulta 176, API 14, diagnóstico 197.
+**Estado:** implementada el 2026-10-18 en el commit `68843d7`. Suites en verde: pipeline 124, consulta 176, API 14, diagnóstico 197.
 
 **Resuelve:** 1, 2, 3 y 4.
 
@@ -123,6 +123,12 @@ Hallazgos nuevos:
 
 ## Parte 4 — Copia de trabajo de Chroma
 
+**Estado:** implementada el 2026-10-18, sin commit. Suites en verde: pipeline 124, consulta 184, API 14, diagnóstico 197. Prueba real con Uvicorn: `/health/ready` 200, índice publicado sin cambios y copia borrada al cerrar.
+
+**Detalle verificado durante la implementación:** `shutil.copytree` copia también los permisos, así que una copia de un origen de solo lectura falla igual que el original. La copia usa `copyfile` y restaura el permiso de escritura del propietario.
+
+**Variable:** `RAG_CHROMA_WORKING_DIR` es el directorio padre; cada arranque crea dentro una subcarpeta `sg-sst-chroma-*` nueva, así que nunca se borra contenido que ya existiera ahí.
+
 **Resuelve:** 7 y 7b.
 
 **Cambios:**
@@ -134,11 +140,11 @@ Hallazgos nuevos:
 
 **Pruebas** (`test_chroma_retrieval.py`):
 
-- [ ] Abrir y consultar no cambia ningún hash del índice de origen.
-- [ ] Funciona con un índice de origen sin permisos de escritura.
-- [ ] Origen vacío o ausente → mismo error que en la Parte 1.
+- [x] Abrir y consultar no cambia ningún hash del índice de origen.
+- [x] Funciona con un índice de origen sin permisos de escritura.
+- [x] Origen vacío o ausente → mismo error que en la Parte 1.
 
-**Riesgo:** item 5 (cambia cómo se monta el índice en el entorno de ejecución).
+**Riesgo:** none. Solo se añade una variable opcional, sin cambiar archivos de despliegue. El `rmtree` de limpieza solo acepta directorios `sg-sst-chroma-*` creados por el propio runtime, y los tests lo cubren.
 
 **Fuera de alcance:** decidir si `data/processed/chroma/` debe seguir versionado en git. Esto corresponde a la Fase 7 (publicación de índices). Los cambios actuales en esos archivos son el efecto del problema 7; restaurarlos es decisión tuya.
 
@@ -165,6 +171,20 @@ Hallazgos nuevos:
 - [ ] Arranque con `HF_HUB_OFFLINE=1` y la caché presente → correcto.
 
 **Riesgo:** item 5 (fija versiones de dependencias de modelo).
+
+## Revisiones de gentle-ai
+
+Límite de revisión vigente: `e414c19`. Los commits anteriores a ese punto no se revisan. Cada commit nuevo de esta fase se evalúa contra el último límite revisado:
+
+```bash
+gentle-ai review assess --cwd . --agent claude-code --base-ref <último límite> --committed-only --json
+```
+
+Solo se revisa cuando `review_due` es `true` (`high_risk`) o cuando se pide de forma explícita. El límite avanza cuando la evaluación sale `passive` o cuando una revisión queda aprobada; un resultado `under_budget` sigue acumulándose hasta que se revise.
+
+| Commits evaluados | Parte | Evaluación | Resultado |
+|---|---|---|---|
+| `cc60500` (documentación) + `68843d7` (Parte 1) | 1 | `medium` | `under_budget`: sin revisión, queda acumulado |
 
 ## Verificación de cada parte
 

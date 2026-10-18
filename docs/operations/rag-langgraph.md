@@ -16,7 +16,7 @@ Operar la consulta normativa SG-SST actual: abre la colección ChromaDB y el ín
 
 | Requisito | Detalle |
 |---|---|
-| Vector store | `data/processed/chroma` con la colección `sg_sst_base_rag`. |
+| Vector store | `data/processed/chroma` con la colección `sg_sst_base_rag`. El runtime no lo abre directamente: al arrancar lo copia a un directorio temporal (o bajo `RAG_CHROMA_WORKING_DIR`) y consulta esa copia, que se borra al salir. Así el índice publicado no cambia y puede estar en solo lectura. |
 | Índice BM25 | `data/processed/bm25`. |
 | Parent chunks | `data/processed/chunks/parents.jsonl`; si falta, el arranque falla con `FileNotFoundError`. |
 | Documentos de tabla | `data/processed/table_documents.jsonl`. |

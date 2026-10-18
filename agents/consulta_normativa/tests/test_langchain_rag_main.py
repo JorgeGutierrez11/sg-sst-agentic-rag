@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import mock_open, patch
 
 from agents.consulta_normativa.langchain_rag import main as cli
-from agents.consulta_normativa.langchain_rag.config import PROJECT_ROOT
+from agents.consulta_normativa.langchain_rag.config import CHROMA_WORKING_DIR_ENV, PROJECT_ROOT
 
 
 class LangChainRagMainTest(unittest.TestCase):
@@ -190,6 +190,7 @@ class LangChainRagMainTest(unittest.TestCase):
             )
             return graph
 
+        working_copy = types.SimpleNamespace(path=Path("/working/chroma"))
         dependencies = self.build_dependencies(
             build_deepseek_llm=lambda: "llm",
             build_langgraph_rag=fake_build_langgraph_rag,
@@ -198,6 +199,10 @@ class LangChainRagMainTest(unittest.TestCase):
             open_existing_collection=fake_open_existing_collection,
             open_existing_bm25_index=fake_open_existing_index,
             hybrid_retriever=fake_hybrid_retriever,
+            create_chroma_working_copy=lambda source, working_root: calls.append(
+                f"working-copy:{source}:{working_root}"
+            )
+            or working_copy,
             get_reranker=lambda model_name, max_length, device: calls.append(
                 f"reranker:{model_name}:{max_length}:{device}"
             )
@@ -206,13 +211,14 @@ class LangChainRagMainTest(unittest.TestCase):
 
         with self.runtime_support_patches(), patch.object(
             cli, "load_dependencies", return_value=dependencies
-        ), patch("builtins.open", mock_open()):
+        ), patch("builtins.open", mock_open()), patch.dict("os.environ", {CHROMA_WORKING_DIR_ENV: ""}):
             runtime = cli.build_runtime()
 
         self.assertEqual(
             calls,
             [
-                f"collection:{cli.DEFAULT_CHROMA_PATH}:sg_sst_base_rag",
+                f"working-copy:{cli.DEFAULT_CHROMA_PATH}:None",
+                "collection:/working/chroma:sg_sst_base_rag",
                 "index",
                 f"retriever:collection:index:{cli.HYBRID_SOURCE_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
                 f"reranker:{cli.RERANKER_MODEL_NAME}:{cli.RERANKER_MAX_LENGTH}:{cli.RERANKER_DEVICE}",
@@ -226,6 +232,21 @@ class LangChainRagMainTest(unittest.TestCase):
             ],
         )
         self.assertIs(runtime.graph, graph)
+        self.assertIs(runtime.chroma_working_copy, working_copy)
+
+    def test_build_runtime_creates_working_copy_under_configured_root(self) -> None:
+        roots: list[object] = []
+        dependencies = self.build_dependencies(
+            create_chroma_working_copy=lambda source, working_root: roots.append(working_root)
+            or types.SimpleNamespace(path=Path("/working/chroma")),
+        )
+
+        with self.runtime_support_patches(), patch.object(
+            cli, "load_dependencies", return_value=dependencies
+        ), patch.dict("os.environ", {CHROMA_WORKING_DIR_ENV: "/srv/chroma-work"}):
+            cli.build_runtime(write_graph_image=False)
+
+        self.assertEqual(roots, [Path("/srv/chroma-work")])
 
     def test_default_runtime_artifacts_cover_required_absolute_paths(self) -> None:
         bm25_path = cli.DEFAULT_BM25_PATH
@@ -307,6 +328,7 @@ class LangChainRagMainTest(unittest.TestCase):
                 validate_runtime_artifacts=lambda: cli.validate_runtime_artifacts(artifacts),
                 open_existing_collection=lambda path, name: opened.append("chroma") or object(),
                 open_existing_bm25_index=lambda: opened.append("bm25") or object(),
+                create_chroma_working_copy=lambda source, working_root: opened.append("working-copy"),
             )
 
             with self.runtime_support_patches(), patch.object(
@@ -384,6 +406,7 @@ class LangChainRagMainTest(unittest.TestCase):
         open_existing_bm25_index: object | None = None,
         get_reranker: object | None = None,
         validate_runtime_artifacts: object | None = None,
+        create_chroma_working_copy: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
             validate_runtime_artifacts=validate_runtime_artifacts or (lambda: None),
@@ -396,6 +419,8 @@ class LangChainRagMainTest(unittest.TestCase):
             open_existing_collection=open_existing_collection or (lambda path, collection_name: object()),
             open_existing_bm25_index=open_existing_bm25_index or (lambda: object()),
             get_reranker=get_reranker or (lambda model_name, max_length, device: object()),
+            create_chroma_working_copy=create_chroma_working_copy
+            or (lambda source, working_root: types.SimpleNamespace(path=source)),
         )
 
     @contextmanager

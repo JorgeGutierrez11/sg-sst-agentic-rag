@@ -72,7 +72,7 @@ python -m agents.consulta_normativa.langchain_rag.main
 python -m agents.consulta_normativa.langchain_rag.main "<question>"
 ```
 
-- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
+- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes. The runtime never opens `data/processed/chroma` with `PersistentClient`: Chroma rewrites its files even on query and fails on read-only files, so `build_runtime` queries a disposable copy created under `RAG_CHROMA_WORKING_DIR` (system temp dir by default) and removed at exit.
 - The unified API lifespan (`agents/api/main.py`) calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
 - The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
 - Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.

@@ -53,6 +53,7 @@ La configuración local vive en el archivo `.env` de la raíz del repositorio. G
 |---|---|---|---|
 | `DEEPSEEK_API_KEY` | Sí | Clave del LLM DeepSeek usado por la consulta normativa y el diagnóstico. | La consulta falla con `DEEPSEEK_API_KEY is not configured in the environment.` |
 | `CORS_ALLOWED_ORIGINS` | Sí | Orígenes del navegador autorizados a llamar la API, separados por comas. Cada uno debe ser exactamente `http(s)://host[:puerto]`, sin ruta ni `/` final. Se rechaza `*` porque la API habilita credenciales CORS. | La API no arranca y muestra un `ValueError` que nombra `CORS_ALLOWED_ORIGINS`. |
+| `RAG_CHROMA_WORKING_DIR` | No | Directorio padre donde el backend crea, al arrancar, una copia privada del índice ChromaDB. Chroma reescribe sus archivos incluso cuando solo consulta y falla si no puede escribir, así que el backend nunca abre `data/processed/chroma/` directamente. Cada arranque crea una subcarpeta `sg-sst-chroma-*` nueva y la borra al cerrar. Debe tener permisos de escritura y estar fuera de `data/processed/chroma/`. | Se usa el directorio temporal del sistema. Si apunta dentro del índice publicado, la API no arranca y el error nombra `RAG_CHROMA_WORKING_DIR`. |
 
 Ejemplo de `.env`:
 
