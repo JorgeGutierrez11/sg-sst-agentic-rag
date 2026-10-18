@@ -1,5 +1,10 @@
 # Guía operativa: vectorización en ChromaDB
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `pipeline/vectorization/main.py`, `ingest.py`, `chroma_store.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
 
 ## Ruta rápida
 

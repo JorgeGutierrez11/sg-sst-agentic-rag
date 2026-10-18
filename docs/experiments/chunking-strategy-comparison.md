@@ -1,5 +1,11 @@
 # Experimento: comparación de estrategias de chunking
 
+> **Status:** `Experimental`
+> **Audience:** academic-reviewer
+> **Verified against:** `data/processed/chunks/comparison/`, `evaluation/experiments/chunking_comparison.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 La comparación actual normaliza la evidencia disponible sobre tres estrategias de child chunking para el corpus SG-SST. La decisión documentada es usar `regex_constrained_semantic` como salida recomendada para indexación principal, manteniendo `sliding_window` como baseline técnico y `semantic_chunking` como baseline experimental.
 
 ## Decisión

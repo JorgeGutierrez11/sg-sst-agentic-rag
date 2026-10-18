@@ -1,5 +1,11 @@
 # Unified Agent API Migration Plan
 
+> **Status:** `Historical`
+> **Audience:** maintainer
+> **Verified against:** `agents/api/main.py` (plan ejecutado)
+> **Last verified:** 2026-10-18
+> **Replacement:** [reference/api.md](../reference/api.md)
+
 ## Decision
 
 Consolidate the normative consultation and compliance diagnosis APIs behind one FastAPI application. The neutral composition root will be `agents/api/main.py`; it will own the single application instance, CORS configuration, and lifespan, initialize both services once, and include the existing domain routers.

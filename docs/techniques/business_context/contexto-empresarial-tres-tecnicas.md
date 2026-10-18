@@ -1,5 +1,13 @@
 # Técnicas candidatas para construcción de contexto empresarial
 
+> **Status:** `Experimental`
+> **Audience:** academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/business_context/techniques/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> Comparación de las tres técnicas de memoria. La seleccionada para el runtime es la [memoria de largo plazo basada en recuperación](retrieval-based-long-term-memory.md).
+
 ## Propósito de la dimensión
 
 La dimensión de **contexto empresarial** tiene como objetivo conservar información relevante sobre la empresa y sobre las interacciones previas del usuario para que otras etapas del agente puedan utilizarla posteriormente.

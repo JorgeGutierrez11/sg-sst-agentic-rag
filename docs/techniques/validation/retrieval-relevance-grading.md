@@ -1,5 +1,13 @@
 # Retrieval Relevance Grading para evidencia normativa
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/validation/retrieval_relevance_grading.py, graph.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** Orden real: `record_retrieval_trace -> retrieval_relevance_grading -> complement_linked_tables -> evidence_route`. El grading es **una sola llamada estructurada por lote** (`RelevanceDecision`, `RelevanceBatchGrade`, `grade_document_batch`), no una por documento. Si la llamada falla, conserva **todos** los documentos (fail-open). Si rechaza todos, devuelve `documents=[]` y el grafo pasa a `fallback_answer`; no conserva el primero.
+
 Retrieval Relevance Grading valida si cada documento recuperado aporta evidencia útil para responder la pregunta original del usuario. La técnica filtra documentos irrelevantes antes de construir el contexto que recibirá el LLM.
 
 La implementación está inspirada en el *retrieval evaluator* de Corrective Retrieval-Augmented Generation (CRAG), pero no implementa CRAG completo.

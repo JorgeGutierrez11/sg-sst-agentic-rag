@@ -1,5 +1,11 @@
 # Runbook operativo: RAG manual congelado
 
+> **Status:** `Baseline`
+> **Audience:** operator, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/manual_implementation/main.py`, `rag_base.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** [rag-langgraph.md](rag-langgraph.md)
+
 Esta guía cubre la operación de la línea base manual en `agents/consulta_normativa/manual_implementation/`. Úsala como referencia o comparación; no es la implementación RAG actual por defecto.
 
 ## Propósito
@@ -22,7 +28,7 @@ export GROQ_API_KEY="tu_api_key"
 python -m agents.consulta_normativa.manual_implementation.main
 ```
 
-> Estado inspeccionado: este módulo conserva imports legacy hacia `agents.consulta_normativa.config` y `agents.consulta_normativa.rag_base`. Si aparece `ModuleNotFoundError`, no lo corrijas desde operación: registra el hallazgo y usa esta carpeta solo como línea base de lectura hasta que se actualice el límite de imports.
+> Los imports del módulo apuntan a `agents.consulta_normativa.manual_implementation.{config,rag_base,prompts}` y reutilizan `agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval` para abrir la colección. Ya no quedan imports legacy.
 
 ## Comportamiento esperado
 
@@ -42,7 +48,6 @@ La sesión termina con `exit`, `quit`, EOF o `Ctrl+C`. Los errores controlados s
 
 | Síntoma | Causa probable | Acción |
 |---|---|---|
-| `ModuleNotFoundError: agents.consulta_normativa.config` | Imports legacy en la línea base congelada. | Registrar el bloqueo; no editar código desde este runbook. |
 | `GROQ_API_KEY is not configured` | Falta la variable de entorno. | Exportar `GROQ_API_KEY` antes de iniciar la CLI. |
 | Error al abrir Chroma | Falta `data/processed/chroma` o la colección `sg_sst_base_rag`. | Ejecutar primero [`vectorization.md`](vectorization.md). |
 | No hay evidencia | No se recuperaron documentos para la pregunta. | Revisar consulta, corpus vectorizado y cobertura de chunks/tablas. |

@@ -1,5 +1,13 @@
 # R2 — Hybrid Retrieval + Cross-Encoder Reranking
 
+> **Status:** `Historical`
+> **Audience:** academic-reviewer
+> **Verified against:** snapshot R2 (híbrido + reranking)
+> **Last verified:** 2026-10-18
+> **Replacement:** [cross-encoder-reranking.md](../../techniques/retrieval/cross-encoder-reranking.md)
+
+> Snapshot congelado: el reranker actual es `SINAI/ALIA-MrBERT-es-legal-administrative-reranker` con pool 16, no `BAAI/bge-reranker-v2-m3` con pool 40.
+
 ## Propósito
 
 Este documento registra cómo quedó implementada la configuración **R2 — Hybrid Retrieval + Cross-Encoder Reranking** para poder reconstruirla exactamente en el futuro si resulta ganadora en la evaluación con ARES.

@@ -1,101 +1,85 @@
 # RAG LangChain/LangGraph de consulta normativa
 
-Esta es la implementación actual de consulta normativa. Vive en `agents/consulta_normativa/langchain_rag/` y ejecuta un grafo explícito para recuperar evidencia, decidir si hay contexto suficiente y generar una respuesta fundamentada.
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `agents/consulta_normativa/langchain_rag/graph.py`, `main.py`, `config.py`, `core/routes.py`, `retrieval/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
 
-## Operación
+Esta es la implementación actual de consulta normativa. Vive en `agents/consulta_normativa/langchain_rag/` y ejecuta un `StateGraph` que incorpora el contexto empresarial, expande la consulta, recupera evidencia híbrida, la reordena, la valida y genera una respuesta fundamentada.
 
-Antes de consultar deben existir dos índices locales:
+## Artefactos requeridos
 
-| Índice | Ruta | Construcción |
+| Artefacto | Ruta | Construcción |
 |---|---|---|
-| ChromaDB `sg_sst_base_rag` | `data/processed/chroma` | [Guía operativa de vectorización](../operations/vectorization.md) |
-| BM25S | `data/processed/bm25` | [Guía operativa de BM25](../operations/bm25-sparse-retrieval.md) |
+| ChromaDB `sg_sst_base_rag` | `data/processed/chroma` | [Vectorización](../operations/vectorization.md) |
+| Índice BM25S | `data/processed/bm25` | [BM25](../operations/bm25-sparse-retrieval.md) |
+| Parent chunks | `data/processed/chunks/parents.jsonl` | [Construcción del corpus](../operations/corpus-build.md) |
+| Documentos de tabla | `data/processed/table_documents.jsonl` | [Procesamiento de tablas](../operations/table-processing.md) |
 
-El runtime abre ambos índices existentes, construye un recuperador híbrido con `agents/shared/hybrid_retrieval.py` y lo pasa a `build_langgraph_rag(..., top_k=RETRIEVAL_TOP_K)`.
-
-Los pasos de ejecución viven en el runbook [`../operations/rag-langgraph.md`](../operations/rag-langgraph.md).
+El runtime abre los índices existentes y nunca crea índices vacíos. `build_runtime` (`main.py`) además carga el reranker, el lookup de padres, la primera parte de cada tabla, un checkpointer `InMemorySaver` y un `InMemoryStore` con embeddings `Qwen/Qwen3-Embedding-0.6B` (1024 dimensiones) para la memoria de largo plazo. La memoria vive solo en el proceso: se pierde al reiniciar.
 
 ## Archivos principales
 
-| Archivo | Responsabilidad |
+| Ruta (bajo `langchain_rag/`) | Responsabilidad |
 |---|---|
-| `config.py` | Constantes de Chroma, BM25, DeepSeek, temperatura y `top_k`. |
-| `formatting.py` | Normalización de documentos, construcción de contexto y referencias. |
+| `config.py` | Rutas de Chroma, modelos (DeepSeek, Groq, reranker), temperatura, `top_k` y constantes RRF/híbridas; carga `.env` con `load_project_environment`. |
+| `main.py` | `build_runtime` (dependencias y grafo) y CLI. |
 | `graph.py` | Construcción y ejecución del `StateGraph`. |
-| `main.py` | Entrypoint CLI actual: inicializa dependencias, abre Chroma y BM25 existentes, crea el recuperador híbrido y ejecuta el grafo. |
-| `models.py` | Modelos `RetrievedDocument` y `LangChainRagResult`. |
-| `prompts.py` | Instrucciones del sistema y prompt humano. |
-| `agents/shared/hybrid_retrieval.py` | Fusiona resultados Chroma y BM25 con RRF y conserva trazabilidad de fuentes. |
+| `core/` | Estado del grafo, invocación del LLM, rutas condicionales e instrumentación de trazas. |
+| `retrieval/` | Chroma, BM25 (`DEFAULT_BM25_PATH`), fusión híbrida RRF, reranking, expansión a padres y complemento de tablas. |
+| `query_understanding/` | Expansión de consulta (cableada); reescritura y Multi-Query (no cableadas). |
+| `business_context/` | Perfil empresarial, historial y técnicas de memoria. |
+| `validation/` | Relevance grading (cableado); sufficient context gate y self-refine (no cableados). |
+| `formatting.py`, `models.py`, `prompts.py` | Contexto, referencias, modelos de resultado y prompts. |
 
 ## Grafo de ejecución
 
-`graph.py` construye un `StateGraph` con esta ruta:
-
 ```text
-retrieve
+business_profile
+  -> retrieval_long_term_memory
+  -> expand_query
+  -> retrieve                      # híbrido Chroma + BM25 con RRF sobre retrieval_query
   -> normalize_documents
-  -> assess_evidence
-  -> ruta condicional
+  -> rerank                        # cross-encoder: pool 16 -> top 8
+  -> expand_parent_documents
+  -> record_retrieval_trace
+  -> retrieval_relevance_grading   # filtra documentos no relevantes
+  -> complement_linked_tables      # agrega la primera parte de tablas enlazadas
+  -> evidence_route
+       with_evidence:    format_context -> build_messages -> generate_answer
+       without_evidence: fallback_answer
+  -> save_conversation_turn
+  -> store_long_term_memory
+  -> format_result
 ```
 
-La condición de evidencia es simple y explícita:
+`evidence_route` (`core/routes.py`) devuelve `with_evidence` si quedan documentos después del grading. Por lo tanto, "sin evidencia" incluye el caso en que el grader rechaza todos los documentos recuperados.
 
-```text
-has_evidence = bool(documents)
-```
-
-Ramas:
-
-| Ruta | Nodos |
-|---|---|
-| Sin evidencia | `fallback_answer -> format_result` |
-| Con evidencia | `format_context -> build_messages -> generate_answer -> format_result` |
+`sufficient_context_route` existe en `core/routes.py` pero no está conectado al grafo.
 
 ## Generación
 
-Cuando hay evidencia, el grafo construye mensajes LangChain:
+Con evidencia, el grafo construye un `SystemMessage` con las instrucciones base y un `HumanMessage` con la pregunta, el contexto normativo y el contexto empresarial vigente, e invoca el LLM mediante `invoke_llm_text` (`core/llm.py`). El modelo es DeepSeek `deepseek-chat` en `https://api.deepseek.com` con temperatura `0`.
 
-```text
-SystemMessage(BASE_SYSTEM_INSTRUCTIONS)
-HumanMessage(build_human_prompt(...))
-```
+Sin evidencia, `fallback_answer` también invoca el LLM con `FALLBACK_PROMPT` y un mensaje de diagnóstico (traza del grading, error de expansión y contexto empresarial). Solo si esa llamada falla devuelve el texto determinístico de evidencia insuficiente.
 
-Luego invoca el modelo con `llm.invoke(messages)`. El runtime usa DeepSeek con el modelo `deepseek-chat`, base URL `https://api.deepseek.com` y temperatura `0`.
-
-El resultado público es:
-
-```text
-LangChainRagResult(answer, references, context, prompt)
-```
-
-## CLI
-
-La CLI actual se ejecuta con:
-
-```bash
-python -m agents.consulta_normativa.langchain_rag.main
-```
-
-Comportamiento visible. Los literales están en inglés porque son las cadenas exactas que imprime la CLI actual:
-
-- prompt interactivo: `Question>`;
-- salida principal: `Answer:`;
-- salida de fuentes: `References:` solo cuando existen referencias;
-- salida con `exit` o `quit`;
-- errores operacionales controlados con código `2`.
+El resultado público es `LangChainRagResult(answer, references, context, prompt, chunks)`.
 
 ## Contratos operativos
 
 | Aspecto | Contrato |
 |---|---|
-| Recuperación runtime | Híbrida: Chroma + BM25 con fusión RRF. |
-| Colección Chroma | Abre una colección existente; no debe crear una colección vacía durante consulta. |
-| Colección esperada | `sg_sst_base_rag`. |
-| Índice BM25 | Abre un índice existente; no debe crear un índice vacío durante consulta. |
-| Persistencia esperada | `data/processed/chroma` y `data/processed/bm25`. |
-| Top-k final | `RETRIEVAL_TOP_K`; `DEFAULT_TOP_K` queda solo como alias de compatibilidad. |
-| Pool candidato híbrido | `HYBRID_CANDIDATE_TOP_K` por motor antes de fusionar. |
-| Trazabilidad híbrida | Metadata `_retrieval_sources`, por ejemplo `['chroma']`, `['bm25']` o `['chroma', 'bm25']`. |
+| Pool por motor | `HYBRID_SOURCE_CANDIDATE_TOP_K = 60` candidatos de Chroma y de BM25. |
+| Salida híbrida | `HYBRID_RRF_OUTPUT_TOP_K = 16`, con `RRF_K = 60`. |
+| Reranker | `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, CPU, `max_length=512`, lotes de 12. |
+| Top-k final | `RERANKER_FINAL_TOP_K = DEFAULT_TOP_K = 8`, antes de la expansión a padres. |
+| Trazabilidad híbrida | Metadata `_retrieval_sources`: `['chroma']`, `['bm25']` o `['chroma', 'bm25']`. |
 | Variable requerida | `DEEPSEEK_API_KEY`. |
-| Evidencia suficiente | Existe al menos un documento recuperado. |
-| Sin evidencia | Respuesta determinística sin invocar el LLM. |
+| Imagen del grafo | Solo la CLI escribe `data/images/base_rag_graph.png`; la API usa `build_runtime(write_graph_image=False)`. |
+
+## Ejecución
+
+- CLI: [runbook RAG LangGraph](../operations/rag-langgraph.md).
+- API HTTP: [referencia de la API](../reference/api.md).
+- Técnicas individuales: [`docs/techniques/`](../techniques/retrieval/hybrid-retrieval.md).

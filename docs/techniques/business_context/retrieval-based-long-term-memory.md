@@ -1,5 +1,13 @@
 # Retrieval-Based Long-Term Memory
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/business_context/techniques/retrieval_long_term_memory.py, main.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** Técnica activa: `retrieval_long_term_memory` conecta con `expand_query` (no directamente con `retrieve`). El `graph.py` incrustado en este documento es un snapshot previo, sin expansión, reranking, padres, grading ni tablas. El namespace, el prompt de consulta Qwen y el top-3 coinciden con el código.
+
 Retrieval-Based Long-Term Memory es una técnica de contexto empresarial que almacena interacciones anteriores como memorias semánticas y recupera únicamente aquellas más relacionadas con la consulta actual.
 
 Su objetivo es evitar incorporar todo el historial completo y, en su lugar, seleccionar los recuerdos potencialmente relevantes mediante búsqueda vectorial.

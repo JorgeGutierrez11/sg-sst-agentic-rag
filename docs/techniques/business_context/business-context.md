@@ -1,5 +1,13 @@
 # Contexto empresarial
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/business_context/profile*.py, history*.py, graph.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** El perfil y el historial están activos. En el flujo actual, `expand_query` va entre la memoria y `retrieve`, y `store_long_term_memory` va entre `save_conversation_turn` y `format_result`.
+
 ## Propósito
 
 El módulo `business_context` concentra la información empresarial persistente que puede ser reutilizada por otras dimensiones del agente.

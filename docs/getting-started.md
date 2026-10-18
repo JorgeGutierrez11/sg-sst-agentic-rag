@@ -1,5 +1,11 @@
 # Guía de ejecución del backend
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `agents/api/main.py`, `agents/api/config.py`, `agents/consulta_normativa/langchain_rag/config.py`, `requirements.txt`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A (antes `GUIA_EJECUCION_BACKEND.md` en la raíz)
+
 Esta guía explica cómo preparar y ejecutar localmente la API unificada de los agentes de consulta normativa y diagnóstico de cumplimiento del SG-SST.
 
 ## 1. Requisitos previos
@@ -17,7 +23,10 @@ Los principales artefactos requeridos son:
 data/processed/chroma/
 data/processed/bm25/
 data/processed/chunks/parents.jsonl
+data/processed/table_documents.jsonl
 ```
+
+Si faltan, constrúyalos con los runbooks de [`operations/`](operations/corpus-build.md).
 
 ## 2. Preparar el entorno
 
@@ -73,7 +82,7 @@ La única URL base del backend es:
 http://127.0.0.1:8000
 ```
 
-La inicialización puede tardar mientras carga ChromaDB, BM25, embeddings y el reranker. La primera ejecución también puede descargar modelos como `Qwen/Qwen3-Embedding-0.6B` y `BAAI/bge-reranker-v2-m3`.
+La inicialización puede tardar mientras carga ChromaDB, BM25, embeddings y el reranker. La primera ejecución también puede descargar modelos como `Qwen/Qwen3-Embedding-0.6B` y `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`.
 
 ## 5. Comprobar salud y disponibilidad
 
@@ -107,15 +116,9 @@ Mientras la aplicación inicia o si falta alguno de los dos servicios, `GET /hea
 
 En un despliegue futuro con contenedores, use `GET /health` como sonda de vida y `GET /health/ready` como sonda de disponibilidad. No existe `/health/live` ni un endpoint de salud separado bajo `/api/v1/diagnostics`.
 
-## 6. Consulta normativa
+## 6. Probar los agentes
 
-La consulta normativa conserva el endpoint:
-
-```text
-POST /api/v1/query
-```
-
-Ejemplo:
+Consulta normativa:
 
 ```bash
 curl -X POST \
@@ -126,18 +129,7 @@ curl -X POST \
 
 Para continuar una conversación, reutilice el `conversation_id` retornado por la primera respuesta.
 
-## 7. Diagnóstico de cumplimiento
-
-Todos los endpoints de diagnóstico usan la misma URL base:
-
-```text
-POST /api/v1/diagnostics
-POST /api/v1/diagnostics/{diagnosis_id}/answers
-POST /api/v1/diagnostics/{diagnosis_id}/complete
-GET  /api/v1/diagnostics/{diagnosis_id}/report
-```
-
-Crear un diagnóstico para una empresa de riesgo I con cinco trabajadores:
+Diagnóstico de cumplimiento (la clase de riesgo es siempre I; solo se envía el número de trabajadores):
 
 ```bash
 curl -X POST \
@@ -146,9 +138,10 @@ curl -X POST \
   -d '{"worker_count":5}'
 ```
 
-Use el `diagnosis_id` y la siguiente pregunta de la respuesta para enviar respuestas, completar el diagnóstico y descargar el informe PDF.
+Los campos, códigos de error y el flujo completo (respuestas, cierre e informe PDF) están en la [referencia de la API](reference/api.md).
 
-## 8. Limitación de sesiones de diagnóstico
+
+## 7. Limitación de sesiones de diagnóstico
 
 Las sesiones de diagnóstico se guardan únicamente en la memoria del proceso:
 
@@ -160,7 +153,7 @@ Las sesiones de diagnóstico se guardan únicamente en la memoria del proceso:
 
 No use `--workers` mientras el almacenamiento de diagnósticos siga siendo local al proceso.
 
-## 9. Problemas frecuentes
+## 8. Problemas frecuentes
 
 ### `DEEPSEEK_API_KEY is not configured`
 
@@ -186,7 +179,7 @@ Verifique que existan los artefactos requeridos en `data/processed/` y que `chro
 
 Compruebe que el frontend use `http://127.0.0.1:8000` como única URL base. El origen del frontend debe figurar en `CORS_ALLOWED_ORIGINS` (sección 3) con el mismo esquema, host y puerto.
 
-## 10. Detener el backend
+## 9. Detener el backend
 
 En la terminal donde se ejecuta Uvicorn:
 

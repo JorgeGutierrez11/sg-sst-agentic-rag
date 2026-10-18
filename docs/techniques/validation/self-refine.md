@@ -1,5 +1,13 @@
 # Self-Refine para respuestas normativas
 
+> **Status:** `Experimental`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/validation/self_refine.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **No está conectado al grafo activo.** `self_refine.py` solo lo importan las pruebas; `graph.py` no lo usa. Las secciones que describen un "flujo actual" que lo incluye documentan la integración evaluada como candidata, no el runtime vigente. Ver [el grafo vigente](../../architecture/retrieval-langgraph.md). En el runtime, `generate_answer` conecta directamente con `save_conversation_turn`.
+
 Self-Refine valida la respuesta inicial generada por el RAG y, si detecta problemas, produce una versión refinada usando únicamente la pregunta original y el contexto normativo recuperado. La técnica se ejecuta después de `generate_answer` y antes de `format_result`.
 
 La implementación sigue el patrón Self-Refine de retroalimentación y refinamiento, pero limita el proceso a **una sola iteración** para mantener controlados el coste y la latencia.

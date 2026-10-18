@@ -1,5 +1,11 @@
 # Arquitectura del pipeline de chunking
 
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `pipeline/chunking/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 El pipeline de chunking convierte normas SG-SST en unidades recuperables para RAG sin romper la trazabilidad jurídica. Su salida principal recomendada es `data/processed/chunks/regex_constrained_semantic/chunks.jsonl`, complementada por `parents.jsonl` y baselines de comparación.
 
 ## Ruta operativa actual
@@ -54,7 +60,7 @@ Esta capa evita que los child chunks crucen límites normativos importantes sin 
 
 ### Metadata de parent chunks
 
-La tabla resume los campos observados en `data/processed/chunks/parents.jsonl` después de analizar los chunks generados actualmente: 138 registros padre.
+La tabla resume los campos observados en `data/processed/chunks/parents.jsonl` después de analizar los chunks generados (99 registros padre al 2026-10-18; el conteo cambia al regenerar el corpus).
 
 | Campo | Significado |
 |---|---|
@@ -115,7 +121,7 @@ Es la estrategia recomendada para SG-SST porque preserva simultáneamente signif
 
 ### Metadata de child chunks recomendados
 
-La tabla resume los campos observados en `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` después de analizar los chunks generados actualmente: 330 registros hijo. Esta es la salida recomendada para indexación RAG.
+La tabla resume los campos observados en `data/processed/chunks/regex_constrained_semantic/chunks.jsonl` después de analizar los chunks generados (313 registros hijo al 2026-10-18; el conteo cambia al regenerar el corpus). Esta es la salida recomendada para indexación RAG.
 
 | Campo | Significado |
 |---|---|
@@ -153,7 +159,7 @@ La diferencia clave es que el parent documenta el límite jurídico amplio, mien
 
 ## Configuración fija y personalización
 
-La configuración central está en `pipeline/chunking/core/config.py`:
+La configuración central está en `pipeline/chunking/config.py`:
 
 | Constante | Valor actual |
 |---|---|

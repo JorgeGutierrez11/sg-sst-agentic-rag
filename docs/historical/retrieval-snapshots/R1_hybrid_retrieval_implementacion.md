@@ -1,5 +1,13 @@
 # R1 — Hybrid Retrieval: Chroma + BM25 + RRF
 
+> **Status:** `Historical`
+> **Audience:** academic-reviewer
+> **Verified against:** snapshot R1 (híbrido Chroma + BM25 + RRF, sin reranking)
+> **Last verified:** 2026-10-18
+> **Replacement:** [hybrid-retrieval.md](../../techniques/retrieval/hybrid-retrieval.md)
+
+> Snapshot congelado: sus parámetros (p. ej. `HYBRID_CANDIDATE_TOP_K = 40`) no son los del runtime actual.
+
 ## Propósito
 
 Este documento registra cómo quedó implementada la configuración **R1 — Hybrid Retrieval** para poder reconstruirla exactamente en el futuro si resulta ganadora en la evaluación con ARES.

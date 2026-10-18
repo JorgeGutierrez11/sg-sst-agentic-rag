@@ -1,5 +1,11 @@
 # Guía operativa: reconstrucción del corpus SG-SST
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `pipeline/ingestion/`, `pipeline/cleaning/`, `pipeline/chunking/cli.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Esta guía reconstruye los artefactos del corpus desde DOCX normativos hasta documentos de tabla listos para vectorización. Ejecútala desde la raíz del repositorio y no edites manualmente las salidas bajo `data/interim/` o `data/processed/`. Para regenerar, auditar o previsualizar tablas de forma aislada, consulta [`table-processing.md`](table-processing.md); las decisiones completas están en [`tables.md`](../architecture/tables.md).
 
 ## Ruta rápida

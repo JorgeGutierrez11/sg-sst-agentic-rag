@@ -1,5 +1,13 @@
 # Parent-Document Retrieval para recuperación normativa small-to-big
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/retrieval/parent_document_retrieval.py, graph.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** La expansión ocurre después de `rerank` (no de `normalize_documents`) sobre los 8 documentos reordenados. El grafo pasa `parent_lookup or {}` y el nodo siempre se ejecuta; la recuperación usa el recuperador híbrido, no `chroma_retriever`.
+
 Parent-Document Retrieval es una técnica de recuperación small-to-big: recupera candidatos pequeños e indexables desde Chroma o Hybrid Retrieval, identifica los `child_chunk` recuperados y los reemplaza por su `parent_chunk` completo antes de construir el contexto enviado al LLM.
 
 ## Propósito
@@ -27,7 +35,7 @@ Archivos principales:
 - `agents/consulta_normativa/langchain_rag/graph.py`
 - `agents/consulta_normativa/langchain_rag/main.py`
 - `agents/consulta_normativa/langchain_rag/config.py`
-- `pipeline/chunking/core/io_jsonl.py`
+- `pipeline/chunking/io_jsonl.py`
 - `data/processed/chunks/parents.jsonl`
 
 ## Resumen de implementación
@@ -120,7 +128,7 @@ from agents.consulta_normativa.langchain_rag.config import (
 )
 from agents.consulta_normativa.langchain_rag.graph import build_langgraph_rag
 from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import load_parent_documents
-from agents.shared.chroma_retrieval import chroma_retriever, open_existing_collection
+from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import chroma_retriever, open_existing_collection
 
 collection = open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
 retriever = chroma_retriever(collection)

@@ -1,5 +1,13 @@
 # Re-ranking con Cross-Encoder para recuperación normativa
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/retrieval/reranking.py, graph.py, config.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** El reranking **está activo** en `build_langgraph_rag` (`rerank` después de `normalize_documents` y antes de `expand_parent_documents`). Modelo `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, pool 16, top 8, lotes de 12, CPU. El texto evaluado incluye un encabezado de metadatos más el contenido. `get_reranker` y `rerank_node` también reciben `device`, `batch_size` e `input_max_length`. El grafo de ejemplo de este documento corresponde al experimento Multi-Query.
+
 Re-ranking es una técnica experimental de mejora de ranking posterior a la recuperación. Toma los documentos candidatos ya recuperados, evalúa cada par `(pregunta, documento)` con un Cross-Encoder y reordena los candidatos antes de construir el contexto enviado al LLM.
 
 ## Propósito

@@ -1,5 +1,13 @@
 # LLM-Based Query Expansion para recuperación normativa
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/query_understanding/query_expansion.py, graph.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** `expand_query` no es el nodo de entrada: el grafo empieza en `business_profile -> retrieval_long_term_memory -> expand_query`, y después de `retrieve` siguen reranking, padres, grading y tablas. `fallback_answer_node` ahora recibe el LLM.
+
 LLM-Based Query Expansion conserva la pregunta original y añade términos técnicos o normativos controlados para mejorar la recuperación semántica sobre el corpus SG-SST colombiano. La técnica no reescribe ni sustituye la consulta del usuario: genera términos adicionales y el sistema los anexa a la consulta usada por el retriever.
 
 ## Propósito

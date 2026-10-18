@@ -1,5 +1,13 @@
 # Hybrid Retrieval con Chroma + BM25 + RRF para recuperación normativa
 
+> **Status:** `Current`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/retrieval/hybrid_retrieval.py, main.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+> **Verificado contra el runtime.** `main.py` pasa `top_k=HYBRID_RRF_OUTPUT_TOP_K` (16) a `build_langgraph_rag`, no `RETRIEVAL_TOP_K`; el top-k final (8) lo fija el reranker. Después de `normalize_documents` el grafo ejecuta reranking, expansión a padres, grading y complemento de tablas ([grafo vigente](../../architecture/retrieval-langgraph.md)).
+
 Hybrid Retrieval combina recuperación densa con Chroma y recuperación dispersa con BM25 para la misma consulta. Ambas ramas recuperan candidatos de forma independiente y luego sus rankings se fusionan con Reciprocal Rank Fusion (RRF) antes de construir el contexto enviado al LLM.
 
 ## Propósito
@@ -14,8 +22,8 @@ El runtime activo construye un retriever híbrido antes del nodo `retrieve`. Par
 
 ```text
 question -> hybrid_retriever(query, top_k)
-             ├─ Chroma query_top_k(query, HYBRID_CANDIDATE_TOP_K)
-             ├─ BM25 query_top_k(query, HYBRID_CANDIDATE_TOP_K)
+             ├─ Chroma query_top_k(query, HYBRID_SOURCE_CANDIDATE_TOP_K)
+             ├─ BM25 query_top_k(query, HYBRID_SOURCE_CANDIDATE_TOP_K)
              └─ RRF -> top_k final
          -> retrieve -> normalize_documents -> record_retrieval_trace
          -> format_context/build_messages/generate_answer o fallback_answer
@@ -26,9 +34,9 @@ La posición es importante: Hybrid Retrieval reemplaza la fuente de candidatos d
 
 Archivos principales:
 
-- `agents/shared/hybrid_retrieval.py`
-- `agents/shared/chroma_retrieval.py`
-- `agents/shared/bm25_retrieval.py`
+- `agents/consulta_normativa/langchain_rag/retrieval/hybrid_retrieval.py`
+- `agents/consulta_normativa/langchain_rag/retrieval/chroma_retrieval.py`
+- `agents/consulta_normativa/langchain_rag/retrieval/bm25_retrieval.py`
 - `agents/consulta_normativa/langchain_rag/config.py`
 - `agents/consulta_normativa/langchain_rag/main.py`
 - `agents/consulta_normativa/langchain_rag/formatting.py`
@@ -56,7 +64,7 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 | Parámetro | Uso |
 |---|---|
 | `RETRIEVAL_TOP_K` | Autoridad final sobre cuántos documentos entran al contexto del grafo. |
-| `HYBRID_CANDIDATE_TOP_K` | Tamaño del pool de candidatos que recupera cada motor antes de la fusión. |
+| `HYBRID_SOURCE_CANDIDATE_TOP_K` | Tamaño del pool de candidatos que recupera cada motor antes de la fusión. |
 | `HYBRID_RRF_K` | Parámetro `k` usado por Hybrid Retrieval para RRF. Actualmente hereda de `RRF_K`. |
 | `RRF_K` | Valor base de RRF compartido con otras técnicas que usan fusión por ranking. |
 
@@ -65,7 +73,7 @@ Valores definidos en `agents/consulta_normativa/langchain_rag/config.py`:
 | Aspecto | Implementación actual |
 |---|---|
 | Autoridad de `top_k` final | `RETRIEVAL_TOP_K` se pasa a `build_langgraph_rag(...)` y limita la cantidad final de documentos usados por el grafo. |
-| Pool por motor | Chroma y BM25 recuperan `HYBRID_CANDIDATE_TOP_K` candidatos cada uno para dar margen a la fusión. |
+| Pool por motor | Chroma y BM25 recuperan `HYBRID_SOURCE_CANDIDATE_TOP_K` candidatos cada uno para dar margen a la fusión. |
 | Sin mezcla de scores | No se combinan `distances` de Chroma con `scores` de BM25; RRF usa posiciones de ranking. |
 | Identidad canónica | La deduplicación usa `_document_id`, luego `document_id` y finalmente un fallback basado en referencia y hash del texto. |
 | Trazabilidad de fuente | Solo `_retrieval_sources` indica si el documento apareció por `chroma`, `bm25` o ambos. |
@@ -106,14 +114,14 @@ Hybrid Retrieval conserva un comportamiento explícito ante ramas vacías y erro
 from agents.consulta_normativa.langchain_rag.config import (
     DEFAULT_CHROMA_PATH,
     DEFAULT_COLLECTION_NAME,
-    HYBRID_CANDIDATE_TOP_K,
+    HYBRID_SOURCE_CANDIDATE_TOP_K,
     HYBRID_RRF_K,
     RETRIEVAL_TOP_K,
 )
 from agents.consulta_normativa.langchain_rag.graph import build_langgraph_rag
-from agents.shared.bm25_retrieval import DEFAULT_BM25_PATH, open_existing_index
-from agents.shared.chroma_retrieval import open_existing_collection
-from agents.shared.hybrid_retrieval import hybrid_retriever
+from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import DEFAULT_BM25_PATH, open_existing_index
+from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
+from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import hybrid_retriever
 
 collection = open_existing_collection(DEFAULT_CHROMA_PATH, DEFAULT_COLLECTION_NAME)
 sparse_index = open_existing_index(DEFAULT_BM25_PATH)
@@ -121,7 +129,7 @@ sparse_index = open_existing_index(DEFAULT_BM25_PATH)
 retriever = hybrid_retriever(
     collection,
     sparse_index,
-    candidate_top_k=HYBRID_CANDIDATE_TOP_K,
+    candidate_top_k=HYBRID_SOURCE_CANDIDATE_TOP_K,
     rrf_k=HYBRID_RRF_K,
 )
 

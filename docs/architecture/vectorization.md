@@ -1,5 +1,11 @@
 # Arquitectura de vectorización SG-SST
 
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `pipeline/vectorization/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 La vectorización convierte los child chunks recomendados y los documentos de tabla en una colección ChromaDB persistente para el RAG base. La decisión central es mantener trazabilidad jurídica: cada registro indexado conserva metadatos planos suficientes para reconstruir fuente, artículo y relación lógica con tablas sin guardar rutas físicas del pipeline. La construcción completa de documentos de tabla se documenta en [`tables.md`](tables.md).
 
 ## Ruta rápida
@@ -24,7 +30,7 @@ La ingesta escribe en `data/processed/chroma`, colección `sg_sst_base_rag`. Si 
 | Persistencia ChromaDB | `data/processed/chroma` | Índice vectorial local persistente. |
 | Colección ChromaDB | `sg_sst_base_rag` | Colección usada por ingesta y consulta normativa. |
 
-Las rutas por defecto salen de `pipeline/chunking/core/config.py` y `pipeline/vectorization/ingest.py`. La CLI permite sobrescribirlas con `--chunks-path`, `--tables-path`, `--persist-path`, `--collection` y `--batch-size`, pero el flujo operativo recomendado usa los defaults del proyecto.
+Las rutas por defecto salen de `pipeline/chunking/config.py` y `pipeline/vectorization/ingest.py`. La CLI permite sobrescribirlas con `--chunks-path`, `--tables-path`, `--persist-path`, `--collection` y `--batch-size`, pero el flujo operativo recomendado usa los defaults del proyecto.
 
 ## Modelo de embeddings
 
@@ -34,7 +40,7 @@ La colección se abre con `SentenceTransformerEmbeddingFunction` y el modelo:
 Qwen/Qwen3-Embedding-0.6B
 ```
 
-El modelo está centralizado como `DEFAULT_EMBEDDING_MODEL` en `pipeline/chunking/core/config.py`. La estrategia `regex_constrained_semantic` lo usa para calcular señales semánticas durante el chunking; la ingesta y la consulta lo usan como función de embeddings para Chroma.
+El modelo está centralizado como `DEFAULT_EMBEDDING_MODEL` en `pipeline/chunking/config.py`. La estrategia `regex_constrained_semantic` lo usa para calcular señales semánticas durante el chunking; la ingesta y la consulta lo usan como función de embeddings para Chroma.
 
 La consistencia importa por tres razones:
 

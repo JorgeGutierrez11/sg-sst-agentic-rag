@@ -1,5 +1,11 @@
 # Guía operativa: recuperación sparse BM25
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `pipeline/sparse_indexing/main.py`, `ingest.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Esta guía cubre la operación del índice BM25 local para el corpus SG-SST. BM25 se construye desde los JSONL canónicos del pipeline y se consulta en runtime como un helper de solo lectura; el RAG LangGraph actual lo usa dentro de la recuperación híbrida junto con Chroma.
 
 ## Ruta rápida
@@ -66,10 +72,10 @@ La reconstrucción limpia depende de los JSONL actuales. No hace sincronización
 
 ## Uso runtime
 
-El runtime vive en `agents/shared/bm25_retrieval.py`.
+El runtime vive en `agents/consulta_normativa/langchain_rag/retrieval/bm25_retrieval.py`.
 
 ```python
-from agents.shared.bm25_retrieval import open_existing_index, query_top_k
+from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import open_existing_index, query_top_k
 
 index = open_existing_index()
 result = query_top_k(index, "¿Qué exige la Resolución 0312?", top_k=5)
@@ -108,7 +114,7 @@ python -m unittest agents.consulta_normativa.tests.test_rag_base agents.consulta
 Chequeo de compilación:
 
 ```bash
-python -m compileall pipeline/vectorization pipeline/sparse_indexing agents/shared agents/consulta_normativa
+python -m compileall pipeline/vectorization pipeline/sparse_indexing agents/consulta_normativa
 ```
 
 ## Troubleshooting

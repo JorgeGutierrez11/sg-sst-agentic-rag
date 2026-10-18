@@ -1,5 +1,13 @@
 # Multi-Query + Reciprocal Rank Fusion para recuperación normativa
 
+> **Status:** `Experimental`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/query_understanding/multi_query.py, retrieval/fusion.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** [query-expansion.md](query-expansion.md)
+
+> **No está conectado al grafo activo.** `multi_query.py` solo lo importan las pruebas; `graph.py` no lo usa. Las secciones que describen un "flujo actual" que lo incluye documentan la integración evaluada como candidata, no el runtime vigente. Ver [el grafo vigente](../../architecture/retrieval-langgraph.md). Solo `reciprocal_rank_fusion` se reutiliza, dentro de la recuperación híbrida. `RETRIEVAL_TOP_K` vale 8, no 5.
+
 Multi-Query + RRF es una técnica experimental de query understanding y fusión de resultados. Genera variantes de la pregunta, recupera documentos por cada variante y fusiona los rankings con Reciprocal Rank Fusion para mejorar el recall en preguntas ambiguas o con múltiples formulaciones posibles.
 
 ## Propósito

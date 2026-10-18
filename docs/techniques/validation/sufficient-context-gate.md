@@ -1,5 +1,13 @@
 # Sufficient-Context Gate para validación de suficiencia normativa
 
+> **Status:** `Experimental`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/validation/sufficient_context_gate.py, core/routes.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** [retrieval-relevance-grading.md](retrieval-relevance-grading.md)
+
+> **No está conectado al grafo activo.** `sufficient_context_gate.py` solo lo importan las pruebas; `graph.py` no lo usa. Las secciones que describen un "flujo actual" que lo incluye documentan la integración evaluada como candidata, no el runtime vigente. Ver [el grafo vigente](../../architecture/retrieval-langgraph.md). `sufficient_context_route` no tiene llamadores y no existe un nodo `insufficient_context_answer`. El grading de relevancia sí está activo.
+
 Sufficient-Context Gate valida si el contexto recuperado por el RAG contiene evidencia suficiente para responder la pregunta original antes de invocar al modelo generador. La técnica se ejecuta después de `format_context` y antes de `build_messages`, porque evalúa el contexto consolidado completo que recibiría el LLM.
 
 A diferencia de Retrieval Relevance Grading, no evalúa documentos por separado. Evalúa el conjunto completo del contexto y clasifica la evidencia como `sufficient`, `partial` o `insufficient`.

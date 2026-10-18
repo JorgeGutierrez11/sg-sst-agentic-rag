@@ -1,5 +1,11 @@
 # Guía de pruebas automatizadas — SG-SST Agentic RAG
 
+> **Status:** `Current`
+> **Audience:** contributor
+> **Verified against:** `pipeline/tests/`, `agents/*/tests/`, `pytest.ini` (76 módulos: 13 + 33 + 2 + 28)
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 > **Estado del documento:** inventario de pruebas y guía de ejecución. **No certifica que las pruebas estén pasando actualmente.** Los comandos se documentaron a partir de la estructura del repositorio; no se ejecutaron todas las suites durante la elaboración de la guía.
 
 ## 1. Propósito y alcance
@@ -61,7 +67,7 @@ python -m unittest discover -s agents/api/tests
 python -m pytest agents/diagnostico_cumplimiento/tests
 ```
 
-La suite del diagnóstico usa funciones y fixtures de `pytest`. Gracias a `pytest.ini`, `pytest agents/diagnostico_cumplimiento/tests` y `python -m pytest agents/diagnostico_cumplimiento/tests` son equivalentes; sin ese archivo, `pytest` a secas falla con `ModuleNotFoundError: No module named 'agents'`. **Todavía no consta en `AGENTS.md`**. `pytest` también recopila el módulo de API que utiliza `unittest.TestCase`.
+La suite del diagnóstico usa funciones y fixtures de `pytest`. Gracias a `pytest.ini`, `pytest agents/diagnostico_cumplimiento/tests` y `python -m pytest agents/diagnostico_cumplimiento/tests` son equivalentes; sin ese archivo, `pytest` a secas falla con `ModuleNotFoundError: No module named 'agents'`. `AGENTS.md` documenta este comando y la configuración de `pytest.ini`. `pytest` también recopila el módulo de API que utiliza `unittest.TestCase`.
 
 Para ejecutar un módulo puntual:
 

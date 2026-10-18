@@ -1,5 +1,11 @@
 # Plan por fases para preparar el entorno de despliegue
 
+> **Status:** `Current`
+> **Audience:** maintainer
+> **Verified against:** `requirements.txt`, `.python-version`, `agents/api/main.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Proyecto: SG-SST Agentic RAG Componente: Backend — FastAPI / Python Versión de Python: 3.14 Objetivo general: preparar un entorno reproducible, seguro y listo para su contenedorización, integración continua y posterior despliegue en producción.
 
 ## Fase 1 — Baseline local reproducible

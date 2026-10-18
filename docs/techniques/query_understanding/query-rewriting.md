@@ -1,5 +1,13 @@
 # Query Rewriting para recuperación normativa
 
+> **Status:** `Experimental`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/query_understanding/rewrite_query.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** [query-expansion.md](query-expansion.md)
+
+> **No está conectado al grafo activo.** `rewrite_query.py` solo lo importan las pruebas; `graph.py` no lo usa. Las secciones que describen un "flujo actual" que lo incluye documentan la integración evaluada como candidata, no el runtime vigente. Ver [el grafo vigente](../../architecture/retrieval-langgraph.md). La posición previa a `retrieve` la ocupa `expand_query`.
+
 Query Rewriting transforma la pregunta natural del usuario en una consulta más adecuada para recuperación semántica sobre el corpus normativo de SG-SST colombiano. La técnica mejora el vocabulario usado por el retriever sin cambiar la pregunta original que se entrega al generador de respuesta.
 
 ## Propósito

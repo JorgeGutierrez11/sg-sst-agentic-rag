@@ -1,5 +1,11 @@
 # Guía operativa: procesamiento de tablas
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `pipeline/tables/main.py`, `pipeline/tables/table_jsonl_to_html.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Esta guía sirve para regenerar, auditar y previsualizar los artefactos de tablas del corpus SG-SST.
 
 ## Ruta rápida

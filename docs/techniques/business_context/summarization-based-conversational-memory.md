@@ -1,151 +1,212 @@
-# Full Conversation Memory
+# Summarization-Based Conversational Memory
 
-## Técnica
+> **Status:** `Experimental`
+> **Audience:** contributor, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/langchain_rag/business_context/techniques/summarization_memory.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** [retrieval-based-long-term-memory.md](retrieval-based-long-term-memory.md)
 
-**Full Conversation Memory** es la primera técnica implementada para la dimensión de contexto empresarial.
+> **No está conectado al grafo activo.** `summarization_memory.py` solo lo importan las pruebas; `graph.py` no lo usa. Las secciones que describen un "flujo actual" que lo incluye documentan la integración evaluada como candidata, no el runtime vigente. Ver [el grafo vigente](../../architecture/retrieval-langgraph.md).
 
-Ubicación:
+Summarization-Based Conversational Memory es una técnica de contexto empresarial que mantiene la continuidad de la conversación mediante un **resumen acumulado de los turnos antiguos**, conservando completos únicamente los turnos más recientes.
+
+Su objetivo es reducir el crecimiento del contexto respecto a Full Conversation Memory sin eliminar el historial original.
+
+## Propósito
+
+Full Conversation Memory incorpora todos los turnos completos:
 
 ```text
-business_context/techniques/full_conversation_memory.py
+perfil
++
+turno 1
++
+turno 2
++
+turno 3
++
+...
 ```
 
-Su función es construir:
+Esto provoca que `current_context` crezca continuamente.
+
+Summarization-Based Conversational Memory cambia esta representación por:
+
+```text
+perfil
++
+resumen de turnos antiguos
++
+últimos 2 turnos completos
+```
+
+El historial completo continúa almacenado en `history`.
+
+## Política implementada
+
+La técnica conserva siempre los **dos turnos más recientes sin resumir**.
+
+Ejemplo con cinco turnos:
+
+```text
+turno 1 ┐
+turno 2 │ → SUMMARY
+turno 3 ┘
+
+turno 4 ┐
+turno 5 ┘ → completos
+```
+
+Cuando aparecen nuevos turnos, el resumen se actualiza incrementalmente:
+
+```text
+summary anterior
++
+nuevos turnos antiguos
+        ↓
+nuevo summary acumulado
+```
+
+De esta forma no se vuelve a resumir todo el historial en cada ejecución.
+
+## Estructura de datos
+
+Se añadieron dos campos a `BusinessContext`:
 
 ```python
-business_context["current_context"]
+history_summary: str
+summarized_turns: int
 ```
 
-utilizando:
+Su función es:
 
-```text
-perfil empresarial
-+
-historial completo de conversaciones anteriores
-```
+- `history_summary`: almacena el resumen acumulado.
+- `summarized_turns`: indica cuántos turnos de `history` ya están representados en el resumen.
 
-No resume, selecciona ni recupera recuerdos.
-
----
+`history` continúa almacenando la conversación completa.
 
 ## Implementación
 
-Se agregó:
+La técnica se implementó en:
 
-```python
-build_full_conversation_context(...)
+```text
+business_context/
+└── techniques/
+    └── summarization_memory.py
 ```
 
-La función recibe `BusinessContext` y genera un contexto textual con dos secciones:
+Las principales funciones son:
+
+```text
+get_turns_pending_summarization()
+        ↓
+identifica turnos antiguos todavía no resumidos
+
+get_recent_turns()
+        ↓
+mantiene los turnos recientes completos
+
+update_conversation_summary()
+        ↓
+actualiza el resumen acumulado mediante el LLM
+
+build_summarization_context()
+        ↓
+construye current_context
+
+summarization_memory_node()
+        ↓
+integra la técnica con LangGraph
+```
+
+## Construcción de `current_context`
+
+La representación final generada es:
 
 ```text
 PERFIL EMPRESARIAL
+...
 
-HISTORIAL DE CONVERSACIÓN
+RESUMEN DE CONVERSACIONES ANTERIORES
+...
+
+CONVERSACIÓN RECIENTE
+...
 ```
 
-Ejemplo:
+Por tanto:
 
 ```text
-PERFIL EMPRESARIAL
-- Actividad económica: Mantenimiento de motocicletas
-- Número de trabajadores: 8
-- Clase de riesgo: I
-
-HISTORIAL DE CONVERSACIÓN
-Turno 1
-Usuario: Tenemos 8 trabajadores.
-Agente: ...
-
-Turno 2
-Usuario: Un trabajador sufrió una fractura.
-Agente: ...
+profile
++
+history_summary
++
+turnos no resumidos
+        ↓
+current_context
 ```
 
-El resultado se almacena en:
+## Manejo de fallos
 
-```python
-business_context["current_context"]
-```
-
----
-
-## Nodo LangGraph
-
-Se agregó:
-
-```python
-full_conversation_memory_node(...)
-```
-
-El nodo fue conectado después de `business_profile`:
+Si el LLM encargado del resumen falla:
 
 ```text
+NO se modifica history_summary
+NO se modifica summarized_turns
+```
+
+Los turnos que aún no han sido resumidos permanecen completos dentro de `current_context`.
+
+Esto evita pérdida de información conversacional.
+
+## Integración en LangGraph
+
+Para evaluar esta técnica se reemplazó el nodo de Full Conversation Memory:
+
+```text
+START
+  ↓
 business_profile
-       ↓
-full_conversation_memory
-       ↓
+  ↓
+summarization_memory
+  ↓
 retrieve
+  ↓
+...
 ```
 
-**Motivo:** primero se actualiza el perfil con información del mensaje actual y después se construye el contexto empresarial.
+Las técnicas de memoria no se ejecutan simultáneamente durante la evaluación.
 
-El historial usado por la técnica corresponde a los turnos anteriores. El turno actual se guarda al final mediante:
+## Pruebas
 
-```python
-save_conversation_turn_node
-```
+Se implementaron pruebas para validar:
 
----
+- selección de turnos antiguos;
+- conservación de los últimos dos turnos;
+- creación del primer resumen;
+- actualización incremental;
+- manejo de fallos del LLM;
+- construcción de `current_context`;
+- ausencia de mutaciones sobre el contexto original;
+- funcionamiento del nodo LangGraph.
 
-## Persistencia
-
-La técnica utiliza el `BusinessContext` persistido por LangGraph mediante:
+Resultado:
 
 ```text
-checkpointer + thread_id
+test_summarization_memory.py
+11 passed
 ```
 
-Esto permite que una segunda pregunta tenga acceso al perfil y al historial generados durante preguntas anteriores.
+Adicionalmente, las pruebas específicas de actualización del resumen obtuvieron:
 
-Conversaciones con diferentes `thread_id` permanecen aisladas.
-
----
-
-## Alcance
-
-La técnica termina en:
-
-```python
-state["business_context"]["current_context"]
+```text
+test_summarization_update.py
+5 passed
 ```
 
-Actualmente no modifica:
+## Resultado
 
-- la consulta de retrieval;
-- Query Rewriting;
-- documentos recuperados;
-- generación de la respuesta.
-
-**Motivo:** la dimensión de contexto empresarial produce contexto; otras dimensiones deciden cómo consumirlo.
-
----
-
-## Validación
-
-Se probaron:
-
-- perfil + historial;
-- historial sin perfil;
-- contexto vacío;
-- ausencia de mutación del estado original;
-- ejecución del nodo;
-- persistencia entre turnos;
-- presencia del turno anterior en `current_context`;
-- integración con la CLI.
-
-La implementación quedó integrada sin regresiones en la suite actual de `langchain_rag`.
-
+La técnica permite mantener contexto empresarial conversacional reduciendo la cantidad de información histórica incluida literalmente en `current_context`, mientras conserva `history` completo como fuente original de la conversación.
 
 
 # main.py
@@ -351,9 +412,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 
 ```
-
 # graph.py
-
 ```python
 """LangGraph RAG flow for normative consultation."""
 
@@ -372,8 +431,10 @@ from agents.consulta_normativa.langchain_rag.prompts import BASE_SYSTEM_INSTRUCT
 # importar nodo de perfil de negocio y nodo de historial de conversación
 from agents.consulta_normativa.langchain_rag.business_context.profile_node import (business_profile_node)
 from agents.consulta_normativa.langchain_rag.business_context.history_node import (save_conversation_turn_node)
-# tecnica 1 full_conversation_memory
-from agents.consulta_normativa.langchain_rag.business_context.techniques.full_conversation_memory import (full_conversation_memory_node)
+# tecnica 2 summarization_memory
+from agents.consulta_normativa.langchain_rag.business_context.techniques.summarization_memory import (summarization_memory_node)
+
+
 
 Retriever = Callable[[str, int], dict[str, Any]] 
 
@@ -391,7 +452,7 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     
 
     workflow.add_node("business_profile", business_profile_node(llm)) # Agregar nodo de perfil de negocio
-    workflow.add_node("full_conversation_memory",full_conversation_memory_node) # Agregar nodo full_conversation_memory
+    workflow.add_node("summarization_memory", summarization_memory_node(llm)) # Agregar nodo summarization_memory
     workflow.add_node("retrieve", retrieve_node(retriever, top_k))
     workflow.add_node("normalize_documents", normalize_documents_node)
     workflow.add_node("record_retrieval_trace", record_retrieval_trace_node)
@@ -417,8 +478,8 @@ def build_langgraph_rag(llm: Any, retriever: Retriever, top_k: int = DEFAULT_TOP
     # Construccion del grafo
     #workflow.set_entry_point("retrieve")
     workflow.set_entry_point("business_profile") # se cambia el punto de entrada a "business_profile"
-    workflow.add_edge("business_profile","full_conversation_memory")
-    workflow.add_edge("full_conversation_memory","retrieve")
+    workflow.add_edge("business_profile","summarization_memory")
+    workflow.add_edge("summarization_memory","retrieve")
     
     workflow.add_edge("retrieve", "normalize_documents")
     workflow.add_edge("normalize_documents", "record_retrieval_trace")
@@ -546,4 +607,5 @@ def format_result_node(state: RagGraphState) -> RagGraphState:
             prompt=state["prompt"],
         )
     }
+
 ```

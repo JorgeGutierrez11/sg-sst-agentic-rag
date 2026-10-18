@@ -1,5 +1,13 @@
 # R3 — Hybrid Retrieval + Cross-Encoder Reranking + Parent-Document Retrieval
 
+> **Status:** `Historical`
+> **Audience:** academic-reviewer
+> **Verified against:** snapshot R3 (híbrido + reranking + parent)
+> **Last verified:** 2026-10-18
+> **Replacement:** [retrieval-langgraph.md](../../architecture/retrieval-langgraph.md)
+
+> Snapshot congelado: el runtime actual cambió el reranker (SINAI ALIA-MrBERT, pool 16) y activó la expansión de consulta y el contexto empresarial.
+
 ## Propósito
 
 Este documento registra cómo quedó implementada la configuración **R3 — Hybrid Retrieval + Cross-Encoder Reranking + Parent-Document Retrieval** para poder reconstruirla exactamente en el futuro si resulta ganadora en la evaluación con ARES.
