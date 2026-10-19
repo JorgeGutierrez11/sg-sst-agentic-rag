@@ -9,8 +9,14 @@
 ## Ruta rápida
 
 ```bash
-python -m pipeline.vectorization.main --batch-size 8
+python -m pipeline.offline_corpus build --batch-size 8
 ```
+
+Detén la API antes de publicar. El build unificado crea una colección Chroma nueva en un workspace aislado y la publica solo después de validar el corpus, así que no quedan registros obsoletos como ocurre con un upsert en sitio. Procedimiento completo en [`corpus-build.md`](corpus-build.md).
+
+## Depuración avanzada
+
+Usa el comando directo de vectorización solo para diagnosticar esta etapa, con sus JSONL de entrada ya preparados.
 
 ## Prerrequisitos
 
@@ -30,7 +36,7 @@ python -m pipeline.vectorization.main --batch-size 8
 
 La ingesta indexa child chunks y documentos de tabla. No ejecuta generación, no requiere Groq y no abre una CLI de consulta.
 
-## Vectorizar
+## Vectorizar en sitio
 
 ```bash
 python -m pipeline.vectorization.main --batch-size 8

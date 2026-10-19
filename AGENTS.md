@@ -46,6 +46,16 @@ Install the declared dependencies before treating import failures as regressions
 ## Corpus and index entrypoints
 
 ```bash
+# Routine rebuild: staged build, validation, and publication of managed artifacts (stop the API first).
+python -m pipeline.offline_corpus build
+# Read-only consistency check of the published corpus.
+python -m pipeline.offline_corpus validate
+```
+
+- `build` rebuilds the real corpus and loads models; never run it from tests or without explicit authorization. Its publication backs up replaced artifacts under `data/.pipeline-backup/<run-id>/` and preserves unmanaged outputs (baselines, `tables_htlm`, `metadata`). See `docs/operations/corpus-build.md`.
+- The per-stage commands below write in place and are for stage-level debugging only.
+
+```bash
 python pipeline/ingestion/docx_to_markdown.py
 python pipeline/cleaning/markdown_cleaner.py
 python -m pipeline.chunking.main build-parents

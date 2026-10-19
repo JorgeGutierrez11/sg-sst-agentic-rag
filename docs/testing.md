@@ -2,7 +2,7 @@
 
 > **Status:** `Current`
 > **Audience:** contributor
-> **Verified against:** `pipeline/tests/`, `agents/*/tests/`, `pytest.ini` (76 módulos: 13 + 33 + 2 + 28)
+> **Verified against:** `pipeline/tests/`, `agents/*/tests/`, `pytest.ini` (80 módulos: 17 + 33 + 2 + 28)
 > **Last verified:** 2026-10-18
 > **Replacement:** N/A
 
@@ -10,15 +10,15 @@
 
 ## 1. Propósito y alcance
 
-Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **76 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
+Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **80 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
 
 | Subsistema | Módulos | Framework principal | Alcance |
 |---|---:|---|---|
-| Pipeline offline del corpus | 13 | `unittest` | Fragmentación, tablas, documentos vectoriales, Chroma e índices BM25 |
+| Pipeline offline del corpus | 17 | `unittest` | Fragmentación, tablas, documentos vectoriales, Chroma, índices BM25 y build unificado |
 | Consulta normativa y RAG | 33 | `unittest` | API, grafos, recuperación, prompts, contexto empresarial y memoria |
 | API unificada | 2 | `unittest` | Inicialización, endpoints de salud, enrutamiento, ciclo de vida y validación de orígenes CORS |
 | Diagnóstico de cumplimiento | 28 | Principalmente `pytest`; un módulo de API con `unittest` | Catálogos v2.1, cuestionarios, enrutamiento por dependencias, evaluación declarativa y reportes |
-| **Total** | **76** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
+| **Total** | **80** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
 
 **Configuración actual:** `pytest.ini` en la raíz declara `pythonpath = .`, de modo que `pytest` resuelve el paquete `agents` aunque `agents/` y `agents/diagnostico_cumplimiento/` no tengan `__init__.py`. La suite de diagnóstico comparte fixtures mediante `agents/diagnostico_cumplimiento/tests/conftest.py`. No existen `pyproject.toml`, `tox.ini` ni `setup.cfg`; las suites de `unittest` siguen usando sus propias utilidades.
 
@@ -80,7 +80,7 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 
 ## 4. Inventario por subsistema
 
-### 4.1. Pipeline offline del corpus — 13 módulos
+### 4.1. Pipeline offline del corpus — 17 módulos
 
 **Fragmentación (*chunking*)**
 
@@ -109,6 +109,15 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 | `test_vectorization_chroma_store.py` | Contratos de colecciones y `upsert` con dependencias simuladas |
 | `test_sparse_indexing_ingest.py` | Carga del corpus y coordinación de la indexación BM25 |
 | `test_sparse_indexing_bm25_store.py` | Tokenización, creación/guardado del índice y serialización usando simulaciones |
+| `test_model_revisions.py` | Revisiones fijadas de los modelos Hugging Face de embeddings y reranker |
+
+**Build unificado del corpus**
+
+| Módulo | Comportamiento que verifica |
+|---|---|
+| `test_offline_orchestration.py` | Orden de las 10 etapas en staging, fallos por etapa, publicación solo de artefactos gestionados, respaldo y restauración con etapas simuladas |
+| `test_offline_corpus.py` | Subcomandos `build`/`validate`, mensajes de progreso, eventos JSON y códigos de salida |
+| `test_artifact_validation.py` | Consistencia padre-hijo e identidades/conteos de Chroma y BM25 |
 
 ### 4.2. Consulta normativa y RAG — 33 módulos
 
@@ -297,7 +306,7 @@ En pruebas de prompts, mantener alineadas las referencias numéricas inline `[n]
 |---|---|
 | Uso mixto de `unittest` y `pytest`; `pytest.ini` solo configura la resolución de imports | No existe un único comando oficial para ejecutar todas las pruebas |
 | `AGENTS.md` omite la suite de diagnóstico y la API unificada | La documentación de ejecución está incompleta |
-| Conteo por módulos, no por aserciones | **76 módulos no equivalen a cobertura porcentual** |
+| Conteo por módulos, no por aserciones | **80 módulos no equivalen a cobertura porcentual** |
 | Ausencia de configuración y umbral de cobertura | No hay un criterio cuantitativo documentado para CI |
 | Omisión condicional de una prueba BM25S | Una ejecución exitosa puede dejar una integración sin verificar |
 | Tests focalizados con servicios y modelos simulados | Pueden aparecer errores al cargar modelos e índices reales |
@@ -322,7 +331,7 @@ Las siguientes son **propuestas adicionales**, no funcionalidades confirmadas de
 | `.python-version` | Versión declarada de Python (3.14) |
 | `requirements.txt` | Manifiesto de dependencias Python |
 | `pytest.ini` | Configuración de `pytest` (`pythonpath = .`) |
-| `pipeline/tests/` | 13 módulos de pruebas del pipeline offline |
+| `pipeline/tests/` | 17 módulos de pruebas del pipeline offline |
 | `agents/consulta_normativa/tests/` | 33 módulos de consulta normativa y RAG |
 | `agents/api/tests/` | Pruebas de la API unificada y de su configuración HTTP |
 | `agents/diagnostico_cumplimiento/tests/` | 28 módulos de diagnóstico, `conftest.py` y fixtures |

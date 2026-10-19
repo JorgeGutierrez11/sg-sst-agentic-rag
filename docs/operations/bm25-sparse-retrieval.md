@@ -11,10 +11,14 @@ Esta guía cubre la operación del índice BM25 local para el corpus SG-SST. BM2
 ## Ruta rápida
 
 ```bash
-python -m pipeline.sparse_indexing.main
+python -m pipeline.offline_corpus build
 ```
 
-Salida esperada: índice BM25S persistido en `data/processed/bm25/`.
+Detén la API antes de publicar. El build unificado crea BM25 en un workspace aislado, valida sus identidades contra Chroma y publica ambos índices juntos. `python -m pipeline.offline_corpus validate` revisa el corpus publicado en modo solo lectura. Procedimiento completo en [`corpus-build.md`](corpus-build.md).
+
+## Depuración avanzada
+
+El comando BM25 directo se mantiene solo para diagnosticar esta etapa.
 
 ## Prerrequisitos
 
@@ -27,7 +31,7 @@ Salida esperada: índice BM25S persistido en `data/processed/bm25/`.
 
 Si faltan los JSONL canónicos, reconstruye primero el corpus con [`corpus-build.md`](corpus-build.md). BM25 no lee desde Chroma.
 
-## Construir el índice
+## Construir el índice en sitio
 
 ```bash
 python -m pipeline.sparse_indexing.main

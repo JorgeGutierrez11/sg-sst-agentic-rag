@@ -164,6 +164,8 @@ Criterio de aceptación: mediante `docker compose up`, el backend inicia y permi
 
 Objetivo: independizar el procesamiento del corpus normativo de la ejecución de los agentes.
 
+**Estado:** en curso. Los comandos `python -m pipeline.offline_corpus build` y `python -m pipeline.offline_corpus validate` están implementados y probados; falta la prueba manual de reconstrucción real del corpus. La Fase 6 sigue diferida y sin cambios. Detalle en [`plan-fase-7-pipeline-offline.md`](plan-fase-7-pipeline-offline.md).
+
 ### Flujo de procesamiento
 
 ```
