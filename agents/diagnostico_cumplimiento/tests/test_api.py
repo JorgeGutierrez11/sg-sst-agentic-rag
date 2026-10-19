@@ -49,6 +49,9 @@ class FakeDiagnosticService(DiagnosticService):
             next_question=None,
         )
 
+    def get_diagnostic(self, diagnosis_id: str):
+        raise KeyError(diagnosis_id)
+
     def submit_answer(
         self,
         diagnosis_id: str,
@@ -130,6 +133,7 @@ class DiagnosticApiRouteTests(unittest.TestCase):
                 "requirement_id": "requirement-1",
                 "question_id": "question-1",
                 "answer": True,
+                "revision": 0,
             },
         )
 
@@ -172,6 +176,7 @@ class DiagnosticApiRouteTests(unittest.TestCase):
                 "requirement_id": "requirement-1",
                 "question_id": "question-1",
                 "answer": False,
+                "revision": 0,
             },
         )
 
