@@ -39,6 +39,7 @@ Install the declared dependencies before treating import failures as regressions
 - `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline.
 - `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
 - `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.
+- Code comments must be ultra concise and strictly technical: one sentence (1-2 lines max) stating what the line/block does or why it exists, with no preamble, compound sentences, or obvious consequences. Focus on the direct technical constraint (version pin, dependency, API contract). Longer rationale belongs in `docs/`. Example: `# Hash de commit del modelo para garantizar consistencia con los índices vectoriales existentes`.
 - Do not add records under `docs/decisiones/` unless explicitly requested. Preserve existing comments, including informal Spanish comments, unless the edited behavior requires changing them.
 - If `.codegraph/` exists, use CodeGraph before broad filesystem searches for architecture, call-flow, or impact questions.
 
