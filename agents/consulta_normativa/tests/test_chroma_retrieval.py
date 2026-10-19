@@ -2,12 +2,15 @@
 
 import hashlib
 import os
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from agents.consulta_normativa.langchain_rag.retrieval import chroma_retrieval
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_EMBEDDING_MODEL_REVISION
 
 
 class ChromaRetrievalTest(unittest.TestCase):
@@ -104,6 +107,41 @@ class ChromaWorkingCopyTest(unittest.TestCase):
 
         self.assertEqual(str(raised.exception), f"ChromaDB persist path does not exist: {missing}")
 
+
+    def test_qwen_embedding_function_loads_pinned_revision(self) -> None:
+        calls: list[dict[str, object]] = []
+
+        def fake_embedding_function(**kwargs: object) -> object:
+            calls.append(kwargs)
+            return "embedding-function"
+
+        fake_module = types.SimpleNamespace(SentenceTransformerEmbeddingFunction=fake_embedding_function)
+
+        with patch.dict(sys.modules, {"chromadb.utils.embedding_functions": fake_module}):
+            embedding_function = chroma_retrieval.qwen_embedding_function()
+
+        self.assertEqual(embedding_function, "embedding-function")
+        self.assertEqual(
+            calls,
+            [{"model_name": DEFAULT_EMBEDDING_MODEL, "revision": DEFAULT_EMBEDDING_MODEL_REVISION}],
+        )
+
+    def test_open_existing_collection_uses_given_embedding_function(self) -> None:
+        requests: list[dict[str, object]] = []
+        client = types.SimpleNamespace(get_collection=lambda **kwargs: requests.append(kwargs) or "collection")
+        embedding_function = object()
+
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            chroma_retrieval, "persistent_client", return_value=client
+        ), patch.object(
+            chroma_retrieval,
+            "qwen_embedding_function",
+            side_effect=AssertionError("a second embedding function was built"),
+        ):
+            collection = chroma_retrieval.open_existing_collection(Path(directory), "name", embedding_function)
+
+        self.assertEqual(collection, "collection")
+        self.assertEqual(requests, [{"name": "name", "embedding_function": embedding_function}])
 
 def create_source_index(path: Path) -> None:
     """Create a two-record Chroma index with explicit embeddings and no model download."""

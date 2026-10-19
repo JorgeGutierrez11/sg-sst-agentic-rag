@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_EMBEDDING_MODEL_REVISION
 
 DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
 WORKING_COPY_PREFIX = "sg-sst-chroma-"
@@ -72,6 +72,7 @@ def create_working_copy(source_path: Path, working_root: Path | None = None) -> 
 def open_existing_collection(
     persist_path: Path,
     collection_name: str = DEFAULT_COLLECTION_NAME,
+    embedding_function: Any = None,
 ) -> Any:
     """Open an existing persistent ChromaDB collection for query without creating it."""
 
@@ -81,7 +82,7 @@ def open_existing_collection(
     client = persistent_client(persist_path)
     return client.get_collection(
         name=collection_name,
-        embedding_function=qwen_embedding_function(),
+        embedding_function=embedding_function if embedding_function is not None else qwen_embedding_function(),
     )
 
 
@@ -101,7 +102,12 @@ def qwen_embedding_function() -> Any:
     # pyrefly: ignore [missing-import]
     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-    return SentenceTransformerEmbeddingFunction(model_name=DEFAULT_EMBEDDING_MODEL)
+    # chromadb cachea el modelo solo por nombre e ignora la revisión, así que el
+    # runtime debe crear esta función una sola vez y compartirla.
+    return SentenceTransformerEmbeddingFunction(
+        model_name=DEFAULT_EMBEDDING_MODEL,
+        revision=DEFAULT_EMBEDDING_MODEL_REVISION,
+    )
 
 
 def query_top_k(collection: Any, question: str, top_k: int = 5) -> dict[str, Any]:

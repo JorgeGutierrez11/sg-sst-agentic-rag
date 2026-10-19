@@ -29,8 +29,8 @@ RERANKING_METADATA_FIELDS = (
 
 
 @lru_cache(maxsize=4)
-def get_reranker(model_name: str, max_length: int, device: str) -> Any:
-    """Load and cache a CrossEncoder reranker lazily."""
+def get_reranker(model_name: str, max_length: int, device: str, revision: str | None = None) -> Any:
+    """Load and cache a CrossEncoder reranker lazily at an optional pinned revision."""
 
     # pyrefly: ignore [missing-import]
     from sentence_transformers import CrossEncoder
@@ -39,6 +39,7 @@ def get_reranker(model_name: str, max_length: int, device: str) -> Any:
         model_name,
         max_length=max_length,
         device=device,
+        revision=revision,
     )
 
 

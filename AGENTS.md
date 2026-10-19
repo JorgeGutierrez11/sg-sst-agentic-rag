@@ -76,6 +76,7 @@ python -m agents.consulta_normativa.langchain_rag.main "<question>"
 - The unified API lifespan (`agents/api/main.py`) calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
 - The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
 - Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
+- Both Hugging Face models load at pinned commit revisions: `DEFAULT_EMBEDDING_MODEL_REVISION` in `pipeline/chunking/config.py` (shared by chunking, vectorization, and runtime) and `RERANKER_MODEL_REVISION` in `langchain_rag/config.py`. Changing the Qwen revision requires rebuilding chunks and indexes. The runtime builds one Qwen embedding function and shares it between Chroma and conversation memory, because `chromadb` caches models by name only.
 
 ## Methodology constraints
 

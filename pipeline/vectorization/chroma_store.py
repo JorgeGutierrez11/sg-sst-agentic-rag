@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, DEFAULT_EMBEDDING_MODEL_REVISION
 from pipeline.vectorization.documents import ChromaRecord
 
 DEFAULT_COLLECTION_NAME = "sg_sst_base_rag"
@@ -44,7 +44,11 @@ def qwen_embedding_function() -> Any:
     # pyrefly: ignore [missing-import]
     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-    return SentenceTransformerEmbeddingFunction(model_name=DEFAULT_EMBEDDING_MODEL)
+    # La revisión queda registrada en la configuración de la colección creada.
+    return SentenceTransformerEmbeddingFunction(
+        model_name=DEFAULT_EMBEDDING_MODEL,
+        revision=DEFAULT_EMBEDDING_MODEL_REVISION,
+    )
 
 
 def upsert_records(

@@ -25,6 +25,7 @@ from agents.consulta_normativa.langchain_rag.config import (
     RERANKER_FINAL_TOP_K,
     RERANKER_MAX_LENGTH,
     RERANKER_MODEL_NAME,
+    RERANKER_MODEL_REVISION,
     get_chroma_working_root,
 )
 from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (
@@ -160,7 +161,7 @@ class RuntimeDependencies:
     #answer_with_langgraph: Callable[[str, Any], Any]
     build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
     answer_with_langgraph: Callable[..., Any]
-    open_existing_collection: Callable[[Any, str], Any]
+    open_existing_collection: Callable[[Any, str, Any], Any]
     open_existing_bm25_index: Callable[..., Any]
     hybrid_retriever: Callable[..., Retriever]
     get_reranker: Callable[..., Any]
@@ -168,6 +169,7 @@ class RuntimeDependencies:
     load_first_table_parts: Callable[..., Any]
     create_chroma_working_copy: Callable[[Path, Path | None], Any]
     validate_index_consistency: Callable[[Any, Any, Mapping[str, Any]], None]
+    build_embedding_function: Callable[[], Any]
     
 
 
@@ -189,13 +191,13 @@ class QwenMemoryEmbeddings(Embeddings):
     def __init__(
         self,
         embedding_function: Any,
+        normalize_embeddings: bool = True,
     ) -> None:
-        # Reutilizamos el SentenceTransformer que Chroma ya cargó.
+        # Reutilizamos el SentenceTransformer de la misma instancia que usa Chroma.
         self._model = embedding_function._model
 
-        self._normalize_embeddings = (
-            embedding_function.normalize_embeddings
-        )
+        # La memoria normaliza sus vectores aunque la función de Chroma no lo haga.
+        self._normalize_embeddings = normalize_embeddings
 
     def embed_documents(
         self,
@@ -265,9 +267,6 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         raise OperationalError(f"{type(error).__name__}: {error}") from error
 
     try:
-        from chromadb.utils.embedding_functions import (
-            SentenceTransformerEmbeddingFunction,
-        )
         from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.store.memory import InMemoryStore
 
@@ -275,11 +274,13 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             DEFAULT_CHROMA_PATH,
             get_chroma_working_root(),
         )
+        # Una sola instancia de Qwen, con revisión fija, para Chroma y para la memoria.
+        embedding_function = dependencies.build_embedding_function()
         collection = dependencies.open_existing_collection(
             chroma_working_copy.path,
             DEFAULT_COLLECTION_NAME,
+            embedding_function,
         )
-        
 
         bm25_index = dependencies.open_existing_bm25_index()
 
@@ -305,6 +306,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             model_name=RERANKER_MODEL_NAME,
             max_length=RERANKER_MAX_LENGTH,
             device=RERANKER_DEVICE,
+            revision=RERANKER_MODEL_REVISION,
         )
 
         first_table_parts = dependencies.load_first_table_parts(
@@ -315,15 +317,9 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         checkpointer = InMemorySaver()
 
         # Mismo modelo de embeddings utilizado por el RAG.
-        memory_embedding_function = (
-            SentenceTransformerEmbeddingFunction(
-                model_name="Qwen/Qwen3-Embedding-0.6B",
-                normalize_embeddings=True,
-            )
-        )
-
         memory_embeddings = QwenMemoryEmbeddings(
-            memory_embedding_function
+            embedding_function,
+            normalize_embeddings=True,
         )
 
         # Store independiente para Retrieval-Based
@@ -389,6 +385,7 @@ def load_dependencies() -> RuntimeDependencies:
         from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import (
             create_working_copy as create_chroma_working_copy,
             open_existing_collection,
+            qwen_embedding_function,
         )
         from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (open_existing_index as open_existing_bm25_index)
         from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
@@ -411,6 +408,7 @@ def load_dependencies() -> RuntimeDependencies:
         load_first_table_parts=load_first_table_parts,
         create_chroma_working_copy=create_chroma_working_copy,
         validate_index_consistency=validate_index_consistency,
+        build_embedding_function=qwen_embedding_function,
     )
 
 

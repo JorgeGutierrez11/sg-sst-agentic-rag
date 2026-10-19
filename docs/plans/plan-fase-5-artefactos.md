@@ -165,6 +165,19 @@ Hallazgos nuevos:
 
 ## Parte 5 — Política de modelos y documentación
 
+**Estado:** implementada el 2026-10-18. Suites en verde: pipeline 130, consulta 196, API 14, diagnóstico 202. Con `HF_HUB_OFFLINE=1` y la caché presente, `build_runtime` arranca en 14 s; con una caché vacía falla con `OSError: ... couldn't find them in the cached files`.
+
+**Revisiones fijadas:** cada modelo tenía una sola versión en la caché local, así que no hubo ambigüedad.
+
+| Modelo | Revisión | Constante |
+|---|---|---|
+| `Qwen/Qwen3-Embedding-0.6B` | `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3` | `DEFAULT_EMBEDDING_MODEL_REVISION` en `pipeline/chunking/config.py` |
+| `SINAI/ALIA-MrBERT-es-legal-administrative-reranker` | `55f7062666a7952242b25fe1d8aae7ccfc32b329` | `RERANKER_MODEL_REVISION` en `langchain_rag/config.py` |
+
+**Ajuste acordado:** la revisión de Qwen también se fija en el pipeline (tokenizador, divisor semántico y vectorización). Si no, una reconstrucción podría generar el índice con otra versión de Qwen, y la Parte 3 no lo detectaría porque los IDs no cambian. Las colecciones nuevas registran la revisión en su configuración; el índice actual tiene `kwargs: {}` porque se creó antes de este cambio.
+
+**Detalle verificado:** `chromadb` cachea los modelos por nombre e ignora la revisión (una revisión inventada no da error si el modelo ya está cargado). Por eso la limpieza del punto 3 era necesaria: el runtime crea una sola función de Qwen y la comparte entre Chroma y la memoria, que conserva `normalize_embeddings=True`.
+
 **Resuelve:** la actividad 4 de la Fase 5 y el hallazgo de versión sin fijar.
 
 **Cambios:**
@@ -182,8 +195,11 @@ Hallazgos nuevos:
 
 **Pruebas:**
 
-- [ ] Las funciones de embeddings y de reranking reciben la revisión configurada.
-- [ ] Arranque con `HF_HUB_OFFLINE=1` y la caché presente → correcto.
+- [x] Las funciones de embeddings y de reranking reciben la revisión configurada, en el runtime y en el pipeline.
+- [x] Otros modelos de embeddings conservan sus opciones anteriores, sin revisión fija.
+- [x] La memoria reutiliza el modelo de Chroma sin crear otra función de embeddings.
+- [x] Arranque con `HF_HUB_OFFLINE=1` y la caché presente → correcto.
+- [x] Arranque con `HF_HUB_OFFLINE=1` sin modelos en caché → error controlado.
 
 **Riesgo:** item 5 (fija versiones de dependencias de modelo).
 
@@ -200,6 +216,7 @@ Solo se revisa cuando `review_due` es `true` (`high_risk`) o cuando se pide de f
 | Commits evaluados | Parte | Evaluación | Resultado |
 |---|---|---|---|
 | `cc60500` (documentación) + `68843d7` (Parte 1) | 1 | `medium` | `under_budget`: sin revisión, queda acumulado |
+| `2b7b7ca` (Parte 3) | 3 | `medium` | `under_budget` contra `cb3154f` |
 | `cc60500`..`cb3154f` (Partes 1, 4 y 2) | 1, 4, 2 | `medium` | `under_budget`. Revisión pedida para los 3 últimos commits (`68843d7`, `4f8bf35`, `cb3154f`) y omitida por decisión del usuario (`declined_this_candidate`) |
 
 ## Verificación de cada parte
@@ -216,11 +233,11 @@ python -m compileall pipeline agents
 
 Además, al cerrar la fase:
 
-- [ ] `uvicorn agents.api.main:app` con todos los artefactos → `/health/ready` devuelve 200.
-- [ ] Al renombrar un artefacto obligatorio → el proceso termina y el log nombra artefacto y ruta.
-- [ ] `git status` no muestra cambios en `data/processed/chroma/` después de arrancar la API.
+- [x] `uvicorn agents.api.main:app` con todos los artefactos → `/health/ready` devuelve 200 (con `HF_HUB_OFFLINE=1`).
+- [x] Al renombrar un artefacto obligatorio → el proceso termina (código 3) y el log nombra artefacto y ruta: `Missing runtime artifact: table documents (.../data/processed/table_documents.jsonl)`.
+- [x] `git status` no muestra cambios en `data/processed/chroma/` después de arrancar la API, y la copia de trabajo se borra al cerrar.
 
-No se hace ningún commit sin aprobación explícita.
+Cada parte terminada se confirma en su propio commit en `dev`, sin push.
 
 ## Siguiente paso
 

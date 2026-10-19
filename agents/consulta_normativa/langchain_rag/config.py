@@ -56,6 +56,8 @@ HYBRID_RRF_K = RRF_K
 
 # Reranking with Cross-Encoder.
 RERANKER_MODEL_NAME = "SINAI/ALIA-MrBERT-es-legal-administrative-reranker"
+# Commit de Hugging Face fijo para que el orden de los resultados sea reproducible.
+RERANKER_MODEL_REVISION = "55f7062666a7952242b25fe1d8aae7ccfc32b329"
 RERANKER_DEVICE = "cpu"
 RERANKER_MAX_LENGTH = 512
 RERANKER_BATCH_SIZE = 12

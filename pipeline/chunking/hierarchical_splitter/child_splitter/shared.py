@@ -3,6 +3,7 @@
 import hashlib
 from pathlib import Path
 
+from pipeline.chunking.config import EMBEDDING_MODEL_REVISIONS
 from pipeline.chunking.hierarchical_splitter.models import ChildChunk, ParentChunk
 from pipeline.chunking.hierarchical_splitter.tokenization import estimate_token_count
 from pipeline.tables.table_references import table_references_for_text
@@ -18,15 +19,20 @@ def embedding_kwargs_for_model(embedding_model: str) -> dict[str, dict[str, obje
 
     normalized_model = embedding_model.lower()
     if "e5" in normalized_model:
-        return {
+        options: dict[str, dict[str, object]] = {
             "encode_kwargs": {"normalize_embeddings": True, "prompt": "passage: "},
             "query_encode_kwargs": {"normalize_embeddings": True, "prompt": "query: "},
         }
+    else:
+        options = {
+            "encode_kwargs": {"normalize_embeddings": True},
+            "query_encode_kwargs": {"normalize_embeddings": True},
+        }
 
-    return {
-        "encode_kwargs": {"normalize_embeddings": True},
-        "query_encode_kwargs": {"normalize_embeddings": True},
-    }
+    revision = EMBEDDING_MODEL_REVISIONS.get(embedding_model)
+    if revision:
+        options["model_kwargs"] = {"revision": revision}
+    return options
 
 # Shared child helpers
 

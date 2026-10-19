@@ -22,7 +22,7 @@ Operar la consulta normativa SG-SST actual: abre la colección ChromaDB y el ín
 | Documentos de tabla | `data/processed/table_documents.jsonl`. |
 | Carpeta de imágenes | `data/images/` con permisos de escritura (solo CLI). |
 | API key | `DEEPSEEK_API_KEY` en el entorno o en `.env`. |
-| Modelos | La primera ejecución descarga `Qwen/Qwen3-Embedding-0.6B` y `SINAI/ALIA-MrBERT-es-legal-administrative-reranker` desde Hugging Face. |
+| Modelos | `Qwen/Qwen3-Embedding-0.6B` y `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, con revisión fija (`DEFAULT_EMBEDDING_MODEL_REVISION` en `pipeline/chunking/config.py` y `RERANKER_MODEL_REVISION` en `langchain_rag/config.py`). La primera ejecución los descarga en `HF_HOME`; con `HF_HUB_OFFLINE=1` solo se cargan desde esa caché. El pipeline usa la misma revisión de Qwen para chunking y vectorización, así que cambiarla exige reconstruir chunks e índices. |
 | Dependencias | `pip install -r requirements.txt`. |
 
 ## Ruta rápida
@@ -64,6 +64,7 @@ La memoria conversacional y de largo plazo es en memoria del proceso: se pierde 
 |---|---|---|
 | `DEEPSEEK_API_KEY is not configured` | Falta la variable. | Definirla en `.env` o exportarla. |
 | `Missing runtime artifact: <artefacto> (<ruta>)` o `Empty runtime artifact: ...` | La comprobación previa encontró un artefacto ausente o vacío (`table_documents.jsonl` puede estar vacío). Se ejecuta antes de abrir Chroma o cargar modelos. | Regenerar el artefacto indicado con [corpus-build.md](corpus-build.md). |
+| `OSError: We couldn't connect to 'https://huggingface.co' ... cached files` | `HF_HUB_OFFLINE=1` y falta en `HF_HOME` la revisión fija de un modelo. | Ejecutar una vez sin `HF_HUB_OFFLINE` para descargarla. |
 | Error al abrir Chroma | Falta `data/processed/chroma` o la colección. | Ejecutar [vectorization.md](vectorization.md). |
 | `Index record count mismatch`, `Index ID mismatch` o `Missing parent chunks` | Chroma, BM25 y `parents.jsonl` no corresponden a la misma versión del corpus. Se comprueba después de abrir los índices y antes de cargar el reranker. Los IDs de los chunks se calculan a partir del contenido, así que un `parent_id` sin resolver indica que los padres y los hijos vienen de construcciones distintas. | Reconstruir desde cero: mover `data/processed/chroma/` (la vectorización hace `upsert` y no borra registros obsoletos) y ejecutar chunking, tablas, [vectorization.md](vectorization.md) y [bm25-sparse-retrieval.md](bm25-sparse-retrieval.md) sobre las mismas entradas. |
 | Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar [bm25-sparse-retrieval.md](bm25-sparse-retrieval.md). |

@@ -65,13 +65,13 @@ Objetivo: unificar la configuración entre desarrollo, CI y producción sin expo
 2. Crear `.env.example` sin valores secretos:
    ```
    DEEPSEEK_API_KEY=
-   IP_ADDRESS=http://localhost:3000
+   CORS_ALLOWED_ORIGINS=http://localhost:3000
    ```
 3. Documentar las variables obligatorias y opcionales.
 4. Configurar GitHub Actions:
    - `DEEPSEEK_API_KEY` como Secret.
    - Origen CORS como Variable.
-5. Sustituir progresivamente `IP_ADDRESS` por `CORS_ALLOWED_ORIGINS`, con validación explícita de los orígenes permitidos.
+5. ~~Sustituir progresivamente `IP_ADDRESS` por `CORS_ALLOWED_ORIGINS`, con validación explícita de los orígenes permitidos.~~ Hecho en el commit `e414c19`.
 
 Criterio de aceptación: ningún secreto aparece en el repositorio, Dockerfile, logs, pruebas ni artefactos generados por CI.
 
@@ -106,6 +106,8 @@ python -m unittest agents.api.tests.test_main
 ## Fase 5 — Validación de artefactos locales
 
 Objetivo: evitar que la API inicie con índices incompletos, ilegibles o inconsistentes.
+
+**Estado:** completada el 2026-10-18. El detalle de cada parte y su verificación están en [`plan-fase-5-artefactos.md`](plan-fase-5-artefactos.md).
 
 ### Artefactos que deben verificarse
 

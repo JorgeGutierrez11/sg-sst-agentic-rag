@@ -53,6 +53,8 @@ La configuración local vive en el archivo `.env` de la raíz del repositorio. G
 |---|---|---|---|
 | `DEEPSEEK_API_KEY` | Sí | Clave del LLM DeepSeek usado por la consulta normativa y el diagnóstico. | La consulta falla con `DEEPSEEK_API_KEY is not configured in the environment.` |
 | `CORS_ALLOWED_ORIGINS` | Sí | Orígenes del navegador autorizados a llamar la API, separados por comas. Cada uno debe ser exactamente `http(s)://host[:puerto]`, sin ruta ni `/` final. Se rechaza `*` porque la API habilita credenciales CORS. | La API no arranca y muestra un `ValueError` que nombra `CORS_ALLOWED_ORIGINS`. |
+| `HF_HOME` | No | Carpeta de la caché de Hugging Face donde se guardan los modelos Qwen (embeddings) y ALIA (reranking). Ambos se cargan con una revisión fija (hash de commit), así que todas las máquinas usan exactamente la misma versión. | Se usa `~/.cache/huggingface`. |
+| `HF_HUB_OFFLINE` | No | Con `1`, el backend no se conecta a Hugging Face y carga los modelos solo desde `HF_HOME`. Es el modo recomendado una vez descargados los modelos, y el previsto para producción: allí se descargan durante la construcción de la imagen o en un paso previo. | Sin la variable, la primera ejecución descarga los modelos (necesita internet) y las siguientes usan la caché. Con `1` y sin los modelos en caché, la API no arranca (ver sección 8). |
 | `RAG_CHROMA_WORKING_DIR` | No | Directorio padre donde el backend crea, al arrancar, una copia privada del índice ChromaDB. Chroma reescribe sus archivos incluso cuando solo consulta y falla si no puede escribir, así que el backend nunca abre `data/processed/chroma/` directamente. Cada arranque crea una subcarpeta `sg-sst-chroma-*` nueva y la borra al cerrar. Debe tener permisos de escritura y estar fuera de `data/processed/chroma/`. | Se usa el directorio temporal del sistema. Si apunta dentro del índice publicado, la API no arranca y el error nombra `RAG_CHROMA_WORKING_DIR`. |
 
 Ejemplo de `.env`:
@@ -185,6 +187,16 @@ Uvicorn registra `API startup failed; the service will not report readiness.` se
 El servicio de diagnóstico carga y valida al arrancar los tres catálogos que usa la API (`res0312_riesgo_i_1_10_general.json`, `res0312_riesgo_i_11_50.json` y `res0312_riesgo_i_51_plus.json`, en `agents/diagnostico_cumplimiento/catalog/data/`). Si alguno falla, Uvicorn registra `API startup failed; the service will not report readiness.` con la ruta del catálogo, y la API no arranca. Corrija el archivo indicado y reinicie Uvicorn.
 
 Los catálogos se leen una sola vez: editar uno con la API en marcha no tiene efecto hasta reiniciarla. El catálogo agropecuario no se carga, porque la API no admite Unidades de Producción Agropecuaria.
+
+### `OSError: We couldn't connect to 'https://huggingface.co' ... couldn't find them in the cached files`
+
+Uvicorn registra `API startup failed; the service will not report readiness.` con ese mensaje. `HF_HUB_OFFLINE=1` está activo, pero falta en `HF_HOME` la revisión fija de Qwen o de ALIA. Descárguela una vez con conexión, sin `HF_HUB_OFFLINE`, y vuelva a arrancar en modo sin conexión:
+
+```bash
+HF_HUB_OFFLINE=0 uvicorn agents.api.main:app
+```
+
+Las revisiones están en `pipeline/chunking/config.py` (`DEFAULT_EMBEDDING_MODEL_REVISION`) y en `agents/consulta_normativa/langchain_rag/config.py` (`RERANKER_MODEL_REVISION`).
 
 ### `Address already in use`
 

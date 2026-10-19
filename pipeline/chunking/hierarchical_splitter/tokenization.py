@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL
+from pipeline.chunking.config import DEFAULT_EMBEDDING_MODEL, EMBEDDING_MODEL_REVISIONS
 
 try:
     # pyrefly: ignore [missing-import]
@@ -20,7 +20,11 @@ def get_tokenizer(model_name: str = DEFAULT_EMBEDDING_MODEL):
             "Could not initialize tokenizer: install 'transformers' to use Hugging Face AutoTokenizer."
         )
     try:
-        return AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        return AutoTokenizer.from_pretrained(
+            model_name,
+            revision=EMBEDDING_MODEL_REVISIONS.get(model_name),
+            use_fast=True,
+        )
     except (OSError, ValueError, RuntimeError) as error:
         raise RuntimeError(f"Could not initialize tokenizer for {model_name!r}: {error}") from error
 

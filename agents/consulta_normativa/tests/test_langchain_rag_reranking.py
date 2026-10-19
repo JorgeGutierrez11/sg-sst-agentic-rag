@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
+from agents.consulta_normativa.langchain_rag.config import RERANKER_MODEL_REVISION
 from agents.consulta_normativa.langchain_rag.retrieval.reranking import (
     document_text_for_reranking,
     get_reranker,
@@ -179,7 +180,7 @@ class LangChainRagRerankingTest(unittest.TestCase):
         calls: list[tuple[str, int, str]] = []
 
         class FakeCrossEncoder:
-            def __init__(self, model_name: str, max_length: int, device: str) -> None:
+            def __init__(self, model_name: str, max_length: int, device: str, revision: object = None) -> None:
                 calls.append((model_name, max_length, device))
 
         fake_module = types.SimpleNamespace(CrossEncoder=FakeCrossEncoder)
@@ -190,6 +191,25 @@ class LangChainRagRerankingTest(unittest.TestCase):
 
         self.assertIs(first, second)
         self.assertEqual(calls, [("fake-model", 128, "cpu")])
+
+    def test_get_reranker_loads_requested_revision(self) -> None:
+        get_reranker.cache_clear()
+        revisions: list[object] = []
+
+        class FakeCrossEncoder:
+            def __init__(self, model_name: str, max_length: int, device: str, revision: object = None) -> None:
+                revisions.append(revision)
+
+        fake_module = types.SimpleNamespace(CrossEncoder=FakeCrossEncoder)
+
+        with patch.dict(sys.modules, {"sentence_transformers": fake_module}):
+            get_reranker("fake-model", 128, "cpu", revision="abc123")
+        get_reranker.cache_clear()
+
+        self.assertEqual(revisions, ["abc123"])
+
+    def test_reranker_revision_is_pinned_to_a_full_commit_hash(self) -> None:
+        self.assertRegex(RERANKER_MODEL_REVISION, r"^[0-9a-f]{40}$")
 
 
 class FakeReranker:
