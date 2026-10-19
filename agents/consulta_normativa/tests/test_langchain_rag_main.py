@@ -195,6 +195,9 @@ class LangChainRagMainTest(unittest.TestCase):
             build_deepseek_llm=lambda: "llm",
             build_langgraph_rag=fake_build_langgraph_rag,
             load_parent_documents=lambda path: calls.append(f"parents:{path}") or {"parent-1": "parent"},
+            validate_index_consistency=lambda collection, sparse_index, parent_lookup: calls.append(
+                f"consistency:{collection}:{sparse_index}:{parent_lookup}"
+            ),
             load_first_table_parts=lambda path: calls.append(f"tables:{path}") or {"source-a:0": "table"},
             open_existing_collection=fake_open_existing_collection,
             open_existing_bm25_index=fake_open_existing_index,
@@ -220,9 +223,10 @@ class LangChainRagMainTest(unittest.TestCase):
                 f"working-copy:{cli.DEFAULT_CHROMA_PATH}:None",
                 "collection:/working/chroma:sg_sst_base_rag",
                 "index",
+                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
+                "consistency:collection:index:{'parent-1': 'parent'}",
                 f"retriever:collection:index:{cli.HYBRID_SOURCE_CANDIDATE_TOP_K}:{cli.HYBRID_RRF_K}",
                 f"reranker:{cli.RERANKER_MODEL_NAME}:{cli.RERANKER_MAX_LENGTH}:{cli.RERANKER_DEVICE}",
-                f"parents:{cli.DEFAULT_PARENT_CHUNKS_PATH}",
                 f"tables:{cli.DEFAULT_TABLE_DOCUMENTS_PATH}",
                 "graph:llm:hybrid-retriever:"
                 f"{cli.HYBRID_RRF_OUTPUT_TOP_K}:reranker:"
@@ -357,6 +361,103 @@ class LangChainRagMainTest(unittest.TestCase):
         self.assertEqual(str(raised.exception), "ValueError: collection unavailable")
         self.assertIs(raised.exception.__cause__, original)
 
+    def test_index_inconsistency_stops_startup_before_loading_reranker(self) -> None:
+        loaded: list[str] = []
+
+        def fail_index_consistency(collection: object, sparse_index: object, parent_lookup: object) -> None:
+            raise cli.OperationalError("Index record count mismatch: Chroma has 3 records, BM25 has 2")
+
+        dependencies = self.build_dependencies(
+            validate_index_consistency=fail_index_consistency,
+            get_reranker=lambda model_name, max_length, device: loaded.append("reranker") or object(),
+        )
+
+        with self.runtime_support_patches(), patch.object(
+            cli, "load_dependencies", return_value=dependencies
+        ), self.assertRaises(cli.OperationalError) as raised:
+            cli.build_runtime(write_graph_image=False)
+
+        self.assertIn("Chroma has 3 records, BM25 has 2", str(raised.exception))
+        self.assertEqual(loaded, [])
+
+    def test_coherent_indexes_pass_consistency_check(self) -> None:
+        corpus = [child_record("child-1", "parent-1"), table_record("table-1")]
+
+        cli.validate_index_consistency(
+            FakeCollection(["child-1", "table-1"]),
+            FakeBm25Index(corpus),
+            {"parent-1": "parent"},
+        )
+
+    def test_different_record_counts_raise_error_with_both_counts(self) -> None:
+        corpus = [child_record("child-1", "parent-1"), child_record("child-2", "parent-1")]
+
+        with self.assertRaises(cli.OperationalError) as raised:
+            cli.validate_index_consistency(
+                FakeCollection(["child-1", "child-2", "stale-1"]),
+                FakeBm25Index(corpus),
+                {"parent-1": "parent"},
+            )
+
+        message = str(raised.exception)
+        self.assertIn("Index record count mismatch: Chroma has 3 records, BM25 has 2", message)
+        self.assertIn("1 only in Chroma (stale-1)", message)
+
+    def test_same_count_with_different_ids_raises_error_naming_ids(self) -> None:
+        corpus = [child_record("child-1", "parent-1"), child_record("child-new", "parent-1")]
+
+        with self.assertRaises(cli.OperationalError) as raised:
+            cli.validate_index_consistency(
+                FakeCollection(["child-1", "child-old"]),
+                FakeBm25Index(corpus),
+                {"parent-1": "parent"},
+            )
+
+        message = str(raised.exception)
+        self.assertNotIn("count mismatch", message)
+        self.assertIn(
+            "Index ID mismatch: 1 only in Chroma (child-old); 1 only in BM25 (child-new)",
+            message,
+        )
+
+    def test_id_mismatch_lists_at_most_five_example_ids(self) -> None:
+        stale_ids = [f"stale-{number}" for number in range(7)]
+
+        with self.assertRaises(cli.OperationalError) as raised:
+            cli.validate_index_consistency(
+                FakeCollection(["child-1", *stale_ids]),
+                FakeBm25Index([child_record("child-1", "parent-1")]),
+                {"parent-1": "parent"},
+            )
+
+        message = str(raised.exception)
+        self.assertIn("7 only in Chroma (stale-0, stale-1, stale-2, stale-3, stale-4, ...)", message)
+        self.assertNotIn("stale-5", message)
+
+    def test_child_with_missing_parent_raises_error(self) -> None:
+        corpus = [child_record("child-1", "parent-1"), child_record("child-2", "parent-gone")]
+
+        with self.assertRaises(cli.OperationalError) as raised:
+            cli.validate_index_consistency(
+                FakeCollection(["child-1", "child-2"]),
+                FakeBm25Index(corpus),
+                {"parent-1": "parent"},
+            )
+
+        self.assertIn(
+            "Missing parent chunks: 1 of 2 child chunks reference a parent not found in parent chunks",
+            str(raised.exception),
+        )
+
+    def test_table_documents_without_parent_id_are_not_orphans(self) -> None:
+        corpus = [table_record("table-1"), table_record("table-2")]
+
+        cli.validate_index_consistency(
+            FakeCollection(["table-1", "table-2"]),
+            FakeBm25Index(corpus),
+            {},
+        )
+
     def create_artifacts(self, root: Path) -> tuple[cli.RuntimeArtifact, ...]:
         """Create one non-empty file per default runtime artifact under a temporary root."""
 
@@ -407,6 +508,7 @@ class LangChainRagMainTest(unittest.TestCase):
         get_reranker: object | None = None,
         validate_runtime_artifacts: object | None = None,
         create_chroma_working_copy: object | None = None,
+        validate_index_consistency: object | None = None,
     ) -> cli.RuntimeDependencies:
         return cli.RuntimeDependencies(
             validate_runtime_artifacts=validate_runtime_artifacts or (lambda: None),
@@ -421,6 +523,8 @@ class LangChainRagMainTest(unittest.TestCase):
             get_reranker=get_reranker or (lambda model_name, max_length, device: object()),
             create_chroma_working_copy=create_chroma_working_copy
             or (lambda source, working_root: types.SimpleNamespace(path=source)),
+            validate_index_consistency=validate_index_consistency
+            or (lambda collection, sparse_index, parent_lookup: None),
         )
 
     @contextmanager
@@ -441,6 +545,34 @@ class LangChainRagMainTest(unittest.TestCase):
             stack.enter_context(patch("langgraph.checkpoint.memory.InMemorySaver", return_value=object()))
             stack.enter_context(patch("langgraph.store.memory.InMemoryStore", return_value=object()))
             yield
+
+
+class FakeCollection:
+    """Chroma collection fake exposing only the calls used by the consistency check."""
+
+    def __init__(self, ids: list[str]) -> None:
+        self.ids = ids
+
+    def count(self) -> int:
+        return len(self.ids)
+
+    def get(self, include: list[str]) -> dict[str, list[str]]:
+        return {"ids": list(self.ids)}
+
+
+class FakeBm25Index:
+    """BM25 index fake with the corpus records loaded by bm25s."""
+
+    def __init__(self, corpus: list[dict[str, object]]) -> None:
+        self.corpus = corpus
+
+
+def child_record(record_id: str, parent_id: str) -> dict[str, object]:
+    return {"id": record_id, "document": "text", "metadata": {"document_type": "child_chunk", "parent_id": parent_id}}
+
+
+def table_record(record_id: str) -> dict[str, object]:
+    return {"id": record_id, "document": "table", "metadata": {"document_type": "table"}}
 
 
 class FakeRuntimeGraph:

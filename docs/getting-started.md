@@ -176,6 +176,10 @@ Missing runtime artifact: Chroma database (/ruta/al/repo/data/processed/chroma/c
 
 Si fallan varios artefactos, aparecen todos en el mismo mensaje, separados por `;`. Regenere cada artefacto indicado con los runbooks de [`operations/`](operations/corpus-build.md) y reinicie Uvicorn. La comprobación se ejecuta antes de abrir ChromaDB, así que un directorio `chroma/` vacío no se modifica.
 
+### `Index record count mismatch`, `Index ID mismatch` o `Missing parent chunks`
+
+Uvicorn registra `API startup failed; the service will not report readiness.` seguido de los problemas encontrados, separados por `;`, con los conteos y hasta 5 IDs de ejemplo. Indica que ChromaDB, BM25 y `parents.jsonl` se construyeron a partir de versiones distintas del corpus. La causa más común es volver a vectorizar sin borrar `data/processed/chroma/`: la vectorización añade y actualiza registros, pero no elimina los obsoletos. Reconstruya los índices desde cero con [`operations/rag-langgraph.md`](operations/rag-langgraph.md#fallos-frecuentes) y reinicie Uvicorn.
+
 ### `Catalog contains invalid JSON` o `Catalog does not match the expected schema`
 
 El servicio de diagnóstico carga y valida al arrancar los tres catálogos que usa la API (`res0312_riesgo_i_1_10_general.json`, `res0312_riesgo_i_11_50.json` y `res0312_riesgo_i_51_plus.json`, en `agents/diagnostico_cumplimiento/catalog/data/`). Si alguno falla, Uvicorn registra `API startup failed; the service will not report readiness.` con la ruta del catálogo, y la API no arranca. Corrija el archivo indicado y reinicie Uvicorn.

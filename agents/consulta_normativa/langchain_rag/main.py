@@ -6,7 +6,7 @@ from uuid import uuid4 # nuevo import para generar un identificador único para 
 import argparse
 import sys
 import logging
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -89,6 +89,67 @@ def validate_runtime_artifacts(artifacts: Iterable[RuntimeArtifact] = RUNTIME_AR
         raise OperationalError("; ".join(problems))
 
 
+# Máximo de IDs de ejemplo por problema, para que el mensaje siga siendo legible.
+INDEX_MISMATCH_SAMPLE_SIZE = 5
+
+
+def validate_index_consistency(collection: Any, bm25_index: Any, parent_lookup: Mapping[str, Any]) -> None:
+    """Fail when Chroma, BM25, and parent chunks do not describe the same corpus version.
+
+    Chunk IDs are content-addressed: a child ID embeds its parent ID, and a parent ID
+    hashes its source document and text, so a resolvable parent_id proves the child
+    and parent come from the same corpus build.
+    """
+
+    from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (
+        parent_child_consistency_report,
+    )
+
+    corpus = list(getattr(bm25_index, "corpus", None) or [])
+    problems: list[str] = []
+
+    chroma_count = collection.count()
+    if chroma_count != len(corpus):
+        problems.append(
+            f"Index record count mismatch: Chroma has {chroma_count} records, BM25 has {len(corpus)}"
+        )
+
+    chroma_ids = {str(record_id) for record_id in collection.get(include=[])["ids"]}
+    bm25_ids = {str(record["id"]) for record in corpus}
+    if chroma_ids != bm25_ids:
+        problems.append(
+            "Index ID mismatch: "
+            f"{describe_ids(chroma_ids - bm25_ids, 'Chroma')}; "
+            f"{describe_ids(bm25_ids - chroma_ids, 'BM25')}"
+        )
+
+    # En el corpus BM25 el parent_id vive dentro de metadata; las tablas no tienen padre.
+    report = parent_child_consistency_report(
+        [dict(record.get("metadata") or {}) for record in corpus],
+        dict(parent_lookup),
+    )
+    if report.children_with_missing_parent:
+        problems.append(
+            f"Missing parent chunks: {report.children_with_missing_parent} of "
+            f"{report.children_with_parent_id} child chunks reference a parent not found in parent chunks"
+        )
+
+    if problems:
+        raise OperationalError("; ".join(problems))
+
+
+def describe_ids(ids: set[str], index_name: str) -> str:
+    """Return the ID count plus a short sorted sample for error messages."""
+
+    description = f"{len(ids)} only in {index_name}"
+    if not ids:
+        return description
+    sample = sorted(ids)[:INDEX_MISMATCH_SAMPLE_SIZE]
+    if len(ids) > INDEX_MISMATCH_SAMPLE_SIZE:
+        sample.append("...")
+    return f"{description} ({', '.join(sample)})"
+
+
 @dataclass(frozen=True)
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
@@ -106,6 +167,7 @@ class RuntimeDependencies:
     load_parent_documents: Callable[..., Any]
     load_first_table_parts: Callable[..., Any]
     create_chroma_working_copy: Callable[[Path, Path | None], Any]
+    validate_index_consistency: Callable[[Any, Any, Mapping[str, Any]], None]
     
 
 
@@ -221,6 +283,17 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
 
         bm25_index = dependencies.open_existing_bm25_index()
 
+        parent_lookup = dependencies.load_parent_documents(
+            DEFAULT_PARENT_CHUNKS_PATH
+        )
+
+        # Antes de cargar el reranker: un índice desincronizado debe fallar rápido.
+        dependencies.validate_index_consistency(
+            collection,
+            bm25_index,
+            parent_lookup,
+        )
+
         retriever = dependencies.hybrid_retriever(
             collection,
             bm25_index,
@@ -234,9 +307,6 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             device=RERANKER_DEVICE,
         )
 
-        parent_lookup = dependencies.load_parent_documents(
-            DEFAULT_PARENT_CHUNKS_PATH
-        )
         first_table_parts = dependencies.load_first_table_parts(
             DEFAULT_TABLE_DOCUMENTS_PATH
         )
@@ -340,6 +410,7 @@ def load_dependencies() -> RuntimeDependencies:
         load_parent_documents=load_parent_documents,
         load_first_table_parts=load_first_table_parts,
         create_chroma_working_copy=create_chroma_working_copy,
+        validate_index_consistency=validate_index_consistency,
     )
 
 

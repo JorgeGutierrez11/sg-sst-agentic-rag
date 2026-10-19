@@ -84,7 +84,7 @@ Hallazgos nuevos:
 
 ## Parte 2 — Catálogos de diagnóstico al arrancar
 
-**Estado:** implementada el 2026-10-18, sin commit. Suites en verde: diagnóstico 202, API 14.
+**Estado:** implementada el 2026-10-18 en el commit `cb3154f`. Suites en verde: diagnóstico 202, API 14.
 
 **Ajuste acordado:** el agente no contempla Unidades de Producción Agropecuaria (`_build_company_profile` fija `is_agricultural_production_unit=False`), así que la API carga solo tres catálogos. Si se cargara el agropecuario, un error en un archivo que la API no puede usar impediría el arranque.
 
@@ -107,6 +107,10 @@ Hallazgos nuevos:
 
 ## Parte 3 — Coherencia entre índices
 
+**Estado:** implementada el 2026-10-18. Suites en verde: pipeline 124, consulta 191, API 14, diagnóstico 202. Prueba con los índices reales sobre una copia de trabajo: 400 registros en Chroma y BM25 con los mismos IDs y 313 hijos con padre; quitar un padre de la búsqueda produce `Missing parent chunks: 1 of 313`. El índice publicado no cambió.
+
+**Detalle verificado:** los IDs se calculan a partir del contenido. El ID de un padre incluye un hash de su documento y su texto (`stable_parent_chunk_id`), y el de un hijo contiene el ID completo de su padre (`stable_child_chunk_id`). Por eso, que un `parent_id` se resuelva demuestra que padre e hijo vienen de la misma construcción del corpus. En el corpus BM25 el `parent_id` está dentro de `metadata`.
+
 **Resuelve:** 6. Depende de la Parte 4.
 
 **Cambios:**
@@ -117,19 +121,24 @@ Hallazgos nuevos:
    - Todos los documentos del corpus BM25 con `parent_id` encuentran a su padre, reutilizando `parent_child_consistency_report`.
 2. Cualquier desajuste lanza un `OperationalError` con los conteos y como máximo 5 IDs de ejemplo.
 3. No se crea un manifiesto nuevo ni se cambia el pipeline.
+4. La comprobación se ejecuta antes de cargar el reranker, para que un índice desincronizado falle rápido.
 
 **Pruebas:**
 
-- [ ] Conteos distintos → error.
-- [ ] Mismos conteos con IDs distintos → error.
-- [ ] Hijo sin padre → error.
-- [ ] Índices coherentes → arranque normal.
+- [x] Conteos distintos → error.
+- [x] Mismos conteos con IDs distintos → error.
+- [x] Como máximo 5 IDs de ejemplo por problema.
+- [x] Hijo sin padre → error.
+- [x] Documento de tabla sin `parent_id` → no cuenta como huérfano.
+- [x] Índices coherentes → arranque normal, sin cargar el reranker si la comprobación falla.
 
-**Riesgo:** none (validación de solo lectura cubierta por las pruebas).
+**Riesgo:** item 3. Es una validación de solo lectura, pero una inconsistencia que antes pasaba en silencio ahora impide arrancar.
+
+**Siguiente paso relacionado:** un comando único que regenere padres, hijos, tablas, Chroma y BM25 desde cero corresponde a la Fase 7 de [`plan-docker.md`](plan-docker.md) (actividad 5). La comprobación de esta parte detecta el problema; ese comando lo previene.
 
 ## Parte 4 — Copia de trabajo de Chroma
 
-**Estado:** implementada el 2026-10-18, sin commit. Suites en verde: pipeline 124, consulta 184, API 14, diagnóstico 197. Prueba real con Uvicorn: `/health/ready` 200, índice publicado sin cambios y copia borrada al cerrar.
+**Estado:** implementada el 2026-10-18 en el commit `4f8bf35`. Suites en verde: pipeline 124, consulta 184, API 14, diagnóstico 197. Prueba real con Uvicorn: `/health/ready` 200, índice publicado sin cambios y copia borrada al cerrar.
 
 **Detalle verificado durante la implementación:** `shutil.copytree` copia también los permisos, así que una copia de un origen de solo lectura falla igual que el original. La copia usa `copyfile` y restaura el permiso de escritura del propietario.
 
@@ -191,6 +200,7 @@ Solo se revisa cuando `review_due` es `true` (`high_risk`) o cuando se pide de f
 | Commits evaluados | Parte | Evaluación | Resultado |
 |---|---|---|---|
 | `cc60500` (documentación) + `68843d7` (Parte 1) | 1 | `medium` | `under_budget`: sin revisión, queda acumulado |
+| `cc60500`..`cb3154f` (Partes 1, 4 y 2) | 1, 4, 2 | `medium` | `under_budget`. Revisión pedida para los 3 últimos commits (`68843d7`, `4f8bf35`, `cb3154f`) y omitida por decisión del usuario (`declined_this_candidate`) |
 
 ## Verificación de cada parte
 
