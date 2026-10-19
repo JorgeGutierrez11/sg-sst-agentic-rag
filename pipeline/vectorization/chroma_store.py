@@ -44,7 +44,7 @@ def qwen_embedding_function() -> Any:
     # pyrefly: ignore [missing-import]
     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-    # La revisión queda registrada en la configuración de la colección creada.
+    # Revisión registrada en la configuración de la colección creada
     return SentenceTransformerEmbeddingFunction(
         model_name=DEFAULT_EMBEDDING_MODEL,
         revision=DEFAULT_EMBEDDING_MODEL_REVISION,

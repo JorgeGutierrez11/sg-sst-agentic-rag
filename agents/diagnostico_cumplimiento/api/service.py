@@ -71,8 +71,7 @@ from agents.diagnostico_cumplimiento.rules.applicability import (
 )
 
 
-# The API never builds agricultural profiles (see _build_company_profile),
-# so only these catalogs are reachable through it.
+# Catalogs reachable through the API; it never builds agricultural profiles
 API_CATALOG_PATHS: tuple[Path, ...] = (
     CATALOG_FILES["risk_i_1_10_general"],
     CATALOG_FILES["risk_i_11_50"],
@@ -99,9 +98,8 @@ class DiagnosticService:
 
     Las sesiones se almacenan temporalmente en memoria.
 
-    Los catálogos se cargan y validan una sola vez al construir el
-    servicio: un catálogo inválido impide el arranque, y editar un
-    catálogo no tiene efecto hasta reiniciar la API.
+    Los catálogos se validan al construir el servicio; editarlos exige
+    reiniciar la API.
     """
 
     def __init__(

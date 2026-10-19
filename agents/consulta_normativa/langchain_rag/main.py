@@ -90,17 +90,12 @@ def validate_runtime_artifacts(artifacts: Iterable[RuntimeArtifact] = RUNTIME_AR
         raise OperationalError("; ".join(problems))
 
 
-# Máximo de IDs de ejemplo por problema, para que el mensaje siga siendo legible.
+# Máximo de IDs de ejemplo por problema en el mensaje de error
 INDEX_MISMATCH_SAMPLE_SIZE = 5
 
 
 def validate_index_consistency(collection: Any, bm25_index: Any, parent_lookup: Mapping[str, Any]) -> None:
-    """Fail when Chroma, BM25, and parent chunks do not describe the same corpus version.
-
-    Chunk IDs are content-addressed: a child ID embeds its parent ID, and a parent ID
-    hashes its source document and text, so a resolvable parent_id proves the child
-    and parent come from the same corpus build.
-    """
+    """Fail when Chroma, BM25, and parent chunks come from different corpus builds."""
 
     from agents.consulta_normativa.langchain_rag.retrieval.parent_document_retrieval import (
         parent_child_consistency_report,
@@ -124,7 +119,7 @@ def validate_index_consistency(collection: Any, bm25_index: Any, parent_lookup: 
             f"{describe_ids(bm25_ids - chroma_ids, 'BM25')}"
         )
 
-    # En el corpus BM25 el parent_id vive dentro de metadata; las tablas no tienen padre.
+    # parent_id está en metadata; las tablas no tienen padre
     report = parent_child_consistency_report(
         [dict(record.get("metadata") or {}) for record in corpus],
         dict(parent_lookup),
@@ -193,10 +188,10 @@ class QwenMemoryEmbeddings(Embeddings):
         embedding_function: Any,
         normalize_embeddings: bool = True,
     ) -> None:
-        # Reutilizamos el SentenceTransformer de la misma instancia que usa Chroma.
+        # Modelo compartido con la función de embeddings de Chroma
         self._model = embedding_function._model
 
-        # La memoria normaliza sus vectores aunque la función de Chroma no lo haga.
+        # Normalización propia de la memoria, independiente de Chroma
         self._normalize_embeddings = normalize_embeddings
 
     def embed_documents(
@@ -274,7 +269,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             DEFAULT_CHROMA_PATH,
             get_chroma_working_root(),
         )
-        # Una sola instancia de Qwen, con revisión fija, para Chroma y para la memoria.
+        # Instancia única de Qwen compartida por Chroma y la memoria
         embedding_function = dependencies.build_embedding_function()
         collection = dependencies.open_existing_collection(
             chroma_working_copy.path,
@@ -288,7 +283,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             DEFAULT_PARENT_CHUNKS_PATH
         )
 
-        # Antes de cargar el reranker: un índice desincronizado debe fallar rápido.
+        # Valida antes de cargar el reranker para fallar rápido
         dependencies.validate_index_consistency(
             collection,
             bm25_index,

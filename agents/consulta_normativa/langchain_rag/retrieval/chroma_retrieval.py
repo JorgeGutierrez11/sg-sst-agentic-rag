@@ -102,8 +102,7 @@ def qwen_embedding_function() -> Any:
     # pyrefly: ignore [missing-import]
     from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-    # chromadb cachea el modelo solo por nombre e ignora la revisión, así que el
-    # runtime debe crear esta función una sola vez y compartirla.
+    # chromadb cachea modelos por nombre e ignora la revisión: crear una sola instancia
     return SentenceTransformerEmbeddingFunction(
         model_name=DEFAULT_EMBEDDING_MODEL,
         revision=DEFAULT_EMBEDDING_MODEL_REVISION,

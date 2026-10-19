@@ -26,11 +26,10 @@ DEFAULT_SLIDING_WINDOW_CHUNK_OVERLAP = 70
 
 # Define qué modelo convierte el texto en vectores semánticos.
 DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-# Commit de Hugging Face del modelo que generó el índice actual. Sin revisión fija,
-# un equipo sin caché descargaría la última versión publicada y sus vectores no
-# serían comparables con los del índice. Cambiarla exige reconstruir chunks e índices.
+# Hash de commit del modelo para garantizar consistencia con los índices vectoriales existentes
 DEFAULT_EMBEDDING_MODEL_REVISION = "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3"
-# Revisiones fijas por modelo; un modelo sin entrada usa la rama main de Hugging Face.
+
+# Mapeo de revisiones por modelo; 'main' por defecto si no está especificado
 EMBEDDING_MODEL_REVISIONS = {DEFAULT_EMBEDDING_MODEL: DEFAULT_EMBEDDING_MODEL_REVISION}
 # Define qué tipo de umbral se utiliza para determinar los puntos de corte semánticos.
 DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_TYPE = "gradient"
