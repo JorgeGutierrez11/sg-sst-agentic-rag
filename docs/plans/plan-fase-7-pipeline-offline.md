@@ -2,7 +2,7 @@
 
 > **For implementation workers:** Read this entire document through `## Log` before editing. Implement task-by-task, preserve the existing per-stage CLIs, and report the covered specs.
 
-**Status (2026-10-18):** Implemented. Tasks 1-8 are complete and verified with fake stage operations, temporary project roots, and an independent verifier (no blockers). The only pending item is the manual smoke test against the real corpus, which requires explicit authorization and a stopped API.
+**Status (2026-10-19):** Complete. Tasks 1-8 are verified with fake stage operations, temporary project roots, and an independent verifier (no blockers); the user ran the manual smoke test against the real corpus successfully.
 
 **Goal:** Replace the manual offline corpus rebuild sequence with two explicit commands that build and validate the offline ingestion pipeline while reusing existing stage implementations.
 

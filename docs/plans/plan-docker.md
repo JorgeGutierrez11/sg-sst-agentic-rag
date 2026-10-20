@@ -3,7 +3,7 @@
 > **Status:** `Current`
 > **Audience:** maintainer
 > **Verified against:** `requirements.txt`, `.python-version`, `agents/api/main.py`
-> **Last verified:** 2026-10-18
+> **Last verified:** 2026-10-19
 > **Replacement:** N/A
 
 Proyecto: SG-SST Agentic RAG Componente: Backend — FastAPI / Python Versión de Python: 3.14 Objetivo general: preparar un entorno reproducible, seguro y listo para su contenedorización, integración continua y posterior despliegue en producción.
@@ -62,7 +62,7 @@ Objetivo: unificar la configuración entre desarrollo, CI y producción sin expo
 ### Actividades
 
 1. Utilizar `.env` exclusivamente para el desarrollo local.
-2. Crear `.env.example` sin valores secretos:
+2. ~~Crear `.env.example` sin valores secretos~~ Hecho en el commit `04c02a8`:
    ```
    DEEPSEEK_API_KEY=
    CORS_ALLOWED_ORIGINS=http://localhost:3000
@@ -138,12 +138,16 @@ Criterio de aceptación: los índices faltantes o ilegibles impiden la disponibi
 
 Objetivo: construir una imagen reproducible y segura del backend.
 
+**Estado:** planificada el 2026-10-19. Decisiones: PyTorch solo CPU, modelos descargados durante el build, un único worker, índices montados en solo lectura y un `compose.dev.yaml` explícito para desarrollo. Detalle en [`plan-fase-6-docker.md`](plan-fase-6-docker.md).
+
 ### Archivos por crear
 
 ```
 Dockerfile
 .dockerignore
 compose.yaml
+compose.dev.yaml
+docker/download_models.py
 ```
 
 ### Requisitos técnicos
@@ -154,7 +158,7 @@ compose.yaml
 - Deshabilitar `--reload` en producción.
 - Excluir `.env` de la imagen.
 - Montar los índices RAG como volúmenes de solo lectura. ChromaDB no puede abrirse en solo lectura: el runtime copia el índice al arrancar y consulta la copia, así que `RAG_CHROMA_WORKING_DIR` debe apuntar a un volumen o `tmpfs` con escritura (ver [`plan-fase-5-artefactos.md`](plan-fase-5-artefactos.md), Parte 4).
-- Mantener la caché de modelos en un volumen independiente.
+- ~~Mantener la caché de modelos en un volumen independiente.~~ Sustituido: los modelos se descargan durante el build con su revisión fija y el runtime arranca con `HF_HUB_OFFLINE=1`.
 - Configurar el healthcheck utilizando `/health/ready`.
 - Preparar el entorno para el uso posterior de GPU en el reranker.
 
@@ -164,7 +168,7 @@ Criterio de aceptación: mediante `docker compose up`, el backend inicia y permi
 
 Objetivo: independizar el procesamiento del corpus normativo de la ejecución de los agentes.
 
-**Estado:** en curso. Los comandos `python -m pipeline.offline_corpus build` y `python -m pipeline.offline_corpus validate` están implementados y probados; falta la prueba manual de reconstrucción real del corpus. La Fase 6 sigue diferida y sin cambios. Detalle en [`plan-fase-7-pipeline-offline.md`](plan-fase-7-pipeline-offline.md).
+**Estado:** completada el 2026-10-19. Los comandos `python -m pipeline.offline_corpus build` y `python -m pipeline.offline_corpus validate` están implementados y probados, y la reconstrucción real del corpus se ejecutó con éxito. Detalle en [`plan-fase-7-pipeline-offline.md`](plan-fase-7-pipeline-offline.md).
 
 ### Flujo de procesamiento
 
