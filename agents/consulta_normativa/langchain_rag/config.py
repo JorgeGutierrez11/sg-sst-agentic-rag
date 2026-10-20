@@ -20,14 +20,17 @@ def load_project_environment(dotenv_path: Path | None = None) -> None:
     )
 
 
-def get_cors_allowed_origins() -> list[str]:
-    """Return the browser origin configured for cross-origin API requests."""
-    return [os.environ["IP_ADDRESS"]]
-
-
 load_project_environment()
 
 DEFAULT_CHROMA_PATH = PROJECT_ROOT / "data" / "processed" / "chroma"
+CHROMA_WORKING_DIR_ENV = "RAG_CHROMA_WORKING_DIR"
+
+
+def get_chroma_working_root() -> Path | None:
+    """Return the optional parent directory for the runtime Chroma working copy."""
+
+    value = os.environ.get(CHROMA_WORKING_DIR_ENV, "").strip()
+    return Path(value) if value else None
 
 # Por que son iguales?
 RETRIEVAL_TOP_K = 8
@@ -53,6 +56,8 @@ HYBRID_RRF_K = RRF_K
 
 # Reranking with Cross-Encoder.
 RERANKER_MODEL_NAME = "SINAI/ALIA-MrBERT-es-legal-administrative-reranker"
+# Hash de commit del reranker para un orden de resultados reproducible
+RERANKER_MODEL_REVISION = "55f7062666a7952242b25fe1d8aae7ccfc32b329"
 RERANKER_DEVICE = "cpu"
 RERANKER_MAX_LENGTH = 512
 RERANKER_BATCH_SIZE = 12

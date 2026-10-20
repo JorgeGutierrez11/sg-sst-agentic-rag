@@ -1,5 +1,7 @@
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from io import BytesIO
+from pathlib import Path
 from threading import RLock
 from uuid import uuid4
 
@@ -8,6 +10,9 @@ from agents.diagnostico_cumplimiento.api.schemas import (
     CreateDiagnosticRequest,
     CreateDiagnosticResponse,
     DiagnosticProgressResponse,
+    DiagnosticStateResponse,
+    RequirementProgressResponse,
+    RestartRequirementRequest,
     DiagnosticSummaryResponse,
     QuestionResponse,
     RequirementAssessmentResponse,
@@ -15,12 +20,16 @@ from agents.diagnostico_cumplimiento.api.schemas import (
     SubmitAnswerResponse,
 )
 from agents.diagnostico_cumplimiento.catalog.loader import (
-    load_catalog_for_profile,
+    load_catalog,
 )
 from agents.diagnostico_cumplimiento.catalog.schemas import (
     AssessmentCatalog,
     CatalogRequirementDefinition,
     CatalogQuestionDefinition,
+)
+from agents.diagnostico_cumplimiento.catalog.selector import (
+    CATALOG_FILES,
+    select_catalog_path,
 )
 from agents.diagnostico_cumplimiento.domain.answers import (
     QuestionAnswer,
@@ -65,6 +74,14 @@ from agents.diagnostico_cumplimiento.rules.applicability import (
 )
 
 
+# Catalogs reachable through the API; it never builds agricultural profiles
+API_CATALOG_PATHS: tuple[Path, ...] = (
+    CATALOG_FILES["risk_i_1_10_general"],
+    CATALOG_FILES["risk_i_11_50"],
+    CATALOG_FILES["risk_i_51_plus"],
+)
+
+
 @dataclass
 class DiagnosticSession:
     diagnosis_id: str
@@ -72,6 +89,7 @@ class DiagnosticSession:
     catalog: AssessmentCatalog
     requirements: list[CatalogRequirementDefinition]
     answers: list[QuestionAnswer] = field(default_factory=list)
+    revision: int = 0
 
 
 class DiagnosticService:
@@ -83,9 +101,18 @@ class DiagnosticService:
     expone resultados mediante los contratos de la API.
 
     Las sesiones se almacenan temporalmente en memoria.
+
+    Los catálogos se validan al construir el servicio; editarlos exige
+    reiniciar la API.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        catalog_paths: Iterable[Path] = API_CATALOG_PATHS,
+    ) -> None:
+        self._catalogs: dict[Path, AssessmentCatalog] = {
+            Path(path): load_catalog(path) for path in catalog_paths
+        }
         self._sessions: dict[str, DiagnosticSession] = {}
         self._lock = RLock()
 
@@ -95,7 +122,7 @@ class DiagnosticService:
     ) -> CreateDiagnosticResponse:
         profile = self._build_company_profile(payload)
 
-        catalog = load_catalog_for_profile(profile)
+        catalog = self._catalogs[select_catalog_path(profile)]
 
         requirements = select_applicable_requirements(
             profile=profile,
@@ -113,20 +140,77 @@ class DiagnosticService:
 
         with self._lock:
             self._sessions[diagnosis_id] = session
-
-        next_question = self._find_next_question(session)
-        progress = self._build_progress(
-            session=session,
-            next_question=next_question,
-        )
+            state = self._state_fields(session)
 
         return CreateDiagnosticResponse(
-            diagnosis_id=diagnosis_id,
+            **state,
             catalog_id=catalog.catalog_id,
             catalog_name=catalog.name,
-            progress=progress,
-            next_question=next_question,
         )
+
+    def get_diagnostic(self, diagnosis_id: str) -> DiagnosticStateResponse:
+        with self._lock:
+            return DiagnosticStateResponse(
+                **self._state_fields(self._get_session(diagnosis_id))
+            )
+
+    def restart_requirement(
+        self,
+        diagnosis_id: str,
+        requirement_id: str,
+        payload: RestartRequirementRequest,
+    ) -> DiagnosticStateResponse:
+        with self._lock:
+            session = self._get_session(diagnosis_id)
+            self._require_revision(session, payload.revision)
+
+            if not any(item.id == requirement_id for item in session.requirements):
+                raise ValueError("The requirement is not part of this diagnostic.")
+
+            if not any(answer.requirement_id == requirement_id for answer in session.answers):
+                raise ValueError("The requirement has no recorded answers.")
+
+            session.answers = [
+                answer for answer in session.answers
+                if answer.requirement_id != requirement_id
+            ]
+            session.revision += 1
+            return DiagnosticStateResponse(**self._state_fields(session))
+
+    def _require_revision(self, session: DiagnosticSession, revision: int) -> None:
+        if revision != session.revision:
+            raise ValueError("The diagnostic has changed. Refresh its state before submitting.")
+
+    def _state_fields(self, session: DiagnosticSession) -> dict:
+        next_question = self._find_next_question(session)
+        requirements = []
+        for index, requirement in enumerate(session.requirements, start=1):
+            answers = [
+                answer for answer in session.answers
+                if answer.requirement_id == requirement.id
+            ]
+            processing = process_requirement_answers(
+                requirement=requirement, answers=answers,
+            )
+            status = (
+                "pending" if not answers else
+                "in_progress" if processing.unanswered_question_ids else
+                "completed"
+            )
+            requirements.append(RequirementProgressResponse(
+                requirement_id=requirement.id,
+                requirement_name=requirement.name,
+                requirement_number=index,
+                status=status,
+            ))
+
+        return {
+            "diagnosis_id": session.diagnosis_id,
+            "revision": session.revision,
+            "requirements": requirements,
+            "next_question": next_question,
+            "progress": self._build_progress(session=session, next_question=next_question),
+        }
 
     def submit_answer(
         self,
@@ -135,6 +219,8 @@ class DiagnosticService:
     ) -> SubmitAnswerResponse:
         with self._lock:
             session = self._get_session(diagnosis_id)
+
+            self._require_revision(session, payload.revision)
 
             expected_question = self._find_next_question(
                 session
@@ -233,15 +319,8 @@ class DiagnosticService:
                     interpretation.status
                     == InterpretationStatus.NEEDS_CLARIFICATION
                 ):
-                    progress = self._build_progress(
-                        session=session,
-                        next_question=expected_question,
-                    )
-
                     return SubmitAnswerResponse(
-                        diagnosis_id=diagnosis_id,
-                        progress=progress,
-                        next_question=expected_question,
+                        **self._state_fields(session),
                         interpretation_status=(
                             interpretation.status.value
                         ),
@@ -255,26 +334,13 @@ class DiagnosticService:
                         "The answer could not be interpreted."
                     )
 
-            session.answers.append(
-                evaluation_answer
-            )
-
-            next_question = self._find_next_question(
-                session
-            )
-
-            progress = self._build_progress(
-                session=session,
-                next_question=next_question,
-            )
+            session.answers.append(evaluation_answer)
+            session.revision += 1
+            state = self._state_fields(session)
 
         return SubmitAnswerResponse(
-            diagnosis_id=diagnosis_id,
-            progress=progress,
-            next_question=next_question,
-            interpretation_status=(
-                interpretation_status.value
-            ),
+            **state,
+            interpretation_status=interpretation_status.value,
             clarification_message=None,
         )
 

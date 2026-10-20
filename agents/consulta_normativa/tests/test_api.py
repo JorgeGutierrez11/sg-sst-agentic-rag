@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 with (
-    patch.dict(os.environ, {"IP_ADDRESS": "https://test.example"}),
+    patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": "https://test.example"}),
     patch("dotenv.load_dotenv"),
 ):
     from agents.consulta_normativa.api.dependencies import get_query_service

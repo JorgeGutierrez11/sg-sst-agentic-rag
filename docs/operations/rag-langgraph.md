@@ -1,31 +1,37 @@
 # Runbook operativo: RAG LangChain/LangGraph
 
-Esta guía cubre la ejecución de la implementación RAG actual en `agents/consulta_normativa/langchain_rag/`.
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `agents/consulta_normativa/langchain_rag/main.py`, `config.py`, `agents/api/main.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
+Esta guía cubre la ejecución por CLI de la implementación RAG actual en `agents/consulta_normativa/langchain_rag/`. Para usarla por HTTP, consulta [getting-started.md](../getting-started.md).
 
 ## Propósito
 
-Operar la consulta normativa SG-SST actual: abre una colección ChromaDB existente, abre un índice BM25 existente, ejecuta recuperación híbrida en LangGraph y genera respuestas fundamentadas con DeepSeek.
+Operar la consulta normativa SG-SST actual: abre la colección ChromaDB y el índice BM25 existentes, ejecuta el grafo LangGraph (contexto empresarial, expansión de consulta, recuperación híbrida, reranking, expansión a padres, grading y complemento de tablas) y genera respuestas con DeepSeek. La arquitectura está en [retrieval-langgraph.md](../architecture/retrieval-langgraph.md).
 
 ## Prerrequisitos
 
 | Requisito | Detalle |
 |---|---|
-| Vector store | Debe existir `data/processed/chroma` con la colección `sg_sst_base_rag`. |
-| Índice BM25 | Debe existir `data/processed/bm25`. |
-| API key | `DEEPSEEK_API_KEY` debe estar en el entorno. |
-| Dependencias | Instalar `requirements.txt`, incluyendo Chroma, LangChain, LangGraph y `langchain-openai`. |
-| Modelo | `langchain_rag/config.py` usa `deepseek-chat` vía `https://api.deepseek.com` con temperatura `0`. |
-
-La consulta abre la colección existente con `open_existing_collection(...)` y el índice BM25 existente con `open_existing_index(...)`; no debe crear índices vacíos durante la operación. El top-k final sale de `RETRIEVAL_TOP_K`, mientras `HYBRID_CANDIDATE_TOP_K` controla el pool candidato por motor antes de la fusión.
+| Vector store | `data/processed/chroma` con la colección `sg_sst_base_rag`. El runtime no lo abre directamente: al arrancar lo copia a un directorio temporal (o bajo `RAG_CHROMA_WORKING_DIR`) y consulta esa copia, que se borra al salir. Así el índice publicado no cambia y puede estar en solo lectura. |
+| Índice BM25 | `data/processed/bm25`. |
+| Parent chunks | `data/processed/chunks/parents.jsonl`; si falta, el arranque falla con `FileNotFoundError`. |
+| Documentos de tabla | `data/processed/table_documents.jsonl`. |
+| Carpeta de imágenes | `data/images/` con permisos de escritura (solo CLI). |
+| API key | `DEEPSEEK_API_KEY` en el entorno o en `.env`. |
+| Modelos | `Qwen/Qwen3-Embedding-0.6B` y `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, con revisión fija (`DEFAULT_EMBEDDING_MODEL_REVISION` en `pipeline/chunking/config.py` y `RERANKER_MODEL_REVISION` en `langchain_rag/config.py`). La primera ejecución los descarga en `HF_HOME`; con `HF_HUB_OFFLINE=1` solo se cargan desde esa caché. El pipeline usa la misma revisión de Qwen para chunking y vectorización, así que cambiarla exige reconstruir chunks e índices. |
+| Dependencias | `pip install -r requirements.txt`. |
 
 ## Ruta rápida
 
 ```bash
-export DEEPSEEK_API_KEY="tu_api_key"
 python -m agents.consulta_normativa.langchain_rag.main
 ```
 
-También se puede responder una sola pregunta y salir:
+Responder una sola pregunta y salir:
 
 ```bash
 python -m agents.consulta_normativa.langchain_rag.main "¿Qué debe incluir el plan anual de trabajo del SG-SST?"
@@ -33,7 +39,7 @@ python -m agents.consulta_normativa.langchain_rag.main "¿Qué debe incluir el p
 
 ## Comportamiento esperado
 
-La CLI interactiva imprime literales en inglés porque son las cadenas exactas del código actual:
+Los literales están en inglés porque son las cadenas exactas del código:
 
 | Momento | Literal de consola |
 |---|---|
@@ -42,31 +48,31 @@ La CLI interactiva imprime literales en inglés porque son las cadenas exactas d
 | Respuesta | `Answer:` |
 | Fuentes | `References:` solo si existen referencias |
 
-La sesión termina con `exit`, `quit`, EOF o `Ctrl+C`. Los errores operacionales controlados se imprimen en stderr como `Error during <stage>:` y devuelven código `2`.
+Antes de la respuesta, la CLI imprime bloques de depuración: `QUERY EXPANSION`, la traza híbrida con reranking y padres, `RETRIEVAL RELEVANCE GRADING` y `CURRENT BUSINESS CONTEXT`.
 
-## Efectos secundarios actuales
+La sesión termina con `exit`, `quit`, EOF o `Ctrl+C`. Los errores se imprimen en stderr como `Error during initialization:` o `Error during RAG execution:`. Los errores de inicialización incluyen el tipo de la excepción original, por ejemplo `ValueError: DEEPSEEK_API_KEY is not configured in the environment.`. En modo de una sola pregunta devuelven código `2`; en modo interactivo el error de ejecución se imprime y el bucle continúa.
 
-Durante la construcción del runtime, el código intenta escribir el diagrama del grafo en:
+## Efectos secundarios
 
-```text
-data/images/base_rag_graph.png
-```
+Al construir el runtime, la CLI escribe `data/images/base_rag_graph.png` e imprime `Grafo guardado exitosamente como 'base_rag_graph.png'`. La API no escribe esta imagen.
 
-Si la carpeta no existe o no hay permisos de escritura, la inicialización puede fallar antes de entrar a la CLI.
+La memoria conversacional y de largo plazo es en memoria del proceso: se pierde al salir.
 
 ## Fallos frecuentes
 
 | Síntoma | Causa probable | Acción |
 |---|---|---|
-| `DEEPSEEK_API_KEY is not configured` | Falta la variable de entorno. | Exportar `DEEPSEEK_API_KEY` antes de iniciar. |
-| Error al abrir Chroma | Falta `data/processed/chroma` o la colección `sg_sst_base_rag`. | Ejecutar primero [`vectorization.md`](vectorization.md). |
-| Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar primero [`bm25-sparse-retrieval.md`](bm25-sparse-retrieval.md). |
-| Error al guardar `base_rag_graph.png` | Falta `data/images/` o no hay permisos. | Crear/verificar la carpeta antes de ejecutar. |
-| Respuesta de evidencia insuficiente | La recuperación híbrida no devolvió documentos. | Revisar corpus, vectorización, índice BM25 y formulación de la pregunta. |
+| `DEEPSEEK_API_KEY is not configured` | Falta la variable. | Definirla en `.env` o exportarla. |
+| `Missing runtime artifact: <artefacto> (<ruta>)` o `Empty runtime artifact: ...` | La comprobación previa encontró un artefacto ausente o vacío (`table_documents.jsonl` puede estar vacío). Se ejecuta antes de abrir Chroma o cargar modelos. | Regenerar el artefacto indicado con [corpus-build.md](corpus-build.md). |
+| `OSError: We couldn't connect to 'https://huggingface.co' ... cached files` | `HF_HUB_OFFLINE=1` y falta en `HF_HOME` la revisión fija de un modelo. | Ejecutar una vez sin `HF_HUB_OFFLINE` para descargarla. |
+| Error al abrir Chroma | Falta `data/processed/chroma` o la colección. | Ejecutar [vectorization.md](vectorization.md). |
+| `Index record count mismatch`, `Index ID mismatch` o `Missing parent chunks` | Chroma, BM25 y `parents.jsonl` no corresponden a la misma versión del corpus. Se comprueba después de abrir los índices y antes de cargar el reranker. Los IDs de los chunks se calculan a partir del contenido, así que un `parent_id` sin resolver indica que los padres y los hijos vienen de construcciones distintas. | Reconstruir desde cero: mover `data/processed/chroma/` (la vectorización hace `upsert` y no borra registros obsoletos) y ejecutar chunking, tablas, [vectorization.md](vectorization.md) y [bm25-sparse-retrieval.md](bm25-sparse-retrieval.md) sobre las mismas entradas. |
+| Error al abrir BM25 | Falta `data/processed/bm25`. | Ejecutar [bm25-sparse-retrieval.md](bm25-sparse-retrieval.md). |
+| `FileNotFoundError` de `parents.jsonl` | Falta la salida de chunking. | Ejecutar [corpus-build.md](corpus-build.md). |
+| Error al guardar `base_rag_graph.png` | Falta `data/images/` o no hay permisos. | Crear la carpeta. |
+| Respuesta de evidencia insuficiente | La recuperación no devolvió documentos o el grader los rechazó todos. | Revisar el bloque `RETRIEVAL RELEVANCE GRADING`, los índices y la pregunta. |
 
 ## Documentos relacionados
 
-- Arquitectura de esta implementación: [`../architecture/retrieval-langgraph.md`](../architecture/retrieval-langgraph.md).
-- Línea base manual congelada: [`rag-manual.md`](rag-manual.md).
-- Vectorización previa: [`vectorization.md`](vectorization.md).
-- Índice BM25 previo: [`bm25-sparse-retrieval.md`](bm25-sparse-retrieval.md).
+- Línea base manual congelada: [rag-manual.md](rag-manual.md).
+- Pruebas: [testing.md](../testing.md).

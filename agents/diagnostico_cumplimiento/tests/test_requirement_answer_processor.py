@@ -19,16 +19,18 @@ from agents.diagnostico_cumplimiento.questionnaire.requirement_answer_processor 
 )
 
 
-PILOT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v1.json"
-)
+CATALOG_PATH = Path(__file__).parent / "fixtures" / "valid_catalog.json"
 
 
 def get_requirement():
-    return load_catalog(PILOT_PATH).requirements[0]
+    # Affiliation requirement: three primary boolean questions, each with
+    # evidence questions that depend on a True answer.
+    catalog = load_catalog(CATALOG_PATH)
+    return next(
+        requirement
+        for requirement in catalog.requirements
+        if requirement.id == "res0312_art3_afiliacion_1_10"
+    )
 
 
 def build_answer(requirement, question_id, raw_answer):
@@ -59,13 +61,25 @@ def test_processes_partial_answers() -> None:
         InterpretationStatus.INSUFFICIENT_INFORMATION,
     ]
 
+    # Health evidence questions open up because the parent answered True;
+    # pension evidence stays blocked because its parent is unresolved.
     assert result.unanswered_question_ids == [
+        "q_health_affiliation_support",
+        "q_health_payment_support",
         "q_occupational_risk_affiliation",
     ]
 
     assert result.unresolved_question_ids == [
         "q_pension_affiliation",
     ]
+
+    assert result.blocked_question_ids == [
+        "q_pension_affiliation_support",
+        "q_pension_payment_support",
+        "q_occupational_risk_affiliation_support",
+        "q_occupational_risk_payment_support",
+    ]
+    assert result.skipped_question_ids == []
 
 
 def test_identifies_all_questions_as_pending_when_no_answers() -> None:
@@ -74,10 +88,21 @@ def test_identifies_all_questions_as_pending_when_no_answers() -> None:
     result = process_requirement_answers(requirement, [])
 
     assert result.interpretations == []
-    assert result.unanswered_question_ids == [
-        question.id for question in requirement.questions
+    # Only the root (primary) questions are active; dependents are blocked.
+    primary_ids = [
+        question.id
+        for question in requirement.questions
+        if question.depends_on is None
     ]
+    assert primary_ids
+    assert result.unanswered_question_ids == primary_ids
+    assert result.active_question_ids == primary_ids
     assert result.unresolved_question_ids == []
+    assert result.blocked_question_ids == [
+        question.id
+        for question in requirement.questions
+        if question.depends_on is not None
+    ]
 
 
 def test_processes_all_resolved_answers() -> None:
@@ -90,13 +115,31 @@ def test_processes_all_resolved_answers() -> None:
 
     result = process_requirement_answers(requirement, answers)
 
-    assert len(result.interpretations) == 3
+    # All dependencies are satisfied by True answers, so every question
+    # is active and interpreted.
+    assert len(result.interpretations) == len(requirement.questions)
     assert all(
         interpretation.status == InterpretationStatus.AFFIRMATIVE
         for interpretation in result.interpretations
     )
     assert result.unanswered_question_ids == []
     assert result.unresolved_question_ids == []
+    assert result.skipped_question_ids == []
+    assert result.blocked_question_ids == []
+
+
+def test_skips_dependent_questions_when_parent_answer_differs() -> None:
+    requirement = get_requirement()
+
+    answers = [build_answer(requirement, "q_health_affiliation", False)]
+
+    result = process_requirement_answers(requirement, answers)
+
+    assert result.skipped_question_ids == [
+        "q_health_affiliation_support",
+        "q_health_payment_support",
+    ]
+    assert "q_health_affiliation_support" not in result.unanswered_question_ids
 
 
 @pytest.mark.parametrize(

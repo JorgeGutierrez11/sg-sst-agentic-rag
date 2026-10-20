@@ -1,5 +1,11 @@
 # Evaluación comparativa de chunks para vector store legal SG-SST
 
+> **Status:** `Experimental`
+> **Audience:** academic-reviewer
+> **Verified against:** `data/processed/chunks/comparison/`
+> **Last verified:** 2026-10-18
+> **Replacement:** [chunking-strategy-comparison.md](chunking-strategy-comparison.md)
+
 Este documento resume la evaluación actual de `parent_chunks` y `child_chunks` regenerados para el corpus normativo SG-SST. El análisis se enfoca en calidad de datos para alimentar un vector store de alto rendimiento sobre normatividad legal colombiana.
 
 ## Decisión actual

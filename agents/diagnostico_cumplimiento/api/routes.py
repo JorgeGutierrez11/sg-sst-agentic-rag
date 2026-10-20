@@ -18,6 +18,8 @@ from agents.diagnostico_cumplimiento.api.schemas import (
     CompleteDiagnosticResponse,
     CreateDiagnosticRequest,
     CreateDiagnosticResponse,
+    DiagnosticStateResponse,
+    RestartRequirementRequest,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
 )
@@ -141,6 +143,38 @@ def create_diagnostic(
                 "unavailable."
             ),
         ) from error
+
+
+@router.get(
+    "/{diagnosis_id}",
+    response_model=DiagnosticStateResponse,
+)
+def get_diagnostic(
+    diagnosis_id: str,
+    service: DiagnosticService = Depends(get_diagnostic_service),
+) -> DiagnosticStateResponse:
+    try:
+        return service.get_diagnostic(diagnosis_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="Diagnostic session not found.") from error
+
+
+@router.post(
+    "/{diagnosis_id}/requirements/{requirement_id}/restart",
+    response_model=DiagnosticStateResponse,
+)
+def restart_requirement(
+    diagnosis_id: str,
+    requirement_id: str,
+    payload: RestartRequirementRequest,
+    service: DiagnosticService = Depends(get_diagnostic_service),
+) -> DiagnosticStateResponse:
+    try:
+        return service.restart_requirement(diagnosis_id, requirement_id, payload)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="Diagnostic session not found.") from error
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
 
 @router.post(

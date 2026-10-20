@@ -1,26 +1,17 @@
-
 import json
-from copy import deepcopy
 from pathlib import Path
 
-from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
 from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
 from agents.diagnostico_cumplimiento.domain.enums import RiskClass
 from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
 from agents.diagnostico_cumplimiento.questionnaire.questionnaire import run_questionnaire
 
 
-CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v2.json"
-)
-
 REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
+TRAINING_REQUIREMENT_ID = "res0312_art3_capacitacion_1_10"
 
 
-def run_pilot(answers, catalog_path=CATALOG_PATH):
+def run_pilot(answers, catalog_path):
     return run_questionnaire(
         profile=CompanyProfile(
             worker_count=8,
@@ -39,127 +30,130 @@ def answer(question_id, value, requirement_id=REQUIREMENT_ID):
     )
 
 
-def test_json_preserves_answers_and_negative_findings():
+def find_by_requirement(items, requirement_id):
+    return next(
+        item for item in items if item.requirement_id == requirement_id
+    )
+
+
+def test_json_preserves_answers_and_negative_findings(catalog_path):
     result = run_pilot(
         [
             answer("q_health_affiliation", True),
             answer("q_health_affiliation_support", False),
-        ]
+        ],
+        catalog_path,
     )
 
     data = json.loads(result.model_dump_json())
 
-    requirement = data["requirements"][0]
-    findings = data["declarative_findings"][0]
-    health = requirement["conditions"][0]
-    health_finding = findings["conditions"][0]
+    requirement = next(
+        item
+        for item in data["requirements"]
+        if item["requirement_id"] == REQUIREMENT_ID
+    )
+    findings = next(
+        item
+        for item in data["declarative_findings"]
+        if item["requirement_id"] == REQUIREMENT_ID
+    )
 
-    assert findings["requirement_id"] == requirement["requirement_id"]
+    questions = {
+        question["question_id"]: question
+        for question in requirement["questions"]
+    }
 
-    assert health["questions"][0]["answer"]["raw_answer"] is True
-    assert health["questions"][1]["answer"]["raw_answer"] is False
-    assert health["questions"][2]["answer"] is None
+    assert questions["q_health_affiliation"]["answer"]["raw_answer"] is True
+    assert (
+        questions["q_health_affiliation_support"]["answer"]["raw_answer"]
+        is False
+    )
+    assert questions["q_health_payment_support"]["answer"] is None
 
-    assert health_finding["status"] == "incomplete"
-    assert health_finding["negative_question_ids"] == [
+    assert findings["status"] == "incomplete"
+    assert findings["negative_question_ids"] == [
         "q_health_affiliation_support"
     ]
-    assert health_finding["unanswered_question_ids"] == [
-        "q_health_payment_support"
-    ]
-    assert health_finding["evidence_verified"] is False
-
-    assert health["evaluation"]["status"] == "pending_information"
+    assert "q_health_payment_support" in findings["unanswered_question_ids"]
+    assert findings["evidence_verified"] is False
 
 
-def test_all_affirmative_answers_do_not_establish_compliance():
-    requirement = load_catalog(CATALOG_PATH).requirements[0]
+def test_all_affirmative_answers_do_not_establish_compliance(
+    catalog,
+    catalog_path,
+):
+    requirement = next(
+        item for item in catalog.requirements if item.id == REQUIREMENT_ID
+    )
 
     answers = [
         answer(question.id, True)
         for question in requirement.questions
     ]
 
-    result = run_pilot(answers)
+    result = run_pilot(answers, catalog_path)
 
-    assert result.requirements[0].collection_status.value == (
-        "answers_interpreted"
+    snapshot = find_by_requirement(result.requirements, REQUIREMENT_ID)
+    findings = find_by_requirement(
+        result.declarative_findings,
+        REQUIREMENT_ID,
     )
 
-    assert all(
-        finding.status.value == "all_affirmative_declared"
-        and finding.evidence_verified is False
-        for finding in result.declarative_findings[0].conditions
-    )
+    assert snapshot.collection_status.value == "answers_interpreted"
 
-    assert all(
-        condition.evaluation.status.value == "not_evaluated"
-        for condition in result.requirements[0].conditions
-    )
+    assert findings.status.value == "all_affirmative_declared"
+    assert findings.evidence_verified is False
+    assert findings.negative_question_ids == []
 
 
-def test_unanswered_questionnaire_contains_pending_findings():
-    result = run_pilot([])
+def test_unanswered_questionnaire_contains_pending_findings(catalog_path):
+    result = run_pilot([], catalog_path)
 
-    assert result.requirements[0].collection_status.value == (
-        "not_started"
-    )
+    snapshot = find_by_requirement(result.requirements, REQUIREMENT_ID)
 
-    findings = result.declarative_findings[0].conditions
+    assert snapshot.collection_status.value == "not_started"
 
-    assert len(findings) == 3
-
-    for finding in findings:
+    for finding in result.declarative_findings:
         assert finding.status.value == "incomplete"
-        assert len(finding.unanswered_question_ids) == 3
         assert finding.negative_question_ids == []
         assert finding.evidence_verified is False
 
+    findings = find_by_requirement(
+        result.declarative_findings,
+        REQUIREMENT_ID,
+    )
+
+    # Only the three primary questions are askable before any answer;
+    # evidence questions stay blocked behind them.
+    assert findings.unanswered_question_ids == [
+        "q_health_affiliation",
+        "q_pension_affiliation",
+        "q_occupational_risk_affiliation",
+    ]
+    assert len(findings.blocked_question_ids) == 6
+
 
 def test_findings_match_their_requirement_with_multiple_requirements(
-    tmp_path: Path,
+    catalog_path: Path,
 ):
     """
-    Utiliza un segundo requisito sintético únicamente para
-    comprobar que no se mezclan respuestas ni hallazgos.
+    Checks that answers and findings of different requirements are
+    not mixed up.
     """
-
-    catalog = load_catalog(CATALOG_PATH)
-    catalog_data = catalog.model_dump(mode="json")
-
-    second = deepcopy(catalog_data["requirements"][0])
-    second["id"] = "test_second_requirement"
-    second["requirement_group_id"] = "test_second_group"
-
-    for condition in second["conditions"]:
-        condition["id"] += "_second"
-
-    for question in second["questions"]:
-        question["id"] += "_second"
-        question["condition_id"] += "_second"
-
-    catalog_data["requirements"].append(second)
-
-    test_catalog = tmp_path / "catalogo_sintetico.json"
-    test_catalog.write_text(
-        json.dumps(catalog_data, ensure_ascii=False),
-        encoding="utf-8",
-    )
 
     result = run_pilot(
         [
             answer("q_health_affiliation", True),
             answer(
-                "q_health_affiliation_second",
+                "q_training_preparation",
                 False,
-                requirement_id="test_second_requirement",
+                requirement_id=TRAINING_REQUIREMENT_ID,
             ),
         ],
-        catalog_path=test_catalog,
+        catalog_path,
     )
 
-    assert len(result.requirements) == 2
-    assert len(result.declarative_findings) == 2
+    assert len(result.requirements) == len(result.declarative_findings)
 
     for requirement, findings in zip(
         result.requirements,
@@ -168,17 +162,15 @@ def test_findings_match_their_requirement_with_multiple_requirements(
     ):
         assert findings.requirement_id == requirement.requirement_id
 
-        assert [
-            finding.condition_id for finding in findings.conditions
-        ] == [
-            condition.condition_id
-            for condition in requirement.conditions
-        ]
+    first = find_by_requirement(
+        result.declarative_findings,
+        REQUIREMENT_ID,
+    )
+    second = find_by_requirement(
+        result.declarative_findings,
+        TRAINING_REQUIREMENT_ID,
+    )
 
-    first_findings = result.declarative_findings[0].conditions[0]
-    second_findings = result.declarative_findings[1].conditions[0]
-
-    assert first_findings.negative_question_ids == []
-    assert second_findings.negative_question_ids == [
-        "q_health_affiliation_second"
-    ]
+    assert first.negative_question_ids == []
+    assert second.negative_question_ids == ["q_training_preparation"]
+    assert second.status.value == "has_negative_declaration"

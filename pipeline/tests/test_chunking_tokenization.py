@@ -47,7 +47,7 @@ class FakeAutoTokenizer:
         self.load_count = 0
         self.tokenizer = FakeTokenizer(offsets or [(0, 3), (4, 7)], is_fast)
 
-    def from_pretrained(self, model_name: str, use_fast: bool = True) -> "FakeTokenizer":
+    def from_pretrained(self, model_name: str, revision: object = None, use_fast: bool = True) -> "FakeTokenizer":
         self.load_count += 1
         return self.tokenizer
 

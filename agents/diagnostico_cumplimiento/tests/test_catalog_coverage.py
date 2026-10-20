@@ -11,11 +11,11 @@ from agents.diagnostico_cumplimiento.preliminary_diagnosis import (
 )
 
 
+# Frozen v2.1 snapshot of the general 1-10 catalog (7 requirements).
 CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v2.json"
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "valid_catalog.json"
 )
 
 
@@ -30,13 +30,14 @@ def run_diagnosis(catalog_path=CATALOG_PATH):
     )
 
 
-def test_pilot_reports_its_actual_coverage():
+def test_package_reports_its_actual_coverage():
     result = run_diagnosis()
+    catalog = load_catalog(CATALOG_PATH)
 
-    assert result.coverage.status == "not_established"
-    assert result.coverage.included_requirement_count == 1
+    assert result.coverage.status == "selected_package"
+    assert result.coverage.included_requirement_count == 7
     assert result.coverage.included_requirement_ids == [
-        "res0312_art3_afiliacion_1_10"
+        requirement.id for requirement in catalog.requirements
     ]
 
     assert [
@@ -50,9 +51,9 @@ def test_coverage_is_included_in_serialized_result():
 
     data = json.loads(result.model_dump_json())
 
-    assert data["coverage"]["status"] == "not_established"
-    assert data["coverage"]["included_requirement_count"] == 1
-    assert len(data["coverage"]["included_requirement_ids"]) == 1
+    assert data["coverage"]["status"] == "selected_package"
+    assert data["coverage"]["included_requirement_count"] == 7
+    assert len(data["coverage"]["included_requirement_ids"]) == 7
     assert data["coverage"]["explanation"]
 
     assert data["questionnaire"]["catalog_version"] == (
@@ -64,25 +65,21 @@ def test_coverage_counts_all_selected_requirements(tmp_path: Path):
     """
     Agrega un requisito sintético para comprobar el conteo.
 
-    No modifica el catálogo piloto ni amplía su cobertura
-    normativa real.
+    No modifica el catálogo real ni amplía su cobertura normativa.
     """
 
-    catalog = load_catalog(CATALOG_PATH)
-    catalog_data = catalog.model_dump(mode="json")
+    catalog_data = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
 
-    second = deepcopy(catalog_data["requirements"][0])
+    section = catalog_data["sections"][0]
+    second = deepcopy(section["requirements"][0])
     second["id"] = "test_second_requirement"
-    second["requirement_group_id"] = "test_second_group"
-
-    for condition in second["conditions"]:
-        condition["id"] += "_second"
 
     for question in second["questions"]:
         question["id"] += "_second"
-        question["condition_id"] += "_second"
+        if question.get("depends_on"):
+            question["depends_on"]["question_id"] += "_second"
 
-    catalog_data["requirements"].append(second)
+    section["requirements"].append(second)
 
     test_catalog = tmp_path / "catalogo_sintetico.json"
     test_catalog.write_text(
@@ -92,15 +89,13 @@ def test_coverage_counts_all_selected_requirements(tmp_path: Path):
 
     result = run_diagnosis(test_catalog)
 
-    assert result.coverage.included_requirement_count == 2
-    assert result.coverage.included_requirement_ids == [
-        "res0312_art3_afiliacion_1_10",
-        "test_second_requirement",
-    ]
-
-    # Aumentar el número de requisitos no demuestra
-    # que el catálogo tenga cobertura normativa completa.
-    assert result.coverage.status == "not_established"
+    assert result.coverage.included_requirement_count == 8
+    assert result.coverage.included_requirement_ids[0] == (
+        "art3_asignacion_persona_sgsst"
+    )
+    assert "test_second_requirement" in (
+        result.coverage.included_requirement_ids
+    )
 
     assert [
         requirement.requirement_id

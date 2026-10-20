@@ -1,10 +1,7 @@
-
 import json
-from pathlib import Path
 
 import pytest
 
-from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
 from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
 from agents.diagnostico_cumplimiento.domain.enums import RiskClass
 from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
@@ -16,14 +13,6 @@ from agents.diagnostico_cumplimiento.rules.applicability import (
 )
 
 
-CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v2.json"
-)
-
-
 def build_profile(risk_class=RiskClass.I):
     return CompanyProfile(
         worker_count=8,
@@ -31,9 +20,12 @@ def build_profile(risk_class=RiskClass.I):
     )
 
 
-def build_answer(question_id, raw_answer):
-    requirement = load_catalog(CATALOG_PATH).requirements[0]
+def get_requirement(catalog, index=1):
+    # Index 1 is the affiliation requirement of the frozen catalog.
+    return catalog.requirements[index]
 
+
+def build_answer(requirement, question_id, raw_answer):
     return QuestionAnswer(
         requirement_id=requirement.id,
         question_id=question_id,
@@ -41,88 +33,120 @@ def build_answer(question_id, raw_answer):
     )
 
 
-def test_integrated_result_preserves_answers_and_findings():
+def find_by_requirement(items, requirement_id):
+    return next(
+        item for item in items if item.requirement_id == requirement_id
+    )
+
+
+def test_integrated_result_preserves_answers_and_findings(
+    catalog,
+    catalog_path,
+):
+    requirement = get_requirement(catalog)
+
     result = run_preliminary_diagnosis(
         profile=build_profile(),
         answers=[
-            build_answer("q_health_affiliation", True),
-            build_answer("q_health_affiliation_support", False),
+            build_answer(requirement, "q_health_affiliation", True),
+            build_answer(
+                requirement, "q_health_affiliation_support", False
+            ),
         ],
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
-    questionnaire_requirement = result.questionnaire.requirements[0]
-    report_requirement = result.report.requirements[0]
+    questionnaire_requirement = find_by_requirement(
+        result.questionnaire.requirements, requirement.id
+    )
+    report_requirement = find_by_requirement(
+        result.report.requirements, requirement.id
+    )
 
+    questions = {
+        question.question_id: question
+        for question in questionnaire_requirement.questions
+    }
+
+    assert questions["q_health_affiliation"].answer.raw_answer is True
     assert (
-        questionnaire_requirement.requirement_id
-        == report_requirement.requirement_id
+        questions["q_health_affiliation_support"].answer.raw_answer
+        is False
     )
+    assert questions["q_health_payment_support"].answer is None
 
-    health_answers = questionnaire_requirement.conditions[0].questions
-
-    assert health_answers[0].answer.raw_answer is True
-    assert health_answers[1].answer.raw_answer is False
-    assert health_answers[2].answer is None
-
-    health_report = report_requirement.conditions[0]
-
-    assert health_report.declaration_status.value == "incomplete"
-    assert health_report.evidence_verified is False
+    assert report_requirement.assessment_evidence_verified is False
+    assert report_requirement.assessment_status.value == (
+        "insufficient_information"
+    )
     assert any(
-        "negativamente" in finding.lower()
-        for finding in health_report.findings
+        "negativa" in finding.lower()
+        for finding in report_requirement.findings
     )
 
 
-def test_integrated_report_preserves_catalog_references():
-    catalog = load_catalog(CATALOG_PATH)
-    requirement = catalog.requirements[0]
+def test_integrated_report_preserves_catalog_references(
+    catalog,
+    catalog_path,
+):
+    requirement = get_requirement(catalog)
 
     result = run_preliminary_diagnosis(
         profile=build_profile(),
         answers=[],
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
-    report_requirement = result.report.requirements[0]
+    report_requirement = find_by_requirement(
+        result.report.requirements, requirement.id
+    )
 
+    assert result.report.catalog_id == catalog.catalog_id
     assert result.report.catalog_version == catalog.catalog_version
     assert report_requirement.source == requirement.source
     assert (
-        report_requirement.criterion_official_text
-        == requirement.criterion.official_text
+        report_requirement.official_criterion
+        == requirement.official_criterion
     )
     assert (
-        report_requirement.verification_method
-        == requirement.criterion.verification_method
+        report_requirement.official_verification_method
+        == requirement.official_verification_method
     )
 
 
-def test_affirmative_answers_do_not_establish_compliance():
-    requirement = load_catalog(CATALOG_PATH).requirements[0]
+def test_affirmative_answers_do_not_establish_compliance(
+    catalog,
+    catalog_path,
+):
+    requirement = get_requirement(catalog)
 
     answers = [
-        build_answer(question.id, True)
+        build_answer(requirement, question.id, True)
         for question in requirement.questions
     ]
 
     result = run_preliminary_diagnosis(
         profile=build_profile(),
         answers=answers,
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
     )
 
     assert len(answers) == 9
 
-    assert all(
-        condition.evaluation.status.value == "not_evaluated"
-        for condition in result.questionnaire.requirements[0].conditions
+    report_requirement = find_by_requirement(
+        result.report.requirements, requirement.id
     )
 
+    # Declared compliance never means verified evidence.
+    assert report_requirement.assessment_status.value == (
+        "complies_as_declared"
+    )
+    assert report_requirement.assessment_evidence_verified is False
+    assert report_requirement.requires_expert_validation is True
+
     assert all(
-        condition.evidence_verified is False
-        for condition in result.report.requirements[0].conditions
+        assessment.evidence_verified is False
+        for assessment in result.assessments
     )
 
     data = json.loads(result.model_dump_json())
@@ -131,10 +155,10 @@ def test_affirmative_answers_do_not_establish_compliance():
     assert "report" in data
 
 
-def test_integrated_execution_rejects_out_of_scope_profile():
+def test_integrated_execution_rejects_out_of_scope_profile(catalog_path):
     with pytest.raises(OutOfScopeError):
         run_preliminary_diagnosis(
             profile=build_profile(risk_class=RiskClass.II),
             answers=[],
-            catalog_path=CATALOG_PATH,
+            catalog_path=catalog_path,
         )

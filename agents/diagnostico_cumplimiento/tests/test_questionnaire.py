@@ -1,11 +1,8 @@
-
 import json
-from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
-from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
 from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
 from agents.diagnostico_cumplimiento.domain.enums import RiskClass
 from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
@@ -16,7 +13,6 @@ from agents.diagnostico_cumplimiento.questionnaire.answer_validation import (
     AnswerReferenceError,
 )
 from agents.diagnostico_cumplimiento.rules.applicability import (
-    CatalogCoverageError,
     OutOfScopeError,
 )
 from agents.diagnostico_cumplimiento.questionnaire.questionnaire import (
@@ -24,14 +20,8 @@ from agents.diagnostico_cumplimiento.questionnaire.questionnaire import (
 )
 
 
-PILOT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v1.json"
-)
-
 REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
+TRAINING_REQUIREMENT_ID = "res0312_art3_capacitacion_1_10"
 
 
 def build_profile(
@@ -57,7 +47,17 @@ def build_answer(
     )
 
 
-def test_runs_complete_questionnaire_with_partial_answers() -> None:
+def get_snapshot(result, requirement_id: str = REQUIREMENT_ID):
+    return next(
+        requirement
+        for requirement in result.requirements
+        if requirement.requirement_id == requirement_id
+    )
+
+
+def test_runs_complete_questionnaire_with_partial_answers(
+    catalog_path: Path,
+) -> None:
     answers = [
         build_answer("q_health_affiliation", "Sí"),
         build_answer("q_pension_affiliation", "No sé"),
@@ -66,103 +66,109 @@ def test_runs_complete_questionnaire_with_partial_answers() -> None:
     result = run_questionnaire(
         profile=build_profile(),
         answers=answers,
-        catalog_path=PILOT_PATH,
+        catalog_path=catalog_path,
     )
 
-    assert result.catalog_version == "res0312-piloto-v1"
+    assert result.catalog_id == "res0312_riesgo_i_1_10_general"
+    assert result.catalog_version == "2.1"
     assert result.company_profile.worker_count == 8
-    assert len(result.requirements) == 1
 
-    requirement = result.requirements[0]
+    # The catalog holds several requirements; all of them are selected.
+    assert len(result.requirements) == 7
+    assert len(result.declarative_findings) == 7
 
-    assert requirement.requirement_id == REQUIREMENT_ID
+    requirement = get_snapshot(result)
+
     assert requirement.collection_status.value == "needs_resolution"
+    assert requirement.unresolved_question_ids == ["q_pension_affiliation"]
 
-    assert [
-        condition.collection_status.value
-        for condition in requirement.conditions
-    ] == [
-        "answers_interpreted",
-        "needs_resolution",
-        "not_started",
-    ]
+    questions = {
+        question.question_id: question
+        for question in requirement.questions
+    }
 
-    assert [
-        condition.evaluation.status.value
-        for condition in requirement.conditions
-    ] == [
-        "not_evaluated",
-        "pending_information",
-        "pending_information",
-    ]
-
-    assert requirement.conditions[0].questions[0].answer.raw_answer == "Sí"
-    assert requirement.conditions[1].questions[0].answer.raw_answer == "No sé"
-    assert requirement.conditions[2].questions[0].answer is None
+    assert questions["q_health_affiliation"].answer.raw_answer == "Sí"
+    assert questions["q_pension_affiliation"].answer.raw_answer == "No sé"
+    assert questions["q_occupational_risk_affiliation"].answer is None
 
     assert [answer.raw_answer for answer in answers] == ["Sí", "No sé"]
 
 
-def test_questionnaire_without_answers() -> None:
+def test_questionnaire_without_answers(catalog_path: Path) -> None:
     result = run_questionnaire(
         profile=build_profile(),
         answers=[],
-        catalog_path=PILOT_PATH,
+        catalog_path=catalog_path,
     )
-
-    requirement = result.requirements[0]
-
-    assert requirement.collection_status.value == "not_started"
 
     assert all(
-        condition.evaluation.status.value == "pending_information"
-        for condition in requirement.conditions
+        requirement.collection_status.value == "not_started"
+        for requirement in result.requirements
+    )
+
+    requirement = get_snapshot(result)
+
+    assert all(
+        question.answer is None and question.interpretation is None
+        for question in requirement.questions
     )
 
 
-def test_questionnaire_produces_serializable_json() -> None:
+def test_questionnaire_produces_serializable_json(
+    catalog_path: Path,
+) -> None:
     result = run_questionnaire(
         profile=build_profile(),
         answers=[build_answer("q_health_affiliation", True)],
-        catalog_path=PILOT_PATH,
+        catalog_path=catalog_path,
     )
 
     data = json.loads(result.model_dump_json())
 
-    assert data["catalog_version"] == "res0312-piloto-v1"
+    assert data["catalog_version"] == "2.1"
     assert data["company_profile"]["worker_count"] == 8
 
-    requirement = data["requirements"][0]
+    requirement = next(
+        item
+        for item in data["requirements"]
+        if item["requirement_id"] == REQUIREMENT_ID
+    )
 
     assert requirement["collection_status"] == "in_progress"
 
-    health = requirement["conditions"][0]
+    health = requirement["questions"][0]
 
-    assert health["questions"][0]["answer"]["raw_answer"] is True
-    assert health["evaluation"]["status"] == "not_evaluated"
+    assert health["question_id"] == "q_health_affiliation"
+    assert health["answer"]["raw_answer"] is True
 
     assert data["scope_note"]
 
 
-def test_rejects_company_outside_risk_scope() -> None:
+def test_rejects_company_outside_risk_scope(catalog_path: Path) -> None:
     with pytest.raises(OutOfScopeError):
         run_questionnaire(
             profile=build_profile(risk_class=RiskClass.II),
             answers=[],
-            catalog_path=PILOT_PATH,
+            catalog_path=catalog_path,
         )
 
 
-def test_rejects_profile_not_covered_by_pilot_catalog() -> None:
-    with pytest.raises(CatalogCoverageError):
-        run_questionnaire(
-            profile=build_profile(worker_count=11),
-            answers=[],
-            catalog_path=PILOT_PATH,
-        )
+def test_selects_catalog_by_profile_when_no_path_is_given() -> None:
+    small = run_questionnaire(
+        profile=build_profile(worker_count=8),
+        answers=[],
+    )
+    medium = run_questionnaire(
+        profile=build_profile(worker_count=11),
+        answers=[],
+    )
+
+    assert small.catalog_id != medium.catalog_id
 
 
-def test_rejects_answer_for_non_applicable_requirement() -> None:
+def test_rejects_answer_for_non_applicable_requirement(
+    catalog_path: Path,
+) -> None:
     answers = [
         build_answer(
             "q_health_affiliation",
@@ -175,11 +181,11 @@ def test_rejects_answer_for_non_applicable_requirement() -> None:
         run_questionnaire(
             profile=build_profile(),
             answers=answers,
-            catalog_path=PILOT_PATH,
+            catalog_path=catalog_path,
         )
 
 
-def test_rejects_unknown_question() -> None:
+def test_rejects_unknown_question(catalog_path: Path) -> None:
     answers = [
         build_answer("unknown_question", True),
     ]
@@ -188,11 +194,11 @@ def test_rejects_unknown_question() -> None:
         run_questionnaire(
             profile=build_profile(),
             answers=answers,
-            catalog_path=PILOT_PATH,
+            catalog_path=catalog_path,
         )
 
 
-def test_rejects_duplicate_answers() -> None:
+def test_rejects_duplicate_answers(catalog_path: Path) -> None:
     answers = [
         build_answer("q_health_affiliation", True),
         build_answer("q_health_affiliation", False),
@@ -202,79 +208,46 @@ def test_rejects_duplicate_answers() -> None:
         run_questionnaire(
             profile=build_profile(),
             answers=answers,
-            catalog_path=PILOT_PATH,
+            catalog_path=catalog_path,
         )
 
 
 def test_processes_multiple_requirements_independently(
-    tmp_path: Path,
+    catalog_path: Path,
 ) -> None:
-    """
-    Construye un catálogo sintético con dos requisitos.
-
-    No modifica el catálogo piloto ni representa una
-    ampliación validada de la matriz normativa.
-    """
-
-    catalog = load_catalog(PILOT_PATH)
-    catalog_data = catalog.model_dump(mode="json")
-
-    second_requirement = deepcopy(
-        catalog_data["requirements"][0]
-    )
-
-    second_requirement["id"] = "test_second_requirement"
-    second_requirement["requirement_group_id"] = (
-        "test_second_requirement_group"
-    )
-
-    # Los identificadores del segundo requisito son distintos.
-    for condition in second_requirement["conditions"]:
-        condition["id"] += "_second"
-
-    for question in second_requirement["questions"]:
-        question["id"] += "_second"
-        question["condition_id"] += "_second"
-
-    catalog_data["requirements"].append(second_requirement)
-
-    test_catalog_path = tmp_path / "catalogo_dos_requisitos.json"
-
-    test_catalog_path.write_text(
-        json.dumps(catalog_data, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
     answers = [
         build_answer("q_health_affiliation", True),
         build_answer(
-            "q_health_affiliation_second",
+            "q_training_preparation",
             False,
-            requirement_id="test_second_requirement",
+            requirement_id=TRAINING_REQUIREMENT_ID,
         ),
     ]
 
     result = run_questionnaire(
         profile=build_profile(),
         answers=answers,
-        catalog_path=test_catalog_path,
+        catalog_path=catalog_path,
     )
 
-    assert len(result.requirements) == 2
+    first = get_snapshot(result, REQUIREMENT_ID)
+    second = get_snapshot(result, TRAINING_REQUIREMENT_ID)
 
-    first, second = result.requirements
+    first_answered = [
+        question.question_id
+        for question in first.questions
+        if question.answer is not None
+    ]
+    second_answered = [
+        question.question_id
+        for question in second.questions
+        if question.answer is not None
+    ]
 
-    assert first.requirement_id == REQUIREMENT_ID
-    assert second.requirement_id == "test_second_requirement"
+    # Each requirement only sees its own answers.
+    assert first_answered == ["q_health_affiliation"]
+    assert second_answered == ["q_training_preparation"]
 
-    first_answer = first.conditions[0].questions[0].answer
-    second_answer = second.conditions[0].questions[0].answer
-
-    assert first_answer.raw_answer is True
-    assert second_answer.raw_answer is False
-
-    assert all(
-        condition.evaluation.status.value != "satisfied_as_declared"
-        for requirement in result.requirements
-        for condition in requirement.conditions
-    )
+    assert first.collection_status.value == "in_progress"
+    assert second.collection_status.value == "answers_interpreted"
+    assert "q_training_execution" in second.skipped_question_ids

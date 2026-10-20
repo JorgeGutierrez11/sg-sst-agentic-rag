@@ -1,5 +1,11 @@
 # Arquitectura de recuperación normativa
 
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `agents/consulta_normativa/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 La consulta normativa tiene dos implementaciones RAG separadas. Esta página solo sirve como índice para evitar mezclar responsabilidades entre la línea base manual congelada y la implementación actual con LangChain/LangGraph.
 
 ## Implementaciones

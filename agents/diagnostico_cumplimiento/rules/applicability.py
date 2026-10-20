@@ -18,16 +18,6 @@ class CatalogCoverageError(ApplicabilityError):
     """El catálogo seleccionado no contiene requisitos evaluables."""
 
 
-class AmbiguousApplicabilityError(ApplicabilityError):
-    """
-    Error legado.
-
-    Se conserva temporalmente para no romper imports existentes.
-    Ya no se utiliza para seleccionar variantes dentro del catálogo,
-    porque cada perfil empresarial recibe un único paquete normativo.
-    """
-
-
 def select_applicable_requirements(
     profile: CompanyProfile,
     catalog: AssessmentCatalog,

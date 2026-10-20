@@ -1,5 +1,11 @@
 # RAG manual de consulta normativa
 
+> **Status:** `Baseline`
+> **Audience:** maintainer, academic-reviewer
+> **Verified against:** `agents/consulta_normativa/manual_implementation/`
+> **Last verified:** 2026-10-18
+> **Replacement:** [retrieval-langgraph.md](retrieval-langgraph.md)
+
 Esta implementación es una línea base congelada para comparación. Vive en `agents/consulta_normativa/manual_implementation/` y no debe presentarse como el flujo actual por defecto.
 
 ## Responsabilidad

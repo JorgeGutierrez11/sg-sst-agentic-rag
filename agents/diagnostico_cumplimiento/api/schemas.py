@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 # pyrefly: ignore [missing-import]
 from pydantic import (
@@ -41,14 +41,25 @@ class DiagnosticProgressResponse(BaseModel):
     completed: bool = False
 
 
-class CreateDiagnosticResponse(BaseModel):
-    diagnosis_id: str
+class RequirementProgressResponse(BaseModel):
+    requirement_id: str
+    requirement_name: str
+    requirement_number: int
+    status: Literal["pending", "in_progress", "completed"]
 
+
+class DiagnosticStateResponse(BaseModel):
+    diagnosis_id: str
+    revision: int = 0
+    progress: DiagnosticProgressResponse
+    next_question: QuestionResponse | None = None
+    requirements: list[RequirementProgressResponse] = Field(default_factory=list)
+
+
+class CreateDiagnosticResponse(DiagnosticStateResponse):
     catalog_id: str
     catalog_name: str
 
-    progress: DiagnosticProgressResponse
-    next_question: QuestionResponse | None = None
 
 
 class SubmitAnswerRequest(BaseModel):
@@ -56,6 +67,7 @@ class SubmitAnswerRequest(BaseModel):
     question_id: str
 
     answer: bool | str
+    revision: Annotated[int, Field(ge=0)]
 
     @field_validator("answer")
     @classmethod
@@ -74,17 +86,13 @@ class SubmitAnswerRequest(BaseModel):
         return value
 
 
-class SubmitAnswerResponse(BaseModel):
-    diagnosis_id: str
-
-    progress: DiagnosticProgressResponse
-    next_question: QuestionResponse | None = None
-
+class SubmitAnswerResponse(DiagnosticStateResponse):
     interpretation_status: str
     clarification_message: str | None = None
 
-    interpretation_status: str
-    clarification_message: str | None = None
+
+class RestartRequirementRequest(BaseModel):
+    revision: Annotated[int, Field(ge=0)]
 
 
 class RequirementAssessmentResponse(BaseModel):

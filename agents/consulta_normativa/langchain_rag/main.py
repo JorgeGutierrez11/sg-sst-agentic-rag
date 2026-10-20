@@ -6,8 +6,9 @@ from uuid import uuid4 # nuevo import para generar un identificador único para 
 import argparse
 import sys
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from langchain_core.embeddings import Embeddings
 
@@ -24,9 +25,18 @@ from agents.consulta_normativa.langchain_rag.config import (
     RERANKER_FINAL_TOP_K,
     RERANKER_MAX_LENGTH,
     RERANKER_MODEL_NAME,
+    RERANKER_MODEL_REVISION,
+    get_chroma_working_root,
+)
+from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (
+    DEFAULT_BM25_PATH,
 )
 from agents.consulta_normativa.langchain_rag.retrieval.table_complement import (
     DEFAULT_TABLE_DOCUMENTS_PATH,
+)
+from pipeline.artifact_validation import (
+    ArtifactValidationError,
+    validate_index_consistency as validate_loaded_index_consistency,
 )
 
 logging.getLogger(
@@ -43,20 +53,75 @@ class OperationalError(Exception):
 
 
 @dataclass(frozen=True)
+class RuntimeArtifact:
+    """Local file the runtime needs before opening indexes or loading models."""
+
+    label: str
+    path: Path
+    allow_empty: bool = False
+
+
+# Archivos que bm25s lee al cargar el índice; si falta corpus.jsonl lo omite sin avisar.
+BM25_INDEX_FILES = (
+    "params.index.json",
+    "vocab.index.json",
+    "data.csc.index.npy",
+    "indices.csc.index.npy",
+    "indptr.csc.index.npy",
+    "corpus.jsonl",
+)
+
+RUNTIME_ARTIFACTS: tuple[RuntimeArtifact, ...] = (
+    RuntimeArtifact("Chroma database", DEFAULT_CHROMA_PATH / "chroma.sqlite3"),
+    *(RuntimeArtifact(f"BM25 index file {name}", DEFAULT_BM25_PATH / name) for name in BM25_INDEX_FILES),
+    RuntimeArtifact("parent chunks", DEFAULT_PARENT_CHUNKS_PATH),
+    # Puede estar vacío si el corpus no tiene tablas.
+    RuntimeArtifact("table documents", DEFAULT_TABLE_DOCUMENTS_PATH, allow_empty=True),
+)
+
+
+def validate_runtime_artifacts(artifacts: Iterable[RuntimeArtifact] = RUNTIME_ARTIFACTS) -> None:
+    """Fail with every missing or empty artifact before Chroma can create files."""
+
+    problems: list[str] = []
+    for artifact in artifacts:
+        if not artifact.path.is_file():
+            problems.append(f"Missing runtime artifact: {artifact.label} ({artifact.path})")
+        elif not artifact.allow_empty and artifact.path.stat().st_size == 0:
+            problems.append(f"Empty runtime artifact: {artifact.label} ({artifact.path})")
+
+    if problems:
+        raise OperationalError("; ".join(problems))
+
+
+def validate_index_consistency(collection: Any, bm25_index: Any, parent_lookup: Mapping[str, Any]) -> None:
+    """Fail when Chroma, BM25, and parent chunks come from different corpus builds."""
+
+    try:
+        validate_loaded_index_consistency(collection, bm25_index, parent_lookup)
+    except ArtifactValidationError as error:
+        raise OperationalError(str(error)) from error
+
+
+@dataclass(frozen=True)
 class RuntimeDependencies:
     """Lazy-loaded dependencies required by the executable RAG flow."""
 
+    validate_runtime_artifacts: Callable[[], None]
     build_deepseek_llm: Callable[[], Any]
     #build_langgraph_rag: Callable[[Any, Retriever, int], Any]
     #answer_with_langgraph: Callable[[str, Any], Any]
     build_langgraph_rag: Callable[..., Any] # La firma anterior ya quedó obsoleta porque ahora ambas funciones aceptan parámetros adicionales.
     answer_with_langgraph: Callable[..., Any]
-    open_existing_collection: Callable[[Any, str], Any]
+    open_existing_collection: Callable[[Any, str, Any], Any]
     open_existing_bm25_index: Callable[..., Any]
     hybrid_retriever: Callable[..., Retriever]
     get_reranker: Callable[..., Any]
     load_parent_documents: Callable[..., Any]
     load_first_table_parts: Callable[..., Any]
+    create_chroma_working_copy: Callable[[Path, Path | None], Any]
+    validate_index_consistency: Callable[[Any, Any, Mapping[str, Any]], None]
+    build_embedding_function: Callable[[], Any]
     
 
 
@@ -68,6 +133,8 @@ class RagRuntime:
     answer_with_langgraph: Callable[..., Any]
     graph: Any
     thread_id: str
+    # Mantiene viva la copia de Chroma que consulta el grafo; se borra al salir.
+    chroma_working_copy: Any = None
 
 # nueva clase para adaptar los embeddings de Qwen a la memoria a largo plazo basada en recuperación
 class QwenMemoryEmbeddings(Embeddings):
@@ -76,13 +143,13 @@ class QwenMemoryEmbeddings(Embeddings):
     def __init__(
         self,
         embedding_function: Any,
+        normalize_embeddings: bool = True,
     ) -> None:
-        # Reutilizamos el SentenceTransformer que Chroma ya cargó.
+        # Modelo compartido con la función de embeddings de Chroma
         self._model = embedding_function._model
 
-        self._normalize_embeddings = (
-            embedding_function.normalize_embeddings
-        )
+        # Normalización propia de la memoria, independiente de Chroma
+        self._normalize_embeddings = normalize_embeddings
 
     def embed_documents(
         self,
@@ -144,26 +211,41 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
     """
 
     dependencies = load_dependencies()
+    dependencies.validate_runtime_artifacts()
 
     try:
         llm = dependencies.build_deepseek_llm()
     except Exception as error:  # noqa: BLE001 - keep missing key/package/provider errors controlled.
-        raise OperationalError(str(error)) from error
+        raise OperationalError(f"{type(error).__name__}: {error}") from error
 
     try:
-        from chromadb.utils.embedding_functions import (
-            SentenceTransformerEmbeddingFunction,
-        )
         from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.store.memory import InMemoryStore
 
-        collection = dependencies.open_existing_collection(
+        chroma_working_copy = dependencies.create_chroma_working_copy(
             DEFAULT_CHROMA_PATH,
-            DEFAULT_COLLECTION_NAME,
+            get_chroma_working_root(),
         )
-        
+        # Instancia única de Qwen compartida por Chroma y la memoria
+        embedding_function = dependencies.build_embedding_function()
+        collection = dependencies.open_existing_collection(
+            chroma_working_copy.path,
+            DEFAULT_COLLECTION_NAME,
+            embedding_function,
+        )
 
         bm25_index = dependencies.open_existing_bm25_index()
+
+        parent_lookup = dependencies.load_parent_documents(
+            DEFAULT_PARENT_CHUNKS_PATH
+        )
+
+        # Valida antes de cargar el reranker para fallar rápido
+        dependencies.validate_index_consistency(
+            collection,
+            bm25_index,
+            parent_lookup,
+        )
 
         retriever = dependencies.hybrid_retriever(
             collection,
@@ -176,11 +258,9 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
             model_name=RERANKER_MODEL_NAME,
             max_length=RERANKER_MAX_LENGTH,
             device=RERANKER_DEVICE,
+            revision=RERANKER_MODEL_REVISION,
         )
 
-        parent_lookup = dependencies.load_parent_documents(
-            DEFAULT_PARENT_CHUNKS_PATH
-        )
         first_table_parts = dependencies.load_first_table_parts(
             DEFAULT_TABLE_DOCUMENTS_PATH
         )
@@ -189,15 +269,9 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         checkpointer = InMemorySaver()
 
         # Mismo modelo de embeddings utilizado por el RAG.
-        memory_embedding_function = (
-            SentenceTransformerEmbeddingFunction(
-                model_name="Qwen/Qwen3-Embedding-0.6B",
-                normalize_embeddings=True,
-            )
-        )
-
         memory_embeddings = QwenMemoryEmbeddings(
-            memory_embedding_function
+            embedding_function,
+            normalize_embeddings=True,
         )
 
         # Store independiente para Retrieval-Based
@@ -242,7 +316,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
 
     except Exception as error:
         raise OperationalError(
-            str(error)
+            f"{type(error).__name__}: {error}"
         ) from error
     
     thread_id = f"cli-session-{uuid4()}" # Generar un identificador único para cada hilo de conversación
@@ -250,6 +324,7 @@ def build_runtime(write_graph_image: bool = True) -> RagRuntime:
         answer_with_langgraph=dependencies.answer_with_langgraph,
         graph=graph,
         thread_id=thread_id, # Agregar el identificador único al runtime para su uso en la conversación
+        chroma_working_copy=chroma_working_copy,
     )
 
 
@@ -259,7 +334,11 @@ def load_dependencies() -> RuntimeDependencies:
     try:
         from agents.consulta_normativa.langchain_rag.core.llm import build_deepseek_llm
         from agents.consulta_normativa.langchain_rag.graph import answer_with_langgraph, build_langgraph_rag
-        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import open_existing_collection
+        from agents.consulta_normativa.langchain_rag.retrieval.chroma_retrieval import (
+            create_working_copy as create_chroma_working_copy,
+            open_existing_collection,
+            qwen_embedding_function,
+        )
         from agents.consulta_normativa.langchain_rag.retrieval.bm25_retrieval import (open_existing_index as open_existing_bm25_index)
         from agents.consulta_normativa.langchain_rag.retrieval.hybrid_retrieval import (hybrid_retriever)
         from agents.consulta_normativa.langchain_rag.retrieval.reranking import (get_reranker)
@@ -269,6 +348,7 @@ def load_dependencies() -> RuntimeDependencies:
         raise OperationalError(f"Required runtime dependency is not installed: {error}") from error
 
     return RuntimeDependencies(
+        validate_runtime_artifacts=validate_runtime_artifacts,
         build_deepseek_llm=build_deepseek_llm,
         build_langgraph_rag=build_langgraph_rag,
         answer_with_langgraph=answer_with_langgraph,
@@ -278,6 +358,9 @@ def load_dependencies() -> RuntimeDependencies:
         get_reranker=get_reranker,
         load_parent_documents=load_parent_documents,
         load_first_table_parts=load_first_table_parts,
+        create_chroma_working_copy=create_chroma_working_copy,
+        validate_index_consistency=validate_index_consistency,
+        build_embedding_function=qwen_embedding_function,
     )
 
 

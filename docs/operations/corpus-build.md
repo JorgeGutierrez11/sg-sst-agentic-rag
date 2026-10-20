@@ -1,6 +1,44 @@
 # Guía operativa: reconstrucción del corpus SG-SST
 
+> **Status:** `Current`
+> **Audience:** operator
+> **Verified against:** `pipeline/offline_corpus.py`, `pipeline/offline_orchestration.py`, `pipeline/ingestion/`, `pipeline/cleaning/`, `pipeline/chunking/cli.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Esta guía reconstruye los artefactos del corpus desde DOCX normativos hasta documentos de tabla listos para vectorización. Ejecútala desde la raíz del repositorio y no edites manualmente las salidas bajo `data/interim/` o `data/processed/`. Para regenerar, auditar o previsualizar tablas de forma aislada, consulta [`table-processing.md`](table-processing.md); las decisiones completas están en [`tables.md`](../architecture/tables.md).
+
+## Operación rutinaria
+
+Detén la API antes de `build`: la publicación reemplaza los índices que el runtime tiene abiertos.
+
+```bash
+python -m pipeline.offline_corpus build
+python -m pipeline.offline_corpus validate
+```
+
+`build` ejecuta el flujo canónico DOCX → índices en un workspace aislado (`data/.pipeline-work/<run-id>/`), valida el corpus staged y solo entonces lo publica. `validate` revisa en modo solo lectura que padres, hijos, Chroma y BM25 describan el mismo build, e informa los conteos. Opciones de `build`: `--batch-size <n>`, `--json` (eventos JSON por línea en stdout) y `--keep-workdir` (conserva el workspace para diagnóstico).
+
+El progreso de las 10 etapas se escribe en stderr (`[n/10] <etapa> started|completed|failed`). Un fallo indica la etapa, su causa (`Cause: ...`) y el estado del corpus publicado; el código de salida es `2` para fallos esperados y `1` para errores inesperados.
+
+### Qué se publica
+
+La publicación reemplaza solo los artefactos que el build regenera; el resto de `data/` no se toca.
+
+| Raíz | Reemplazado | Preservado |
+|---|---|---|
+| `data/interim/` | `*.md` de primer nivel, `tables/` | Todo lo demás |
+| `data/processed/` | `*.md` de primer nivel, `chunks/parents.jsonl`, `chunks/regex_constrained_semantic/`, `tables_markdown/`, `table_documents.jsonl`, `chroma/`, `bm25/` | Baselines `chunks/sliding_window/`, `chunks/semantic_chunking/`, `chunks/comparison/`, `tables_htlm/`, `metadata/` |
+
+Los `*.md` de primer nivel se reemplazan como conjunto, así que un documento fuente retirado no deja Markdown ni registros obsoletos.
+
+### Respaldo y recuperación
+
+Antes de publicar, cada artefacto reemplazado se mueve a `data/.pipeline-backup/<run-id>/`. Si la publicación falla o se interrumpe (incluido `Ctrl+C`), el corpus anterior se restaura y el respaldo se elimina. Si la restauración también falla, el respaldo se conserva y el comando imprime su ruta; restaura manualmente moviendo su contenido a `data/` (respetando las rutas relativas) y elimina el directorio del respaldo. Mientras exista un respaldo sin restaurar, un nuevo `build` se detiene en `preflight`.
+
+## Depuración por etapa
+
+Los comandos individuales siguientes se mantienen solo para depurar una etapa concreta. Escriben directamente sobre los artefactos publicados y no son la ruta rutinaria de reconstrucción.
 
 ## Ruta rápida
 

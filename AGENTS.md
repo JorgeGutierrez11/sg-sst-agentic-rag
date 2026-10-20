@@ -7,7 +7,8 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 - Treat `docs/EISI_2026-04-09_14-25-36_pg1409.pdf` as the methodology source of truth. Use `docs/architecture/` for intended technical contracts and `docs/operations/` for runbooks, but verify current runtime wiring against executable code because some retrieval documentation lags the implementation.
 - The legal corpus is limited to Decreto 1072/2015, Resolución 0312/2019, Resolución 2346/2007, Resolución 1401/2007, Ley 1562/2012, Resolución 2013/1986, Ley 1010/2006, and the risk classification in Decreto 768/2022.
 - `requirements.txt` is the only manifest. There is no lockfile, task runner, CI, pre-commit, formatter, lint, typecheck, codegen, or repository OpenCode configuration; do not invent project commands for them.
-- Install `requirements.txt` in the active environment. `chromadb` is required by vectorization and runtime retrieval but is not declared there, so verify/install it separately before real Chroma runs.
+- Install `requirements.txt` in the active environment. Direct dependencies are pinned to exact versions validated on Python 3.14 (`.python-version`); `pytest` is included there, with no separate dev manifest.
+- Local configuration lives in the git-ignored `.env` (loaded with `override=False`): `DEEPSEEK_API_KEY` and `CORS_ALLOWED_ORIGINS` (comma-separated exact `http(s)://host[:port]` origins; `*` is rejected). See `docs/getting-started.md` section 3.
 - DOCX ingestion and table conversion require the Pandoc system binary in `PATH`; `pypandoc` alone is insufficient.
 
 ## Verification commands
@@ -16,28 +17,43 @@ This repository is a thesis RAG system for SG-SST normative assistance and compl
 # Broad suites
 python -m unittest discover -s pipeline/tests
 python -m unittest discover -s agents/consulta_normativa/tests
+python -m unittest discover -s agents/api/tests
+pytest agents/diagnostico_cumplimiento/tests
 
 # Tables
 python -m unittest pipeline.tests.test_tables_main pipeline.tests.test_table_references pipeline.tests.test_table_markdown pipeline.tests.test_table_documents
 
 # Syntax/import-independent compile check
-python -m compileall pipeline agents/consulta_normativa
+python -m compileall pipeline agents
 ```
 
-Install the declared dependencies before treating import failures as regressions. The suites use `unittest`, not pytest.
+Install the declared dependencies before treating import failures as regressions. The pipeline, consultation, and unified API suites use `unittest`; the diagnosis suite uses `pytest`. Root `pytest.ini` sets `pythonpath = .` so bare `pytest` can import the `agents` package. See `docs/testing.md` for the full test inventory.
 
 ## Package boundaries and data safety
 
 - `pipeline/` is offline corpus transformation and index construction; keep online agent behavior out of it.
 - `agents/consulta_normativa/langchain_rag/` is the current online implementation. Its `retrieval/` package owns query-only Chroma/BM25 helpers; collection creation/upsert belongs in `pipeline/vectorization/`, and BM25 construction belongs in `pipeline/sparse_indexing/`.
-- `agents/consulta_normativa/api/` is the FastAPI adapter for the current runtime. `app/backend/`, `app/frontend/`, and `agents/diagnostico_cumplimiento/` remain `.gitkeep` scaffolds; do not add speculative layers there.
+- `agents/api/main.py` is the unified FastAPI composition root (`uvicorn agents.api.main:app`). It mounts the consultation router from `agents/consulta_normativa/api/` and the diagnosis router from `agents/diagnostico_cumplimiento/api/`.
+- `agents/diagnostico_cumplimiento/` is the compliance-diagnosis agent: v2.1 catalogs under `catalog/data/`, questionnaire with `depends_on` question routing, declarative assessment, and reporting. Its tests use a frozen catalog copy in `tests/fixtures/valid_catalog.json`.
+- `app/backend/` and `app/frontend/` remain `.gitkeep` scaffolds; do not add speculative layers there.
 - `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline.
 - `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
 - `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.
+- Code comments must be ultra concise and strictly technical: one sentence (1-2 lines max) stating what the line/block does or why it exists, with no preamble, compound sentences, or obvious consequences. Focus on the direct technical constraint (version pin, dependency, API contract). Longer rationale belongs in `docs/`. Example: `# Hash de commit del modelo para garantizar consistencia con los índices vectoriales existentes`.
 - Do not add records under `docs/decisiones/` unless explicitly requested. Preserve existing comments, including informal Spanish comments, unless the edited behavior requires changing them.
 - If `.codegraph/` exists, use CodeGraph before broad filesystem searches for architecture, call-flow, or impact questions.
 
 ## Corpus and index entrypoints
+
+```bash
+# Routine rebuild: staged build, validation, and publication of managed artifacts (stop the API first).
+python -m pipeline.offline_corpus build
+# Read-only consistency check of the published corpus.
+python -m pipeline.offline_corpus validate
+```
+
+- `build` rebuilds the real corpus and loads models; never run it from tests or without explicit authorization. Its publication backs up replaced artifacts under `data/.pipeline-backup/<run-id>/` and preserves unmanaged outputs (baselines, `tables_htlm`, `metadata`). See `docs/operations/corpus-build.md`.
+- The per-stage commands below write in place and are for stage-level debugging only.
 
 ```bash
 python pipeline/ingestion/docx_to_markdown.py
@@ -67,10 +83,11 @@ python -m agents.consulta_normativa.langchain_rag.main
 python -m agents.consulta_normativa.langchain_rag.main "<question>"
 ```
 
-- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes.
-- The FastAPI adapter's default lifespan calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
+- Runtime requires existing `data/processed/chroma`, `data/processed/bm25`, `data/processed/chunks/parents.jsonl`, and writable `data/images/`; direct CLI startup writes `data/images/base_rag_graph.png` and must not create empty retrieval indexes. The runtime never opens `data/processed/chroma` with `PersistentClient`: Chroma rewrites its files even on query and fails on read-only files, so `build_runtime` queries a disposable copy created under `RAG_CHROMA_WORKING_DIR` (system temp dir by default) and removed at exit.
+- The unified API lifespan (`agents/api/main.py`) calls `build_runtime(write_graph_image=False)`, so API startup builds the runtime without writing the CLI graph image.
 - The wired graph currently performs business-profile and retrieval-based conversation memory, query expansion, hybrid Chroma+BM25 RRF retrieval, cross-encoder reranking, parent expansion, LLM relevance grading, evidence branching, generation, and memory updates. Do not infer wiring from unused experimental modules.
-- Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `BAAI/bge-reranker-v2-m3`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
+- Defaults are Qwen `Qwen/Qwen3-Embedding-0.6B`, reranker `SINAI/ALIA-MrBERT-es-legal-administrative-reranker`, and DeepSeek `deepseek-chat` via `https://api.deepseek.com` at temperature `0`.
+- Both Hugging Face models load at pinned commit revisions: `DEFAULT_EMBEDDING_MODEL_REVISION` in `pipeline/chunking/config.py` (shared by chunking, vectorization, and runtime) and `RERANKER_MODEL_REVISION` in `langchain_rag/config.py`. Changing the Qwen revision requires rebuilding chunks and indexes. The runtime builds one Qwen embedding function and shares it between Chroma and conversation memory, because `chromadb` caches models by name only.
 
 ## Methodology constraints
 

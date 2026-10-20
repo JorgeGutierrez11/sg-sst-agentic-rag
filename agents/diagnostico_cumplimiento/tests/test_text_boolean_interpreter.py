@@ -13,16 +13,22 @@ from agents.diagnostico_cumplimiento.questionnaire.text_boolean_interpreter impo
 )
 
 
-PILOT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v1.json"
-)
+CATALOG_PATH = Path(__file__).parent / "fixtures" / "valid_catalog.json"
+
+
+def get_requirement():
+    # Affiliation requirement: three primary boolean questions, each with
+    # evidence questions that depend on a True answer.
+    catalog = load_catalog(CATALOG_PATH)
+    return next(
+        requirement
+        for requirement in catalog.requirements
+        if requirement.id == "res0312_art3_afiliacion_1_10"
+    )
 
 
 def get_pilot_question():
-    requirement = load_catalog(PILOT_PATH).requirements[0]
+    requirement = get_requirement()
     return requirement, requirement.questions[0]
 
 

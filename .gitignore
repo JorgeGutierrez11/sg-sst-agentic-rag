@@ -14,6 +14,10 @@ node_modules/
 **/vector_store/
 **/*.index
 
+# staging y respaldo del build offline del corpus
+data/.pipeline-work/
+data/.pipeline-backup/
+
 # IDE / tooling metadata
 .atl/
 .idea/

@@ -1,6 +1,7 @@
 """Query-only lookup and graph node for linked table first parts."""
 
 from __future__ import annotations
+from pipeline.chunking.config import DEFAULT_TABLE_DOCUMENTS_PATH
 
 from collections.abc import Callable, Iterable
 from pathlib import Path
@@ -8,10 +9,6 @@ from pathlib import Path
 from agents.consulta_normativa.langchain_rag.core.state import RagGraphState
 from agents.consulta_normativa.langchain_rag.models import RetrievedDocument
 from pipeline.chunking.io_jsonl import read_jsonl
-
-
-DEFAULT_TABLE_DOCUMENTS_PATH = Path("data/processed/table_documents.jsonl")
-
 
 def load_first_table_parts(path: Path = DEFAULT_TABLE_DOCUMENTS_PATH) -> dict[str, RetrievedDocument]:
     """Load the first stored part of each logical table, keyed by table key."""

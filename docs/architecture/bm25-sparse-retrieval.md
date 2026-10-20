@@ -1,5 +1,11 @@
 # Arquitectura de recuperación sparse BM25
 
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `pipeline/sparse_indexing/`, `agents/consulta_normativa/langchain_rag/retrieval/bm25_retrieval.py`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 BM25 agrega recuperación léxica al corpus SG-SST. Su responsabilidad es construir un índice sparse local desde los artefactos JSONL canónicos y exponer una consulta runtime de solo lectura con una forma compatible con los resultados actuales de recuperación, incluida la integración híbrida con Chroma.
 
 ## Ruta rápida
@@ -10,15 +16,15 @@ Desde la raíz del repositorio:
 python -m pipeline.sparse_indexing.main
 ```
 
-El índice se persiste en `data/processed/bm25/`. En runtime, `agents/shared/bm25_retrieval.py` abre ese índice existente y ejecuta consultas `top_k`; no crea índices. El grafo LangGraph actual lo consume mediante `agents/shared/hybrid_retrieval.py` junto con Chroma.
+El índice se persiste en `data/processed/bm25/`. En runtime, `agents/consulta_normativa/langchain_rag/retrieval/bm25_retrieval.py` abre ese índice existente y ejecuta consultas `top_k`; no crea índices. El grafo LangGraph actual lo consume mediante `agents/consulta_normativa/langchain_rag/retrieval/hybrid_retrieval.py` junto con Chroma.
 
 ## Límite arquitectónico
 
 | Capa | Ubicación | Responsabilidad |
 |---|---|---|
 | Indexación offline | `pipeline/sparse_indexing/` | Leer JSONL canónicos, construir corpus BM25, tokenizar, indexar y persistir con BM25S. |
-| Recuperación runtime | `agents/shared/bm25_retrieval.py` | Abrir un índice BM25 existente y devolver resultados en forma Chroma-like. |
-| Fusión híbrida | `agents/shared/hybrid_retrieval.py` | Combinar resultados BM25 y Chroma, deduplicar por identidad documental y anotar fuentes de recuperación. |
+| Recuperación runtime | `agents/consulta_normativa/langchain_rag/retrieval/bm25_retrieval.py` | Abrir un índice BM25 existente y devolver resultados en forma Chroma-like. |
+| Fusión híbrida | `agents/consulta_normativa/langchain_rag/retrieval/hybrid_retrieval.py` | Combinar resultados BM25 y Chroma, deduplicar por identidad documental y anotar fuentes de recuperación. |
 | Fuente de verdad | JSONL procesados | `chunks.jsonl` y `table_documents.jsonl`, no Chroma. |
 
 BM25 no se construye desde ChromaDB. Chroma usa `upsert` y puede conservar registros obsoletos; por eso BM25 se reconstruye desde los mismos JSONL que alimentan la vectorización.
@@ -32,6 +38,8 @@ data/processed/table_documents.jsonl
 pipeline.vectorization.documents.load_vector_record_batch
         ↓
 registros BM25 {id, document, metadata}
+        ↓
+bm25_text_for_indexing: antepone un bloque "Metadata normativa:" (BM25_METADATA_FIELDS) al texto
         ↓
 bm25s.tokenize(..., stopwords="es")
         ↓

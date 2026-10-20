@@ -1,5 +1,11 @@
 # Arquitectura del procesamiento de tablas
 
+> **Status:** `Current`
+> **Audience:** maintainer, contributor
+> **Verified against:** `pipeline/tables/`
+> **Last verified:** 2026-10-18
+> **Replacement:** N/A
+
 Las tablas son contenido normativo de primera clase en el RAG SG-SST. En normas como la Resolución 0312 de 2019 y el Decreto 768 de 2022, obligaciones, criterios, fases, puntajes y clasificaciones aparecen en estructuras tabulares; si se tratan como texto accesorio, el sistema pierde evidencia clave para responder y diagnosticar cumplimiento.
 
 ## Ruta rápida

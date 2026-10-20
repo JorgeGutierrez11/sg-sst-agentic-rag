@@ -1,9 +1,3 @@
-
-from pathlib import Path
-
-import pytest
-
-from agents.diagnostico_cumplimiento.catalog.loader import load_catalog
 from agents.diagnostico_cumplimiento.domain.answers import QuestionAnswer
 from agents.diagnostico_cumplimiento.domain.enums import RiskClass
 from agents.diagnostico_cumplimiento.domain.models import CompanyProfile
@@ -15,22 +9,22 @@ from agents.diagnostico_cumplimiento.questionnaire.questionnaire import (
     run_questionnaire,
 )
 
-
-CATALOG_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "catalog"
-    / "data"
-    / "res0312_piloto_v2.json"
-)
+AFFILIATION_REQUIREMENT_ID = "res0312_art3_afiliacion_1_10"
 
 
 def build_findings(
+    catalog,
+    catalog_path,
     overrides: dict[str, bool | str] | None = None,
     omitted: set[str] | None = None,
 ):
     """Ejecuta el cuestionario y genera sus hallazgos declarativos."""
 
-    requirement = load_catalog(CATALOG_PATH).requirements[0]
+    requirement = next(
+        item
+        for item in catalog.requirements
+        if item.id == AFFILIATION_REQUIREMENT_ID
+    )
     overrides = overrides or {}
     omitted = omitted or set()
 
@@ -50,161 +44,202 @@ def build_findings(
             risk_class=RiskClass.I,
         ),
         answers=answers,
-        catalog_path=CATALOG_PATH,
+        catalog_path=catalog_path,
+    )
+
+    snapshot = next(
+        item
+        for item in questionnaire.requirements
+        if item.requirement_id == requirement.id
     )
 
     return (
-        questionnaire.requirements[0],
-        summarize_requirement_declarations(
-            questionnaire.requirements[0]
-        ),
+        snapshot,
+        summarize_requirement_declarations(snapshot),
     )
 
 
-def test_all_affirmative_answers_are_only_declarations():
-    requirement, findings = build_findings()
+def test_all_affirmative_answers_are_only_declarations(
+    catalog,
+    catalog_path,
+):
+    requirement, findings = build_findings(catalog, catalog_path)
 
-    assert len(findings.conditions) == 3
-
-    for condition in findings.conditions:
-        assert condition.status == (
-            DeclarationFindingStatus.ALL_AFFIRMATIVE_DECLARED
-        )
-        assert condition.negative_question_ids == []
-        assert condition.unanswered_question_ids == []
-        assert condition.unresolved_question_ids == []
-        assert condition.evidence_verified is False
-
-    # El cuestionario tampoco establece cumplimiento normativo.
-    assert all(
-        condition.evaluation.status.value == "not_evaluated"
-        for condition in requirement.conditions
+    assert findings.requirement_id == AFFILIATION_REQUIREMENT_ID
+    assert findings.status == (
+        DeclarationFindingStatus.ALL_AFFIRMATIVE_DECLARED
     )
+    assert findings.negative_question_ids == []
+    assert findings.unanswered_question_ids == []
+    assert findings.unresolved_question_ids == []
+    assert findings.skipped_question_ids == []
+    assert findings.blocked_question_ids == []
+    assert findings.evidence_verified is False
+
+    # All nine questions were active and declared.
+    assert len(requirement.active_question_ids) == 9
 
 
-def test_negative_answer_identifies_the_correct_question():
+def test_negative_answer_identifies_the_correct_question(
+    catalog,
+    catalog_path,
+):
     _, findings = build_findings(
-        overrides={"q_health_affiliation_support": False}
+        catalog,
+        catalog_path,
+        overrides={"q_health_affiliation_support": False},
     )
 
-    health = findings.conditions[0]
-
-    assert health.status == (
+    assert findings.status == (
         DeclarationFindingStatus.HAS_NEGATIVE_DECLARATION
     )
-    assert health.negative_question_ids == [
+    assert findings.negative_question_ids == [
         "q_health_affiliation_support"
     ]
-    assert health.evidence_verified is False
-
-    assert all(
-        condition.status
-        == DeclarationFindingStatus.ALL_AFFIRMATIVE_DECLARED
-        for condition in findings.conditions[1:]
-    )
+    assert findings.evidence_verified is False
 
 
-def test_multiple_negative_answers_are_preserved():
+def test_negative_primary_answer_skips_dependent_questions(
+    catalog,
+    catalog_path,
+):
+    # Dependent questions omitted by routing are neither pending nor
+    # negative: only the negative primary answer is reported.
     _, findings = build_findings(
-        overrides={
-            "q_health_affiliation": False,
-            "q_health_payment_support": False,
-        }
+        catalog,
+        catalog_path,
+        overrides={"q_health_affiliation": False},
+        omitted={
+            "q_health_affiliation_support",
+            "q_health_payment_support",
+        },
     )
 
-    health = findings.conditions[0]
-
-    assert health.status == (
+    assert findings.status == (
         DeclarationFindingStatus.HAS_NEGATIVE_DECLARATION
     )
-    assert health.negative_question_ids == [
-        "q_health_affiliation",
+    assert findings.negative_question_ids == ["q_health_affiliation"]
+    assert findings.unanswered_question_ids == []
+    assert findings.skipped_question_ids == [
+        "q_health_affiliation_support",
         "q_health_payment_support",
     ]
 
 
-def test_missing_answer_identifies_incomplete_condition():
+def test_multiple_negative_answers_are_preserved(catalog, catalog_path):
     _, findings = build_findings(
-        omitted={"q_pension_payment_support"}
+        catalog,
+        catalog_path,
+        overrides={
+            "q_health_affiliation_support": False,
+            "q_pension_payment_support": False,
+        },
     )
 
-    pension = findings.conditions[1]
+    assert findings.status == (
+        DeclarationFindingStatus.HAS_NEGATIVE_DECLARATION
+    )
+    assert findings.negative_question_ids == [
+        "q_health_affiliation_support",
+        "q_pension_payment_support",
+    ]
 
-    assert pension.status == DeclarationFindingStatus.INCOMPLETE
-    assert pension.unanswered_question_ids == [
+
+def test_missing_answer_identifies_incomplete_requirement(
+    catalog,
+    catalog_path,
+):
+    _, findings = build_findings(
+        catalog,
+        catalog_path,
+        omitted={"q_pension_payment_support"},
+    )
+
+    assert findings.status == DeclarationFindingStatus.INCOMPLETE
+    assert findings.unanswered_question_ids == [
         "q_pension_payment_support"
     ]
-    assert pension.unresolved_question_ids == []
-    assert pension.evidence_verified is False
+    assert findings.unresolved_question_ids == []
+    assert findings.evidence_verified is False
 
 
-def test_negative_answer_is_preserved_when_information_is_missing():
+def test_negative_answer_is_preserved_when_information_is_missing(
+    catalog,
+    catalog_path,
+):
     _, findings = build_findings(
+        catalog,
+        catalog_path,
         overrides={"q_health_affiliation_support": False},
         omitted={"q_health_payment_support"},
     )
 
-    health = findings.conditions[0]
-
-    assert health.status == DeclarationFindingStatus.INCOMPLETE
-    assert health.negative_question_ids == [
+    assert findings.status == DeclarationFindingStatus.INCOMPLETE
+    assert findings.negative_question_ids == [
         "q_health_affiliation_support"
     ]
-    assert health.unanswered_question_ids == [
+    assert findings.unanswered_question_ids == [
         "q_health_payment_support"
     ]
 
 
-def test_uncertain_answer_requires_clarification():
+def test_uncertain_answer_requires_clarification(catalog, catalog_path):
     _, findings = build_findings(
-        overrides={"q_pension_affiliation_support": "No sé"}
+        catalog,
+        catalog_path,
+        overrides={"q_pension_affiliation_support": "No sé"},
     )
 
-    pension = findings.conditions[1]
-
-    assert pension.status == (
+    assert findings.status == (
         DeclarationFindingStatus.NEEDS_CLARIFICATION
     )
-    assert pension.unresolved_question_ids == [
+    assert findings.unresolved_question_ids == [
         "q_pension_affiliation_support"
     ]
-    assert pension.evidence_verified is False
+    assert findings.evidence_verified is False
 
 
-def test_unresolved_answer_does_not_hide_other_findings():
+def test_unresolved_answer_does_not_hide_other_findings(
+    catalog,
+    catalog_path,
+):
     _, findings = build_findings(
+        catalog,
+        catalog_path,
         overrides={
-            "q_health_affiliation": False,
+            "q_pension_affiliation_support": False,
             "q_health_affiliation_support": "No sé",
         },
         omitted={"q_health_payment_support"},
     )
 
-    health = findings.conditions[0]
-
-    assert health.status == (
+    assert findings.status == (
         DeclarationFindingStatus.NEEDS_CLARIFICATION
     )
-    assert health.negative_question_ids == [
-        "q_health_affiliation"
+    assert findings.negative_question_ids == [
+        "q_pension_affiliation_support"
     ]
-    assert health.unresolved_question_ids == [
+    assert findings.unresolved_question_ids == [
         "q_health_affiliation_support"
     ]
-    assert health.unanswered_question_ids == [
+    assert findings.unanswered_question_ids == [
         "q_health_payment_support"
     ]
 
 
-def test_findings_can_be_serialized_to_json():
+def test_findings_can_be_serialized_to_json(catalog, catalog_path):
     _, findings = build_findings(
-        overrides={"q_health_affiliation_support": False}
+        catalog,
+        catalog_path,
+        overrides={"q_health_affiliation_support": False},
     )
 
     data = findings.model_dump(mode="json")
 
-    assert data["conditions"][0]["status"] == (
-        "has_negative_declaration"
-    )
-    assert data["conditions"][0]["evidence_verified"] is False
+    assert data["requirement_id"] == AFFILIATION_REQUIREMENT_ID
+    assert data["status"] == "has_negative_declaration"
+    assert data["negative_question_ids"] == [
+        "q_health_affiliation_support"
+    ]
+    assert data["evidence_verified"] is False
     assert isinstance(findings.model_dump_json(), str)
