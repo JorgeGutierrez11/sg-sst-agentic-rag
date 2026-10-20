@@ -216,7 +216,12 @@ class UnifiedApiAppTests(unittest.TestCase):
                 ("GET", "/health/ready"),
                 ("POST", "/api/v1/query"),
                 ("POST", "/api/v1/diagnostics"),
+                ("GET", "/api/v1/diagnostics/{diagnosis_id}"),
                 ("POST", "/api/v1/diagnostics/{diagnosis_id}/answers"),
+                (
+                    "POST",
+                    "/api/v1/diagnostics/{diagnosis_id}/requirements/{requirement_id}/restart",
+                ),
                 ("POST", "/api/v1/diagnostics/{diagnosis_id}/complete"),
                 ("GET", "/api/v1/diagnostics/{diagnosis_id}/report"),
             },
