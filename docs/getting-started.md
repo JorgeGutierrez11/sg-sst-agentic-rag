@@ -57,6 +57,8 @@ La configuración local vive en el archivo `.env` de la raíz del repositorio. G
 | `HF_HUB_OFFLINE` | No | Con `1`, el backend no se conecta a Hugging Face y carga los modelos solo desde `HF_HOME`. Es el modo recomendado una vez descargados los modelos, y el previsto para producción: allí se descargan durante la construcción de la imagen o en un paso previo. | Sin la variable, la primera ejecución descarga los modelos (necesita internet) y las siguientes usan la caché. Con `1` y sin los modelos en caché, la API no arranca (ver sección 8). |
 | `RAG_CHROMA_WORKING_DIR` | No | Directorio padre donde el backend crea, al arrancar, una copia privada del índice ChromaDB. Chroma reescribe sus archivos incluso cuando solo consulta y falla si no puede escribir, así que el backend nunca abre `data/processed/chroma/` directamente. Cada arranque crea una subcarpeta `sg-sst-chroma-*` nueva y la borra al cerrar. Debe tener permisos de escritura y estar fuera de `data/processed/chroma/`. | Se usa el directorio temporal del sistema. Si apunta dentro del índice publicado, la API no arranca y el error nombra `RAG_CHROMA_WORKING_DIR`. |
 
+La plantilla versionada `.env.example` lista todas las variables sin valores secretos; cópiela con `cp .env.example .env` y complete los valores.
+
 Ejemplo de `.env`:
 
 ```bash
