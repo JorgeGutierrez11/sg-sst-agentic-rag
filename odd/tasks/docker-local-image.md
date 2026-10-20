@@ -12,9 +12,9 @@ S11. Commit rule verbatim: "No hagas el commit, hazlo hasta que te digas pasa a 
 
 | ID | Specs | Route | Status | Evidence |
 |---|---|---|---|---|
-| T1 | S2, S11 | inline (single unit, no writer trigger) | done, uncommitted (awaiting user) | RED 4 errors → GREEN 4/4; API suite 18 OK |
-| T2 | S1, S3, S4, S6, S7 | inline | pending | — |
-| T3 | S5, S8 | inline | pending | — |
+| T1 | S2, S11 | inline (single unit, no writer trigger) | done | `2a3b92a`; RED 4 errors → GREEN 4/4; API suite 18 OK |
+| T2 | S1, S3, S4, S6, S7 | inline | done (chmod layer unverified) | smoke L8; commit below |
+| T3 | S5, S8 | inline | in progress | — |
 | T4 | S1-S9 | inline + independent verifier (Risk item 5) | pending | — |
 | T5 | S10 | inline | pending | — |
 
@@ -25,3 +25,9 @@ S11. Commit rule verbatim: "No hagas el commit, hazlo hasta que te digas pasa a 
 - L3 (2026-10-19): T1 implemented: `docker/download_models.py` (ast-parsed revisions, `snapshot_download` per model) and `agents/api/tests/test_docker_model_download.py` (isolated two-file layer, missing and non-string constants, download calls and exit code). RED: 4 errors (script missing); GREEN: 4/4; API suite 18 OK; compileall OK.
 - L4 (2026-10-19): Offline run against the local cache fails with `OfflineModeIsEnabled` because `snapshot_download` lists the full repo tree and the local cache lacks non-model files (README, .gitattributes); expected, the build runs online. Real download proof deferred to T2 `docker build`.
 - Next step: commit T1 when the user says to move on, then T2.
+- L5 (2026-10-19): First build OK (287 s); in-image checks pass (uid 10001, torch 2.14.1+cpu, 0 nvidia packages, no .env/data/evaluation/tests); layers ≈ 3.9 GB uncompressed.
+- L6 (2026-10-19, user): "Ejecuta la prueba". Smoke run without corpus: the lifespan raises `Missing runtime artifact` and Uvicorn exits with code 3, so `/health` never answers. Plan S5 check ("returns 503") is wrong for current code and must be corrected; with `restart: unless-stopped` a missing corpus becomes a restart loop.
+- L7 (2026-10-19): Rebuild after the user's Dockerfile edit failed with `OSError: [Errno 28] No space left on device`; host root filesystem at 100% (423 MB free). Awaiting user decision on freeing space.
+- L8 (2026-10-19, user): "ya realice yo mismo las limpiesas, verifica que tenemos el espacio requerido y de ser asi haz el test". Free 10 GB; full rebuild OK (min free 1.78 GB, now 1.8 GB). Scenario without corpus: exit 3 with `Missing runtime artifact`. Scenario with `data/processed` read-only, `/tmp` tmpfs, `RAG_CHROMA_WORKING_DIR=/tmp/chroma-work`, `--env-file .env`: ready in 14 s, `/health` 200, `/health/ready` 200, Docker health `healthy`, uid 10001, corpus mount rejects writes (`Read-only file system`), Chroma copy created under `/tmp/chroma-work`, ~760 MiB RAM.
+- L9 (2026-10-19): 20 warnings `Ignoring corrupted tree cache file ... Permission denied`: huggingface_hub writes `trees/*.json` as 0600 root. Added a separate `find ... chmod a+r` layer after the download; not yet verified (rebuild needs more free disk).
+- L10 (2026-10-19, user): "dejemos por el momento estas pruebas hasta hay, pasemos a la siguiente tarea." T2 committed with the chmod layer unverified; its rebuild check moves to T4.
