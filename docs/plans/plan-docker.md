@@ -202,26 +202,36 @@ Criterio de aceptación: la API opera exclusivamente en modo de consulta y el pi
 
 Objetivo: detectar errores y regresiones antes de integrar cambios al repositorio principal.
 
+**Estado:** planificada el 2026-10-20. El repositorio es público: los minutos de los runners estándar son gratuitos y las reglas de rama pueden exigir que CI pase antes del merge. Detalle en [`plan-fase-8-ci.md`](plan-fase-8-ci.md).
+
 ### Pipeline propuesto
 
-1. Preparar el entorno con Python `3.14`.
-2. Instalar las dependencias.
-3. Ejecutar las pruebas automatizadas:
-   ```
-   python -m unittest discover -s pipeline/tests
-   python -m unittest discover -s agents/consulta_normativa/tests
-   python -m unittest discover -s agents/diagnostico_cumplimiento/tests
-   python -m compileall pipeline agents
-   ```
-4. Construir la imagen Docker.
-5. Ejecutar pruebas de integración y smoke tests para:
-   - `GET /health`
-   - `GET /health/ready`
-6. Verificar que la imagen Docker no incluya archivos `.env` ni secretos.
+Los workflows viven en el repositorio, en `.github/workflows/`, y GitHub los ejecuta al recibir el push.
 
-Consideración: las pruebas de readiness deberán ejecutarse con los modelos y artefactos necesarios. No se debe asumir que una imagen recién construida puede inicializar el RAG sin ellos.
+1. Workflow `tests` (push a `dev` o `main` y PR hacia `main`):
+   1. Preparar Python desde `.python-version` (`3.14`).
+   2. Instalar PyTorch CPU (`torch==2.14.1` del índice `https://download.pytorch.org/whl/cpu`) antes de `requirements.txt`; sin ese paso, `pip` descarga la variante CUDA.
+   3. Ejecutar las cuatro suites y la compilación:
+      ```
+      python -m unittest discover -s pipeline/tests
+      python -m unittest discover -s agents/consulta_normativa/tests
+      python -m unittest discover -s agents/api/tests
+      python -m pytest agents/diagnostico_cumplimiento/tests
+      python -m compileall pipeline agents
+      ```
+2. Workflow `image` (PR hacia `main` y push a `main`):
+   1. Construir la imagen con `docker compose build`.
+   2. Arrancar con `docker compose up --wait` usando un `.env` generado en el runner con valores ficticios, y comprobar `GET /health` y `GET /health/ready`.
+   3. Verificar que la imagen no incluya `.env`, `data/`, `evaluation/`, paquetes `nvidia-*` ni secretos en su historial, y que corra con UID `10001`.
 
-Criterio de aceptación: ningún cambio puede integrarse si fallan las pruebas, las validaciones de código o la construcción de la imagen Docker.
+Consideraciones verificadas el 2026-10-20:
+
+- El corpus de runtime (`chroma/`, `bm25/`, `chunks/parents.jsonl`, `table_documents.jsonl`) está versionado, así que el smoke test de readiness no necesita reconstruirlo.
+- La API alcanza `healthy` con una `DEEPSEEK_API_KEY` ficticia, porque el arranque no llama al LLM; CI no requiere secretos.
+- `pipeline/tests/test_chunking_phase2_sliding_window.py` carga el tokenizador real de Qwen; el workflow `tests` necesita red o una caché de Hugging Face.
+- La suite de diagnóstico usa `pytest`, no `unittest`.
+
+Criterio de aceptación: con una regla de rama sobre `main`, ningún cambio puede integrarse si fallan las pruebas, las validaciones de código o la construcción y el arranque de la imagen Docker.
 
 ## Fase 9 — Endurecimiento previo a producción
 

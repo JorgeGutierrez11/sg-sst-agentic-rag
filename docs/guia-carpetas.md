@@ -62,8 +62,6 @@ proyecto_rag/
 │   │   └── tests/
 │   └── diagnostico_cumplimiento/     # Agente de diagnóstico: api, catalog, domain, questionnaire, reporting, rules, tests.
 │
-├── app/                              # Andamiaje vacío (`.gitkeep`); aún no hay frontend ni backend aquí.
-│
 ├── evaluation/                       # Datasets, experimentos, instrumentos y resultados.
 │   ├── ares/                         # Configuración de ARES (vacío por ahora).
 │   ├── datasets/                     # conjunto_a_gold (calibración) y conjunto_b_optim (optimización).
@@ -115,7 +113,6 @@ Puntos de entrada de técnicas: [búsqueda híbrida](techniques/retrieval/hybrid
 |---|---|
 | Código que transforma datos offline | `pipeline/` |
 | Lógica de agentes y API HTTP | `agents/` |
-| Interfaz de usuario (futura) | `app/` |
 | Evaluación, datasets, instrumentos y resultados | `evaluation/` |
 | Instalación y ejecución | `docs/getting-started.md` |
 | Diseño vigente | `docs/architecture/` |

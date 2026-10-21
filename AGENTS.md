@@ -35,7 +35,6 @@ Install the declared dependencies before treating import failures as regressions
 - `agents/consulta_normativa/langchain_rag/` is the current online implementation. Its `retrieval/` package owns query-only Chroma/BM25 helpers; collection creation/upsert belongs in `pipeline/vectorization/`, and BM25 construction belongs in `pipeline/sparse_indexing/`.
 - `agents/api/main.py` is the unified FastAPI composition root (`uvicorn agents.api.main:app`). It mounts the consultation router from `agents/consulta_normativa/api/` and the diagnosis router from `agents/diagnostico_cumplimiento/api/`.
 - `agents/diagnostico_cumplimiento/` is the compliance-diagnosis agent: v2.1 catalogs under `catalog/data/`, questionnaire with `depends_on` question routing, declarative assessment, and reporting. Its tests use a frozen catalog copy in `tests/fixtures/valid_catalog.json`.
-- `app/backend/` and `app/frontend/` remain `.gitkeep` scaffolds; do not add speculative layers there.
 - `agents/consulta_normativa/manual_implementation/` is a frozen comparison baseline.
 - `data/interim/` and `data/processed/` contain regenerable but potentially tracked outputs. Pipeline, Chroma, and BM25 commands can dirty them; inspect `git status` and never overwrite or revert unrelated generated-data changes.
 - `evaluation/resultados_usuarios/` holds confidential raw company interactions. Anonymize identifiers and confirm consent covers storage before adding data; only its README is intentionally versioned by default.

@@ -11,7 +11,7 @@ Sistema RAG de tesis para **asistencia normativa y diagnóstico de cumplimiento 
 - **Consulta normativa:** responde preguntas con evidencia del corpus (recuperación híbrida Chroma + BM25, reranking, expansión a documentos padre y generación con DeepSeek).
 - **Diagnóstico de cumplimiento:** cuestionario guiado que evalúa requisitos normativos y genera un informe PDF.
 
-**Límites.** El corpus se restringe al Decreto 1072/2015, las Resoluciones 0312/2019, 2346/2007, 1401/2007 y 2013/1986, las Leyes 1562/2012 y 1010/2006 y la clasificación de riesgo del Decreto 768/2022. Las respuestas no sustituyen la asesoría de un profesional SST. Aún no existe frontend (`app/` es un andamiaje vacío).
+**Límites.** El corpus se restringe al Decreto 1072/2015, las Resoluciones 0312/2019, 2346/2007, 1401/2007 y 2013/1986, las Leyes 1562/2012 y 1010/2006 y la clasificación de riesgo del Decreto 768/2022. Las respuestas no sustituyen la asesoría de un profesional SST. Aún no existe frontend.
 
 ## Inicio rápido
 
