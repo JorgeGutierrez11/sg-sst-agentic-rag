@@ -31,7 +31,7 @@ El paso a paso, las variables de entorno y la solución de problemas están en [
 | Si eres... | Empieza por | Luego |
 |---|---|---|
 | Usuario de la API | [Referencia de la API](docs/reference/api.md) | [Inicio rápido](docs/getting-started.md) |
-| Operador local | [Inicio rápido](docs/getting-started.md) | Runbooks: [corpus](docs/operations/corpus-build.md), [tablas](docs/operations/table-processing.md), [vectorización](docs/operations/vectorization.md), [BM25](docs/operations/bm25-sparse-retrieval.md), [RAG](docs/operations/rag-langgraph.md) |
+| Operador local | [Inicio rápido](docs/getting-started.md) | Runbooks: [corpus](docs/operations/corpus-build.md), [tablas](docs/operations/table-processing.md), [vectorización](docs/operations/vectorization.md), [BM25](docs/operations/bm25-sparse-retrieval.md), [RAG](docs/operations/rag-langgraph.md), [Docker](docs/operations/docker.md) |
 | Contribuidor | [Mapa de carpetas](docs/guia-carpetas.md) | [Pruebas](docs/testing.md), [arquitectura de recuperación](docs/architecture/retrieval.md) |
 | Revisor académico | [Mapa fases ↔ repositorio](docs/mapa-fases-tesis.md) | [Metodología (PDF)](docs/EISI_2026-04-09_14-25-36_pg1409.pdf), [técnicas por etapa](docs/guia-carpetas.md#documentación), [experimentos](docs/experiments/chunking-strategy-comparison.md) |
 | Mantenedor | [Arquitectura de recuperación](docs/architecture/retrieval.md) | [Plan de despliegue](docs/plans/plan-docker.md), [pipeline de chunking](docs/architecture/chunking.md) |

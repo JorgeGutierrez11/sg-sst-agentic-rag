@@ -138,7 +138,7 @@ Criterio de aceptación: los índices faltantes o ilegibles impiden la disponibi
 
 Objetivo: construir una imagen reproducible y segura del backend.
 
-**Estado:** planificada el 2026-10-19. Decisiones: PyTorch solo CPU, modelos descargados durante el build, un único worker, índices montados en solo lectura y un `compose.dev.yaml` explícito para desarrollo. Detalle en [`plan-fase-6-docker.md`](plan-fase-6-docker.md).
+**Estado:** completada el 2026-10-20. La imagen y los dos archivos de Compose están implementados y verificados (pruebas manuales, verificador independiente y revisión de riesgo sin hallazgos); la operación está en [`operations/docker.md`](../operations/docker.md). Decisiones: PyTorch solo CPU, modelos descargados durante el build, un único worker, índices montados en solo lectura y un `compose.dev.yaml` explícito para desarrollo. Detalle en [`plan-fase-6-docker.md`](plan-fase-6-docker.md).
 
 ### Archivos por crear
 

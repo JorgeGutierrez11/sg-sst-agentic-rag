@@ -3,7 +3,7 @@
 > **Status:** `Current`
 > **Audience:** contributor, maintainer
 > **Verified against:** árbol del repositorio y `git ls-files`
-> **Last verified:** 2026-10-18
+> **Last verified:** 2026-10-20
 > **Replacement:** N/A
 
 Este documento es el mapa técnico del repositorio. Muestra dónde vive cada tipo de contenido y qué responsabilidad tiene cada carpeta en la implementación actual. La entrada general del proyecto es el [README](../README.md).
@@ -14,6 +14,11 @@ proyecto_rag/
 ├── AGENTS.md                         # Instrucciones para agentes de desarrollo.
 ├── requirements.txt                  # Único manifiesto de dependencias (versiones exactas, Python 3.14).
 ├── pytest.ini                        # `pythonpath = .` para la suite de diagnóstico.
+├── Dockerfile                        # Imagen del backend: PyTorch CPU, modelos fijos y usuario sin privilegios.
+├── .dockerignore                     # Lista blanca del contexto de build.
+├── compose.yaml                      # Ejecución tipo producción (`docker compose up`).
+├── compose.dev.yaml                  # Overlay de desarrollo con recarga (`-f compose.dev.yaml`).
+├── docker/                           # Script de descarga de modelos del build.
 ├── odd/tasks/                        # Bitácoras de tareas de desarrollo (no es documentación de producto).
 ├── docs/                             # Documentación detallada (ver sección "Documentación").
 │

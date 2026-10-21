@@ -2,23 +2,23 @@
 
 > **Status:** `Current`
 > **Audience:** contributor
-> **Verified against:** `pipeline/tests/`, `agents/*/tests/`, `pytest.ini` (80 módulos: 17 + 33 + 2 + 28)
-> **Last verified:** 2026-10-18
+> **Verified against:** `pipeline/tests/`, `agents/*/tests/`, `pytest.ini` (81 módulos: 17 + 33 + 3 + 28)
+> **Last verified:** 2026-10-20
 > **Replacement:** N/A
 
 > **Estado del documento:** inventario de pruebas y guía de ejecución. **No certifica que las pruebas estén pasando actualmente.** Los comandos se documentaron a partir de la estructura del repositorio; no se ejecutaron todas las suites durante la elaboración de la guía.
 
 ## 1. Propósito y alcance
 
-Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **80 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
+Esta guía identifica las pruebas automatizadas del proyecto, explica cómo ejecutarlas y delimita qué conclusiones pueden extraerse de sus resultados. El inventario comprende **81 módulos** distribuidos entre el pipeline de procesamiento documental, el agente de consulta normativa, la API unificada y el agente de diagnóstico de cumplimiento.
 
 | Subsistema | Módulos | Framework principal | Alcance |
 |---|---:|---|---|
 | Pipeline offline del corpus | 17 | `unittest` | Fragmentación, tablas, documentos vectoriales, Chroma, índices BM25 y build unificado |
 | Consulta normativa y RAG | 33 | `unittest` | API, grafos, recuperación, prompts, contexto empresarial y memoria |
-| API unificada | 2 | `unittest` | Inicialización, endpoints de salud, enrutamiento, ciclo de vida y validación de orígenes CORS |
+| API unificada | 3 | `unittest` | Inicialización, endpoints de salud, enrutamiento, ciclo de vida, validación de orígenes CORS y descarga de modelos de la imagen Docker |
 | Diagnóstico de cumplimiento | 28 | Principalmente `pytest`; un módulo de API con `unittest` | Catálogos v2.1, cuestionarios, enrutamiento por dependencias, evaluación declarativa y reportes |
-| **Total** | **80** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
+| **Total** | **81** | **Mixto** | Pruebas unitarias y de contratos entre componentes |
 
 **Configuración actual:** `pytest.ini` en la raíz declara `pythonpath = .`, de modo que `pytest` resuelve el paquete `agents` aunque `agents/` y `agents/diagnostico_cumplimiento/` no tengan `__init__.py`. La suite de diagnóstico comparte fixtures mediante `agents/diagnostico_cumplimiento/tests/conftest.py`. No existen `pyproject.toml`, `tox.ini` ni `setup.cfg`; las suites de `unittest` siguen usando sus propias utilidades.
 
@@ -184,12 +184,13 @@ python -m pytest agents/diagnostico_cumplimiento/tests/test_catalog.py
 | `test_cli.py` | Interfaz CLI de la implementación manual de referencia |
 | `test_rag_base.py` | Coordinación RAG y contratos auxiliares de esa referencia |
 
-### 4.3. API unificada — 2 módulos
+### 4.3. API unificada — 3 módulos
 
 | Módulo | Comportamiento que verifica |
 |---|---|
 | `agents/api/tests/test_main.py` | Inicialización de FastAPI, separación entre *liveness* y *readiness*, registro de routers, CORS, ruta raíz, ciclo de vida (*lifespan*) y reutilización de dependencias de consulta/diagnóstico, sin cargar runtimes reales |
 | `agents/api/tests/test_config.py` | Lectura y validación de `CORS_ALLOWED_ORIGINS`: lista separada por comas, variable ausente, rechazo de `*` y de orígenes con ruta, `/` final o esquema distinto de `http(s)` |
+| `agents/api/tests/test_docker_model_download.py` | Script `docker/download_models.py` del build Docker: lee las revisiones fijas solo desde los dos archivos de configuración, sin importarlos; rechaza constantes ausentes o no textuales, y descarga cada modelo con su revisión mediante una función de descarga simulada, sin acceso a red |
 
 ### 4.4. Diagnóstico de cumplimiento — 28 módulos
 
@@ -306,7 +307,7 @@ En pruebas de prompts, mantener alineadas las referencias numéricas inline `[n]
 |---|---|
 | Uso mixto de `unittest` y `pytest`; `pytest.ini` solo configura la resolución de imports | No existe un único comando oficial para ejecutar todas las pruebas |
 | `AGENTS.md` omite la suite de diagnóstico y la API unificada | La documentación de ejecución está incompleta |
-| Conteo por módulos, no por aserciones | **80 módulos no equivalen a cobertura porcentual** |
+| Conteo por módulos, no por aserciones | **81 módulos no equivalen a cobertura porcentual** |
 | Ausencia de configuración y umbral de cobertura | No hay un criterio cuantitativo documentado para CI |
 | Omisión condicional de una prueba BM25S | Una ejecución exitosa puede dejar una integración sin verificar |
 | Tests focalizados con servicios y modelos simulados | Pueden aparecer errores al cargar modelos e índices reales |

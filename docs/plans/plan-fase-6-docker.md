@@ -2,7 +2,7 @@
 
 > **For implementation workers:** Read this entire document through `## Log` before editing. Implement task by task and report the covered specs.
 
-**Status (2026-10-19):** Planned. Prerequisites are met: Phases 1-5 and 7 are complete, all suites are green (pipeline 163, consultation 196, API 14, diagnosis 205), `.env.example` exists, and `dev` is synchronized with `main` (merge-base `b6ce5bc`).
+**Status (2026-10-20):** Complete. T1-T4 are verified (user checks, an independent verifier with no blockers, and an approved risk review); T5 documents operation in `docs/operations/docker.md`. Accepted advisory: six `.lock`/`.refs` files under `/opt/hf-cache` remain writable by UID `10001`. Measured image size: 5.92 GB.
 
 **Goal:** Build one reproducible, non-root, CPU-only backend image that starts offline with pinned models, consumes the published corpus read-only, and runs through `docker compose` in a production-like default and an explicit development variant.
 
@@ -83,14 +83,14 @@
 
 ### T4 — Verification
 
-- [ ] Run every check in S1-S8 and record results in `## Log`.
-- [ ] Run the four suites and `compileall` (unchanged runtime must stay green).
-- [ ] Run S9 after explicit authorization for DeepSeek calls.
-- [ ] Independent verifier (Risk item 5: delivery/environment and dependencies).
+- [x] Run every check in S1-S8 and record results in `## Log`.
+- [x] Run the four suites and `compileall` (unchanged runtime must stay green).
+- [x] Run S9 after explicit authorization for DeepSeek calls.
+- [x] Independent verifier (Risk item 5: delivery/environment and dependencies).
 
 ### T5 — Documentation
 
-- [ ] Write the docs in S10.
+- [x] Write the docs in S10.
 - [ ] Commit: `docs(docker): document container build and operation`.
 
 ## Deferred (not in this plan)
