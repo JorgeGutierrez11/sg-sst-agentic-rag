@@ -1,0 +1,28 @@
+# Development overlay: docker compose -f compose.yaml -f compose.dev.yaml up
+services:
+  backend:
+    volumes:
+      # Host source replaces the image copy so edits trigger Uvicorn reload without rebuilding.
+      - type: bind
+        source: ./agents
+        target: /app/agents
+        read_only: true
+      - type: bind
+        source: ./pipeline
+        target: /app/pipeline
+        read_only: true
+    command:
+      - uvicorn
+      - agents.api.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - "1"
+      - --reload
+      - --reload-dir
+      - agents
+      - --reload-dir
+      - pipeline
+    restart: "no"

@@ -14,7 +14,7 @@ S11. Commit rule verbatim: "No hagas el commit, hazlo hasta que te digas pasa a 
 |---|---|---|---|---|
 | T1 | S2, S11 | inline (single unit, no writer trigger) | done | `2a3b92a`; RED 4 errors → GREEN 4/4; API suite 18 OK |
 | T2 | S1, S3, S4, S6, S7 | inline | done (chmod layer unverified) | smoke L8; commit below |
-| T3 | S5, S8 | inline | in progress | — |
+| T3 | S5, S8 | inline | done | `docker compose config` valid for base and dev overlay; commit `feat(docker): add compose deployment and development overlays` |
 | T4 | S1-S9 | inline + independent verifier (Risk item 5) | pending | — |
 | T5 | S10 | inline | pending | — |
 
@@ -31,3 +31,5 @@ S11. Commit rule verbatim: "No hagas el commit, hazlo hasta que te digas pasa a 
 - L8 (2026-10-19, user): "ya realice yo mismo las limpiesas, verifica que tenemos el espacio requerido y de ser asi haz el test". Free 10 GB; full rebuild OK (min free 1.78 GB, now 1.8 GB). Scenario without corpus: exit 3 with `Missing runtime artifact`. Scenario with `data/processed` read-only, `/tmp` tmpfs, `RAG_CHROMA_WORKING_DIR=/tmp/chroma-work`, `--env-file .env`: ready in 14 s, `/health` 200, `/health/ready` 200, Docker health `healthy`, uid 10001, corpus mount rejects writes (`Read-only file system`), Chroma copy created under `/tmp/chroma-work`, ~760 MiB RAM.
 - L9 (2026-10-19): 20 warnings `Ignoring corrupted tree cache file ... Permission denied`: huggingface_hub writes `trees/*.json` as 0600 root. Added a separate `find ... chmod a+r` layer after the download; not yet verified (rebuild needs more free disk).
 - L10 (2026-10-19, user): "dejemos por el momento estas pruebas hasta hay, pasemos a la siguiente tarea." T2 committed with the chmod layer unverified; its rebuild check moves to T4.
+- L11 (2026-10-19): T3 written: `compose.yaml` (env_file required, read-only corpus bind with `create_host_path: false`, tmpfs `/tmp` 256 MB mode 1777, `RAG_CHROMA_WORKING_DIR=/tmp/chroma-work`, `127.0.0.1:8000`, `restart: on-failure:3`) and `compose.dev.yaml` (read-only source binds for `agents` and `pipeline`, `--reload` with both reload dirs, `restart: "no"`). `docker compose config` valid for both; merged dev keeps the corpus mount; missing `.env` rejected. Plan S5 check corrected (exit code 3, not 503). No runnable RED test applies to YAML; `compose up` deferred to T4 by the user's pause on tests.
+- L12 (2026-10-20, user): "explicame el compose.yml, y como el dockerfile dividelo en secciones." Added six numbered section headers to `compose.yaml` (comments only); both configs still valid. User then said "Haz el commit"; T3 committed.

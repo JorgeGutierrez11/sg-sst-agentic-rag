@@ -37,7 +37,7 @@
 - Check: `docker run --rm <image> id -u` prints `10001`.
 
 **S5 — Read-only corpus volume.** Confirmed option A: the image contains no `data/`. `compose.yaml` mounts `./data/processed:/app/data/processed:ro`. `RAG_CHROMA_WORKING_DIR=/tmp/chroma-work` points to a `tmpfs` mount, because Chroma rewrites its files even on query.
-- Check: readiness succeeds with the read-only mount; a missing `data/processed` makes `/health/ready` return `503` and logs `Missing runtime artifact`.
+- Check: readiness succeeds with the read-only mount. Without the corpus the lifespan re-raises `Missing runtime artifact` and Uvicorn exits with code `3` (the API never serves `503`); compose uses `restart: on-failure:3` so this does not loop forever. A missing host `./data/processed` fails at `up` because the bind uses `create_host_path: false`.
 
 **S6 — No secrets or private data in the image.** A whitelist `.dockerignore` (`*` then `!` entries) admits only `requirements.txt`, `agents/`, `pipeline/`, and `docker/`, and excludes `**/tests/` and `**/__pycache__/`. Secrets reach the container only through `env_file: .env` at run time; no `ARG`/`ENV` holds a secret.
 - Check: `docker run --rm <image> sh -c 'test ! -e /app/.env && test ! -e /app/data && test ! -e /app/evaluation'` exits `0`; `docker history --no-trunc <image>` shows no `DEEPSEEK_API_KEY` value.
@@ -77,9 +77,9 @@
 
 ### T3 — Compose files
 
-- [ ] Write `compose.yaml`: build, `env_file: .env`, read-only corpus mount, `tmpfs` for `/tmp`, `RAG_CHROMA_WORKING_DIR`, port `127.0.0.1:8000:8000`, `restart: unless-stopped`.
-- [ ] Write `compose.dev.yaml`: source bind mounts and `--reload` command.
-- [ ] Commit: `feat(docker): add compose deployment and development overlays`.
+- [x] Write `compose.yaml`: build, `env_file: .env`, read-only corpus mount, `tmpfs` for `/tmp`, `RAG_CHROMA_WORKING_DIR`, port `127.0.0.1:8000:8000`, `restart: on-failure:3`.
+- [x] Write `compose.dev.yaml`: source bind mounts and `--reload` command.
+- [x] Commit: `feat(docker): add compose deployment and development overlays`.
 
 ### T4 — Verification
 
@@ -107,7 +107,8 @@
 | R1 | Hugging Face download fails or is rate-limited during build | Retry the build; the model layer is cached once it succeeds |
 | R2 | Host corpus files unreadable by UID `10001` | Files are created `0644` by the pipeline; document `chmod -R a+rX data/processed` in troubleshooting |
 | R3 | Image size exceeds expectations | Target ~3.5-4 GB; record the measured size in `## Log` |
-| R4 | `compose.yaml` started without `.env` | Compose fails fast on a missing `env_file`; `.env.example` documents the variables |
+| R4 | `compose.yaml` started without `.env` | Compose fails fast on a missing `env_file` (verified); `.env.example` documents the variables |
+| R5 | Non-root user cannot read `huggingface_hub` `trees/*.json` (0600) | Separate `chmod a+r` layer after the download; verify on the next rebuild (T4) |
 
 ## Log
 
