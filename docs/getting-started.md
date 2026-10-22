@@ -3,10 +3,12 @@
 > **Status:** `Current`
 > **Audience:** operator
 > **Verified against:** `agents/api/main.py`, `agents/api/config.py`, `agents/consulta_normativa/langchain_rag/config.py`, `requirements.txt`
-> **Last verified:** 2026-10-18
+> **Last verified:** 2026-10-20
 > **Replacement:** N/A (antes `GUIA_EJECUCION_BACKEND.md` en la raíz)
 
 Esta guía explica cómo preparar y ejecutar localmente la API unificada de los agentes de consulta normativa y diagnóstico de cumplimiento del SG-SST.
+
+Para ejecutar el backend en un contenedor Docker, consulte [`operations/docker.md`](operations/docker.md).
 
 ## 1. Requisitos previos
 

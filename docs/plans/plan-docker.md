@@ -3,7 +3,7 @@
 > **Status:** `Current`
 > **Audience:** maintainer
 > **Verified against:** `requirements.txt`, `.python-version`, `agents/api/main.py`
-> **Last verified:** 2026-10-18
+> **Last verified:** 2026-10-19
 > **Replacement:** N/A
 
 Proyecto: SG-SST Agentic RAG Componente: Backend — FastAPI / Python Versión de Python: 3.14 Objetivo general: preparar un entorno reproducible, seguro y listo para su contenedorización, integración continua y posterior despliegue en producción.
@@ -62,7 +62,7 @@ Objetivo: unificar la configuración entre desarrollo, CI y producción sin expo
 ### Actividades
 
 1. Utilizar `.env` exclusivamente para el desarrollo local.
-2. Crear `.env.example` sin valores secretos:
+2. ~~Crear `.env.example` sin valores secretos~~ Hecho en el commit `04c02a8`:
    ```
    DEEPSEEK_API_KEY=
    CORS_ALLOWED_ORIGINS=http://localhost:3000
@@ -138,12 +138,16 @@ Criterio de aceptación: los índices faltantes o ilegibles impiden la disponibi
 
 Objetivo: construir una imagen reproducible y segura del backend.
 
+**Estado:** completada el 2026-10-20. La imagen y los dos archivos de Compose están implementados y verificados (pruebas manuales, verificador independiente y revisión de riesgo sin hallazgos); la operación está en [`operations/docker.md`](../operations/docker.md). Decisiones: PyTorch solo CPU, modelos descargados durante el build, un único worker, índices montados en solo lectura y un `compose.dev.yaml` explícito para desarrollo. Detalle en [`plan-fase-6-docker.md`](plan-fase-6-docker.md).
+
 ### Archivos por crear
 
 ```
 Dockerfile
 .dockerignore
 compose.yaml
+compose.dev.yaml
+docker/download_models.py
 ```
 
 ### Requisitos técnicos
@@ -154,7 +158,7 @@ compose.yaml
 - Deshabilitar `--reload` en producción.
 - Excluir `.env` de la imagen.
 - Montar los índices RAG como volúmenes de solo lectura. ChromaDB no puede abrirse en solo lectura: el runtime copia el índice al arrancar y consulta la copia, así que `RAG_CHROMA_WORKING_DIR` debe apuntar a un volumen o `tmpfs` con escritura (ver [`plan-fase-5-artefactos.md`](plan-fase-5-artefactos.md), Parte 4).
-- Mantener la caché de modelos en un volumen independiente.
+- ~~Mantener la caché de modelos en un volumen independiente.~~ Sustituido: los modelos se descargan durante el build con su revisión fija y el runtime arranca con `HF_HUB_OFFLINE=1`.
 - Configurar el healthcheck utilizando `/health/ready`.
 - Preparar el entorno para el uso posterior de GPU en el reranker.
 
@@ -164,7 +168,7 @@ Criterio de aceptación: mediante `docker compose up`, el backend inicia y permi
 
 Objetivo: independizar el procesamiento del corpus normativo de la ejecución de los agentes.
 
-**Estado:** en curso. Los comandos `python -m pipeline.offline_corpus build` y `python -m pipeline.offline_corpus validate` están implementados y probados; falta la prueba manual de reconstrucción real del corpus. La Fase 6 sigue diferida y sin cambios. Detalle en [`plan-fase-7-pipeline-offline.md`](plan-fase-7-pipeline-offline.md).
+**Estado:** completada el 2026-10-19. Los comandos `python -m pipeline.offline_corpus build` y `python -m pipeline.offline_corpus validate` están implementados y probados, y la reconstrucción real del corpus se ejecutó con éxito. Detalle en [`plan-fase-7-pipeline-offline.md`](plan-fase-7-pipeline-offline.md).
 
 ### Flujo de procesamiento
 
@@ -198,26 +202,36 @@ Criterio de aceptación: la API opera exclusivamente en modo de consulta y el pi
 
 Objetivo: detectar errores y regresiones antes de integrar cambios al repositorio principal.
 
+**Estado:** planificada el 2026-10-20. El repositorio es público: los minutos de los runners estándar son gratuitos y las reglas de rama pueden exigir que CI pase antes del merge. Detalle en [`plan-fase-8-ci.md`](plan-fase-8-ci.md).
+
 ### Pipeline propuesto
 
-1. Preparar el entorno con Python `3.14`.
-2. Instalar las dependencias.
-3. Ejecutar las pruebas automatizadas:
-   ```
-   python -m unittest discover -s pipeline/tests
-   python -m unittest discover -s agents/consulta_normativa/tests
-   python -m unittest discover -s agents/diagnostico_cumplimiento/tests
-   python -m compileall pipeline agents
-   ```
-4. Construir la imagen Docker.
-5. Ejecutar pruebas de integración y smoke tests para:
-   - `GET /health`
-   - `GET /health/ready`
-6. Verificar que la imagen Docker no incluya archivos `.env` ni secretos.
+Los workflows viven en el repositorio, en `.github/workflows/`, y GitHub los ejecuta al recibir el push.
 
-Consideración: las pruebas de readiness deberán ejecutarse con los modelos y artefactos necesarios. No se debe asumir que una imagen recién construida puede inicializar el RAG sin ellos.
+1. Workflow `tests` (push a `dev` o `main` y PR hacia `main`):
+   1. Preparar Python desde `.python-version` (`3.14`).
+   2. Instalar PyTorch CPU (`torch==2.14.1` del índice `https://download.pytorch.org/whl/cpu`) antes de `requirements.txt`; sin ese paso, `pip` descarga la variante CUDA.
+   3. Ejecutar las cuatro suites y la compilación:
+      ```
+      python -m unittest discover -s pipeline/tests
+      python -m unittest discover -s agents/consulta_normativa/tests
+      python -m unittest discover -s agents/api/tests
+      python -m pytest agents/diagnostico_cumplimiento/tests
+      python -m compileall pipeline agents
+      ```
+2. Workflow `image` (PR hacia `main` y push a `main`):
+   1. Construir la imagen con `docker compose build`.
+   2. Arrancar con `docker compose up --wait` usando un `.env` generado en el runner con valores ficticios, y comprobar `GET /health` y `GET /health/ready`.
+   3. Verificar que la imagen no incluya `.env`, `data/`, `evaluation/`, paquetes `nvidia-*` ni secretos en su historial, y que corra con UID `10001`.
 
-Criterio de aceptación: ningún cambio puede integrarse si fallan las pruebas, las validaciones de código o la construcción de la imagen Docker.
+Consideraciones verificadas el 2026-10-20:
+
+- El corpus de runtime (`chroma/`, `bm25/`, `chunks/parents.jsonl`, `table_documents.jsonl`) está versionado, así que el smoke test de readiness no necesita reconstruirlo.
+- La API alcanza `healthy` con una `DEEPSEEK_API_KEY` ficticia, porque el arranque no llama al LLM; CI no requiere secretos.
+- `pipeline/tests/test_chunking_phase2_sliding_window.py` carga el tokenizador real de Qwen; el workflow `tests` necesita red o una caché de Hugging Face.
+- La suite de diagnóstico usa `pytest`, no `unittest`.
+
+Criterio de aceptación: con una regla de rama sobre `main`, ningún cambio puede integrarse si fallan las pruebas, las validaciones de código o la construcción y el arranque de la imagen Docker.
 
 ## Fase 9 — Endurecimiento previo a producción
 

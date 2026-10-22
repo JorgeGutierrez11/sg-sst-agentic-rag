@@ -1,0 +1,87 @@
+# 1. DISPARADORES
+name: tests
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+
+# 2. PERMISOS Y CONCURRENCIA
+# Public repository: the workflow token only reads code.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+# 3. VARIABLES GLOBALES
+env:
+  # Must match ARG TORCH_VERSION in the Dockerfile.
+  TORCH_VERSION: "2.14.1"
+  TORCH_INDEX_URL: https://download.pytorch.org/whl/cpu
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+
+      # 4. PREPARACIÓN DEL ENTORNO
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # The pipeline suite loads the real Qwen tokenizer at the revision pinned in this file.
+      - name: Cache Hugging Face models
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-${{ hashFiles('pipeline/chunking/config.py') }}
+
+
+      # 5. DEPENDENCIAS
+      # CPU torch first, otherwise requirements.txt pulls the CUDA build.
+      - name: Install dependencies
+        run: |
+          python -m pip install --index-url "$TORCH_INDEX_URL" "torch==$TORCH_VERSION"
+          python -m pip install -r requirements.txt
+
+      - name: Assert CPU-only PyTorch
+        run: |
+          python -c "import torch; v = torch.__version__; print(v); assert v.endswith('+cpu'), v"
+          # Capture first so a failing pip list fails the step instead of yielding zero matches.
+          packages="$(python -m pip list)"
+          if grep -q '^nvidia-' <<<"$packages"; then
+            echo "CUDA packages installed" >&2
+            exit 1
+          fi
+
+
+      # 6. PRUEBAS
+      - name: Pipeline tests
+        run: python -m unittest discover -s pipeline/tests
+
+      - name: Consultation tests
+        run: python -m unittest discover -s agents/consulta_normativa/tests
+
+      - name: API tests
+        run: python -m unittest discover -s agents/api/tests
+
+      - name: Diagnosis tests
+        run: python -m pytest agents/diagnostico_cumplimiento/tests
+
+      - name: Compile check
+        run: python -m compileall -q pipeline agents

@@ -1,0 +1,10 @@
+# Whitelist: the build context admits only runtime code and the dependency manifest.
+*
+!requirements.txt
+!agents
+!pipeline
+!docker
+
+**/tests
+**/__pycache__
+**/*.pyc

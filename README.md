@@ -11,7 +11,7 @@ Sistema RAG de tesis para **asistencia normativa y diagnóstico de cumplimiento 
 - **Consulta normativa:** responde preguntas con evidencia del corpus (recuperación híbrida Chroma + BM25, reranking, expansión a documentos padre y generación con DeepSeek).
 - **Diagnóstico de cumplimiento:** cuestionario guiado que evalúa requisitos normativos y genera un informe PDF.
 
-**Límites.** El corpus se restringe al Decreto 1072/2015, las Resoluciones 0312/2019, 2346/2007, 1401/2007 y 2013/1986, las Leyes 1562/2012 y 1010/2006 y la clasificación de riesgo del Decreto 768/2022. Las respuestas no sustituyen la asesoría de un profesional SST. Aún no existe frontend (`app/` es un andamiaje vacío).
+**Límites.** El corpus se restringe al Decreto 1072/2015, las Resoluciones 0312/2019, 2346/2007, 1401/2007 y 2013/1986, las Leyes 1562/2012 y 1010/2006 y la clasificación de riesgo del Decreto 768/2022. Las respuestas no sustituyen la asesoría de un profesional SST. Aún no existe frontend.
 
 ## Inicio rápido
 
@@ -31,7 +31,7 @@ El paso a paso, las variables de entorno y la solución de problemas están en [
 | Si eres... | Empieza por | Luego |
 |---|---|---|
 | Usuario de la API | [Referencia de la API](docs/reference/api.md) | [Inicio rápido](docs/getting-started.md) |
-| Operador local | [Inicio rápido](docs/getting-started.md) | Runbooks: [corpus](docs/operations/corpus-build.md), [tablas](docs/operations/table-processing.md), [vectorización](docs/operations/vectorization.md), [BM25](docs/operations/bm25-sparse-retrieval.md), [RAG](docs/operations/rag-langgraph.md) |
+| Operador local | [Inicio rápido](docs/getting-started.md) | Runbooks: [corpus](docs/operations/corpus-build.md), [tablas](docs/operations/table-processing.md), [vectorización](docs/operations/vectorization.md), [BM25](docs/operations/bm25-sparse-retrieval.md), [RAG](docs/operations/rag-langgraph.md), [Docker](docs/operations/docker.md) |
 | Contribuidor | [Mapa de carpetas](docs/guia-carpetas.md) | [Pruebas](docs/testing.md), [arquitectura de recuperación](docs/architecture/retrieval.md) |
 | Revisor académico | [Mapa fases ↔ repositorio](docs/mapa-fases-tesis.md) | [Metodología (PDF)](docs/EISI_2026-04-09_14-25-36_pg1409.pdf), [técnicas por etapa](docs/guia-carpetas.md#documentación), [experimentos](docs/experiments/chunking-strategy-comparison.md) |
 | Mantenedor | [Arquitectura de recuperación](docs/architecture/retrieval.md) | [Plan de despliegue](docs/plans/plan-docker.md), [pipeline de chunking](docs/architecture/chunking.md) |

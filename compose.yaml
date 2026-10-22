@@ -1,0 +1,47 @@
+# Production-like default; development adds compose.dev.yaml explicitly with -f.
+
+# 1. PROYECTO
+name: sg-sst
+
+services:
+  backend:
+
+    # 2. CONSTRUCCIÓN DE LA IMAGEN
+    build:
+      context: .
+    image: sg-sst-backend:local
+
+
+    # 3. CONFIGURACIÓN Y SECRETOS
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      RAG_CHROMA_WORKING_DIR: /tmp/chroma-work
+
+
+    # 4. VOLÚMENES
+    volumes:
+      # Published corpus is consumed read-only; a missing host path fails instead of creating an empty dir.
+      - type: bind
+        source: ./data/processed
+        target: /app/data/processed
+        read_only: true
+        bind:
+          create_host_path: false
+      # Chroma rewrites its files even on query, so the runtime queries a disposable copy here.
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 268435456
+          mode: 01777
+
+
+    # 5. RED
+    ports:
+      - "127.0.0.1:8000:8000"
+
+
+    # 6. POLÍTICA DE REINICIO
+    # Bounded retries so a missing or invalid corpus does not restart forever.
+    restart: on-failure:3
