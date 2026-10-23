@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # image.yml runs this suite before building the image.
+  workflow_call:
 
 
 # 2. PERMISOS Y CONCURRENCIA
@@ -14,8 +16,9 @@ on:
 permissions:
   contents: read
 
+# A called workflow inherits the caller's github.workflow, so the suffix keeps its group distinct.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-tests-${{ github.ref }}
   cancel-in-progress: true
 
 

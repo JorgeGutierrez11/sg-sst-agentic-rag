@@ -118,7 +118,7 @@ python -m compileall -q pipeline agents
 
 ## Deferred (not in this plan)
 
-- **Image publishing to `ghcr.io`:** belongs to Phase 10 (deployment); it needs `packages: write` and a tagging policy.
+- **Image publishing to `ghcr.io`:** implemented in `image.yml` on 2026-10-22 as part of the deployment phase; see `docs/operations/docker.md` ("Imagen publicada en GHCR").
 - **Build layer caching (`type=gha`):** decide after measuring the uncached build time in T4. The roughly 6 GB of layers compete with the 10 GB per-repository cache.
 - **Mocking the Qwen tokenizer** in `test_chunking_phase2_sliding_window.py` to remove the network dependency of S4.
 - **Vulnerability scanning** of dependencies and the image: Phase 9.

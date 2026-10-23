@@ -2,8 +2,8 @@
 
 > **Status:** `Current`
 > **Audience:** operator
-> **Verified against:** `Dockerfile`, `.dockerignore`, `compose.yaml`, `compose.dev.yaml`, `docker/download_models.py`
-> **Last verified:** 2026-10-20
+> **Verified against:** `Dockerfile`, `.dockerignore`, `compose.yaml`, `compose.dev.yaml`, `docker/download_models.py`, `.github/workflows/image.yml`
+> **Last verified:** 2026-10-22
 > **Replacement:** N/A
 
 Esta guía construye y ejecuta la API unificada en un contenedor. La imagen contiene el código, las dependencias (PyTorch solo CPU) y los dos modelos de Hugging Face con su revisión fija; **no contiene el corpus**. El contenedor monta `data/processed/` del host en solo lectura, y el corpus se construye en el host con [`corpus-build.md`](corpus-build.md). Ejecuta todos los comandos desde la raíz del repositorio. Para la ejecución sin contenedor, consulta [`getting-started.md`](../getting-started.md).
@@ -97,6 +97,23 @@ Detén el contenedor antes de `build`, porque la publicación reemplaza los índ
 | Revisión del reranker en `langchain_rag/config.py` | `docker compose up -d --build` |
 | Revisión de Qwen en `pipeline/chunking/config.py` | Reconstruir el corpus y luego la imagen: los índices dependen de esa revisión. |
 | Solo el corpus o `.env` | `docker compose down && docker compose up -d`; no requiere build. |
+
+## Imagen publicada en GHCR
+
+El workflow `.github/workflows/image.yml` ejecuta primero las suites de `tests.yml`, luego construye la imagen, verifica su higiene y su arranque. Solo en un push a `main` (o una ejecución manual sobre `main`) publica **la misma imagen probada**, sin reconstruirla, con dos tags:
+
+| Tag | Uso |
+|---|---|
+| `ghcr.io/jorgegutierrez11/sg-sst-backend:sha-<7 caracteres del commit>` | Inmutable; es el que se fija en producción y permite volver a una versión anterior. |
+| `ghcr.io/jorgegutierrez11/sg-sst-backend:main` | Móvil; apunta a la última imagen publicada desde `main`. |
+
+Los pull requests construyen y prueban la imagen, pero nunca publican. La autenticación usa el `GITHUB_TOKEN` efímero de cada ejecución, con `packages: write` solo en el job `image`; no requiere secretos ni tokens personales.
+
+Tras la primera publicación, el paquete queda privado: en GitHub → *Packages* → `sg-sst-backend` → *Package settings*, cambia la visibilidad a **Public** una sola vez para descargarlo sin credenciales:
+
+```bash
+docker pull ghcr.io/jorgegutierrez11/sg-sst-backend:main
+```
 
 ## Verificación
 
