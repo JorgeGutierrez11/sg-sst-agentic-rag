@@ -35,7 +35,7 @@ Las rutas públicas se configuran en el panel de Cloudflare (**Networking → Tu
 | Requisito | Detalle |
 |---|---|
 | Docker Engine y Compose v2 | `docker compose version`. |
-| Recursos | Mínimo 4 GB de RAM y 2 vCPU; recomendado 8 GB y 4 vCPU. Unos 7 GB de disco para imágenes. |
+| Recursos | 8 GB de RAM (los límites suman 5.75 GB) y al menos 2 vCPU; 4 vCPU reducen la latencia. Unos 7 GB de disco para imágenes. |
 | Red | Salida a internet (GHCR, DeepSeek, Cloudflare). No requiere puertos de entrada aparte de SSH. |
 | Secretos | Clave de DeepSeek y token del túnel (`eyJ...`, en **Networking → Tunnels → túnel → Overview → Add a replica**). |
 
@@ -81,7 +81,7 @@ Tras actualizar el corpus con `git pull`, reinicia el backend para que lo cargue
 - Cloudflare corta en **100 s** las peticiones que pasan por su proxy (error 524). Una consulta tarda entre 20 y 60 s; varias consultas simultáneas se encolan en el único worker del backend.
 - Las sesiones de diagnóstico viven en memoria: se pierden al reiniciar o actualizar el backend.
 - No hay autenticación ni rate limiting en la aplicación (Fase 9 de [`plan-docker.md`](../plans/plan-docker.md)).
-- Los contenedores no tienen límites de memoria ni CPU; se fijarán tras medir el consumo en la VPS (pico medido del backend: 3.34 GiB).
+- Límites de memoria: `backend` 5 GB (pico medido 3.34 GiB), `frontend` 512 MB, `cloudflared` 256 MB; si un contenedor los supera, el kernel lo termina y Docker lo reinicia. No hay límite de CPU: el backend usa todos los núcleos y con 2 vCPU las consultas simultáneas pueden acercarse al corte de 100 s.
 
 ## Troubleshooting
 

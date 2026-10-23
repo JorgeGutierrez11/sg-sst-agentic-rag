@@ -35,6 +35,8 @@ services:
           size: 268435456
           mode: 01777
     networks: [app]
+    # Measured peak is 3.34 GiB; no CPU cap so queries use every core.
+    mem_limit: 5g
     security_opt: ["no-new-privileges:true"]
     logging: *logging
     restart: unless-stopped
@@ -47,6 +49,7 @@ services:
       # Server-side proxy target for /api/v1 requests that reach the frontend.
       SGSST_API_URL: http://backend:8000
     networks: [app]
+    mem_limit: 512m
     security_opt: ["no-new-privileges:true"]
     logging: *logging
     restart: unless-stopped
@@ -67,6 +70,7 @@ services:
       frontend:
         condition: service_healthy
     networks: [app]
+    mem_limit: 256m
     security_opt: ["no-new-privileges:true"]
     logging: *logging
     restart: unless-stopped
