@@ -1,0 +1,78 @@
+# Production stack for the VPS: run from this directory with `docker compose up -d`.
+# Images come from GHCR; values are interpolated from deploy/.env (see .env.example).
+
+# 1. PROYECTO
+name: sg-sst
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # 2. BACKEND
+  backend:
+    image: ghcr.io/jorgegutierrez11/sg-sst-backend:${BACKEND_TAG:?set BACKEND_TAG in deploy/.env}
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?set DEEPSEEK_API_KEY in deploy/.env}
+      # Single-origin routing; the backend still requires an explicit allowed origin.
+      CORS_ALLOWED_ORIGINS: https://${PUBLIC_HOSTNAME:?set PUBLIC_HOSTNAME in deploy/.env}
+      RAG_CHROMA_WORKING_DIR: /tmp/chroma-work
+    volumes:
+      # Published corpus is consumed read-only; a missing host path fails instead of creating an empty dir.
+      - type: bind
+        source: ${CORPUS_DIR:-../data/processed}
+        target: /app/data/processed
+        read_only: true
+        bind:
+          create_host_path: false
+      # Chroma rewrites its files even on query, so the runtime queries a disposable copy here.
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 268435456
+          mode: 01777
+    networks: [app]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+
+
+  # 3. FRONTEND
+  frontend:
+    image: ghcr.io/jorgegutierrez11/sg-sst-frontend:${FRONTEND_TAG:?set FRONTEND_TAG in deploy/.env}
+    environment:
+      # Server-side proxy target for /api/v1 requests that reach the frontend.
+      SGSST_API_URL: http://backend:8000
+    networks: [app]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+
+
+  # 4. CLOUDFLARE TUNNEL
+  # Outbound-only connector; public routes (/api/v1/* -> backend, rest -> frontend) live in the Cloudflare dashboard.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      # Read from the environment so the token never appears in the process arguments.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in deploy/.env}
+    # Publishes traffic only once both upstreams report healthy.
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks: [app]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+
+
+# 5. RED
+# No service publishes host ports; the tunnel is the only ingress.
+networks:
+  app:

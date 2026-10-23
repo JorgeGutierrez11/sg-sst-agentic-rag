@@ -19,6 +19,7 @@ proyecto_rag/
 ├── compose.yaml                      # Ejecución tipo producción (`docker compose up`).
 ├── compose.dev.yaml                  # Overlay de desarrollo con recarga (`-f compose.dev.yaml`).
 ├── docker/                           # Script de descarga de modelos del build.
+├── deploy/                           # Compose de producción para la VPS (GHCR + Cloudflare Tunnel) y plantilla de `.env`.
 ├── odd/tasks/                        # Bitácoras de tareas de desarrollo (no es documentación de producto).
 ├── docs/                             # Documentación detallada (ver sección "Documentación").
 │
