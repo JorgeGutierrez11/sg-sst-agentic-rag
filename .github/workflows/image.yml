@@ -10,7 +10,7 @@ on:
 
 
 # 2. PERMISOS Y CONCURRENCIA
-# Public repository: the workflow token only reads code.
+# Public repository: the token is read-only by default; only the image job adds packages: write.
 permissions:
   contents: read
 
@@ -24,9 +24,18 @@ env:
   IMAGE: sg-sst-backend:local
 
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   image:
+    # A failing suite blocks the build, so no untested image is published.
+    needs: tests
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      # Only the publish step uses this scope, and only on main.
+      packages: write
     steps:
 
       # 4. PREPARACIÓN DEL ENTORNO
@@ -88,7 +97,23 @@ jobs:
           echo
 
 
-      # 8. LIMPIEZA
+      # 8. PUBLICACIÓN EN GHCR
+      # Pushes the smoke-tested image without rebuilding; pull requests never publish.
+      - name: Publish image to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GHCR requires lowercase repository names.
+          registry_image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/sg-sst-backend"
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          for tag in "sha-${GITHUB_SHA::7}" main; do
+            docker tag "$IMAGE" "$registry_image:$tag"
+            docker push "$registry_image:$tag"
+          done
+
+
+      # 9. LIMPIEZA
       - name: Container logs on failure
         if: failure()
         run: docker compose logs backend

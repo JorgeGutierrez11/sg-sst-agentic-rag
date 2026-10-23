@@ -49,6 +49,9 @@ RUN find /opt/hf-cache -type f ! -perm -o=r -exec chmod a+r {} +
 # 4. IMAGEN DE PRODUCCIÓN
 FROM ${PYTHON_IMAGE} AS runtime
 
+# Links the GHCR package to this repository so GITHUB_TOKEN keeps write access across pushes.
+LABEL org.opencontainers.image.source=https://github.com/JorgeGutierrez11/sg-sst-agentic-rag
+
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
