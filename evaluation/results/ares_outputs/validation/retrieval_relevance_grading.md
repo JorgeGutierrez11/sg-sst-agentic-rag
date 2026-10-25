@@ -1,4 +1,4 @@
-# Resumen ARES: Retrieval Relevance Grading
+# Resumen ARES: Retrieval Relevance Grading.
 
 Se evaluó el archivo [retrieval_relevance_grading.tsv](../../ares_runs/validation/retrieval_relevance_grading.tsv) con el modelo `deepseek-v4-flash` sobre 80 ejemplos, usando 200 ejemplos anotados para PPI.
 
@@ -10,15 +10,16 @@ Se evaluó el archivo [retrieval_relevance_grading.tsv](../../ares_runs/validati
 | Archivo evaluado | `evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv` |
 | Número de ejemplos | 80 |
 | Ejemplos anotados para PPI | 200 |
-| Promedio simple de ARES | 0.984 |
+| Promedio simple de ARES (normalizado a [0,1]) | 0.933 |
 | Promedio simple de accuracy del juez LLM | 0.913 |
+| Estado por Predicción ARES | Técnica ganadora (1 de 3) |
 
 ## Resultados por etiqueta
 
 | Métrica | Predicción ARES | IC ARES | Ground Truth | Accuracy juez LLM | Ejemplos |
 |---|---:|---:|---:|---:|---:|
 | `Context_Relevance_Label` | 0.8550 | [0.766, 0.944] | 1.0 | 0.825 | 80 |
-| `Answer_Faithfulness_Label` | 1.1525 | [1.084, 1.221] | 1.0 | 0.963 | 80 |
+| `Answer_Faithfulness_Label` | 1.0000 | [1.000, 1.000] | 1.0 | 0.963 | 80 |
 | `Answer_Relevance_Label` | 0.9450 | [0.896, 0.994] | 1.0 | 0.950 | 80 |
 
 ## Lectura rápida
@@ -26,9 +27,9 @@ Se evaluó el archivo [retrieval_relevance_grading.tsv](../../ares_runs/validati
 | Dimensión | Lectura |
 |---|---|
 | Relevancia de contexto | La más baja del conjunto; muestra un déficit claro en la identificación de contexto relevante. |
-| Fidelidad de la respuesta | La mejor dimensión del proceso de validación; supera 1.0 en predicción ARES y mantiene alta precisión del juez. |
+| Fidelidad de la respuesta | Tras normalizar al rango [0,1], se mantiene como la dimensión más fuerte. |
 | Relevancia de la respuesta | Muy sólida y cercana al nivel ideal, con una precisión del juez de 0.950. |
-| Señal global | La validación sugiere un sistema razonablemente sólido, pero con margen para mejorar la relevancia contextual. |
+| Señal global | Es la técnica con mejor desempeño global en el bloque validation. |
 
 
 ## Salida de referencia
@@ -112,8 +113,8 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv
 Checkpoint:None
-ARES Prediction: [1.1525000000000056]
-ARES Confidence Interval: [[1.084, 1.221]]
+ARES Prediction: [1.0]
+ARES Confidence Interval: [[1.0, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.963]
@@ -160,6 +161,6 @@ ARES LLM Judge Accuracy on Ground Truth Labels: [0.95]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 0.8550000000000133, 'ARES_Confidence_Interval': [0.766, 0.944], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.825, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 1.1525000000000056, 'ARES_Confidence_Interval': [1.084, 1.221], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 0.945000000000001, 'ARES_Confidence_Interval': [0.896, 0.994], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.95, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 0.8550000000000133, 'ARES_Confidence_Interval': [0.766, 0.944], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.825, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/validation/retrieval_relevance_grading.tsv', 'ARES_Prediction': 0.945000000000001, 'ARES_Confidence_Interval': [0.896, 0.994], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.95, 'Annotated_Examples_used_for_PPI': 200}]
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
 ```

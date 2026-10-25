@@ -12,14 +12,16 @@ Fuente: ejecución de `python evaluation/ares/config.py` sobre `evaluation/resul
 | Etiquetas evaluadas | `Context_Relevance_Label`, `Answer_Faithfulness_Label`, `Answer_Relevance_Label` |
 | Conjunto anotado para PPI | 200 ejemplos |
 | Performance ground truth | 1.0 en las tres etiquetas |
+| Promedio simple de ARES (normalizado a [0,1]) | 0.937 |
+| Estado por Predicción ARES | No ganadora (2 de 3) |
 
 ## Resultados por etiqueta
 
 | Etiqueta | Predicción ARES | Intervalo de confianza | Precisión del juez LLM | Lectura rápida |
 |---|---:|---|---:|---|
 | `Context_Relevance_Label` | 0.8475 | [0.755, 0.940] | 0.812 | Es la métrica más baja de la corrida, aunque sigue en un rango aceptable. |
-| `Answer_Faithfulness_Label` | 1.1750 | [1.110, 1.240] | 0.975 | Es el mejor resultado relativo y muestra alta concordancia con el ground truth. |
-| `Answer_Relevance_Label` | 0.9625 | [0.921, 1.004] | 0.963 | Mantiene una calidad sólida y queda muy cerca de 1.0. |
+| `Answer_Faithfulness_Label` | 1.0000 | [1.000, 1.000] | 0.975 | Tras normalización al rango [0,1], alcanza el máximo permitido. |
+| `Answer_Relevance_Label` | 0.9625 | [0.921, 1.000] | 0.963 | Mantiene una calidad sólida y queda muy cerca de 1.0. |
 
 ## Lectura global
 
@@ -126,8 +128,8 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv
 Checkpoint:None
-ARES Prediction: [1.1749999999999976]
-ARES Confidence Interval: [[1.11, 1.24]]
+ARES Prediction: [1.0]
+ARES Confidence Interval: [[1.0, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.975]
@@ -167,12 +169,12 @@ ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv
 Checkpoint:None
 ARES Prediction: [0.9624999999999911]
-ARES Confidence Interval: [[0.921, 1.004]]
+ARES Confidence Interval: [[0.921, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.963]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 0.8475000000000061, 'ARES_Confidence_Interval': [0.755, 0.94], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.812, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 1.1749999999999976, 'ARES_Confidence_Interval': [1.11, 1.24], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.975, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 0.9624999999999911, 'ARES_Confidence_Interval': [0.921, 1.004], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 0.8475000000000061, 'ARES_Confidence_Interval': [0.755, 0.94], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.812, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.975, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/multi_query.tsv', 'ARES_Prediction': 0.9624999999999911, 'ARES_Confidence_Interval': [0.921, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}]
 ```

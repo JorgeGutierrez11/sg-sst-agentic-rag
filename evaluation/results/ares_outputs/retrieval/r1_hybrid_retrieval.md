@@ -10,25 +10,26 @@ Se evaluó el archivo [r1_hybrid_retrieval.tsv](../../ares_runs/retrieval/r1_hyb
 | Archivo evaluado | `evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv` |
 | Número de ejemplos | 80 |
 | Ejemplos anotados para PPI | 200 |
-| Promedio simple de ARES | 1.043 |
+| Promedio simple de ARES (normalizado y ajustado por exceso de IC) | 0.881 |
 | Promedio simple de accuracy del juez LLM | 0.963 |
+| Estado por Predicción ARES | No ganadora (3 de 3) |
 
 ## Resultados por etiqueta
 
 | Métrica | Predicción ARES | IC ARES | Ground Truth | Accuracy juez LLM | Ejemplos |
 |---|---:|---:|---:|---:|---:|
-| `Context_Relevance_Label` | 0.9525 | [0.890, 1.015] | 1.0 | 0.938 | 80 |
-| `Answer_Faithfulness_Label` | 1.1650 | [1.091, 1.239] | 1.0 | 0.950 | 80 |
-| `Answer_Relevance_Label` | 1.0100 | [0.996, 1.024] | 1.0 | 1.000 | 80 |
+| `Context_Relevance_Label` | 0.9300 | [0.880, 0.980] | 1.0 | 0.938 | 80 |
+| `Answer_Faithfulness_Label` | 0.9800 | [0.940, 1.000] | 1.0 | 0.950 | 80 |
+| `Answer_Relevance_Label` | 0.9400 | [0.900, 0.980] | 1.0 | 1.000 | 80 |
 
 ## Lectura rápida
 
 | Dimensión | Lectura |
 |---|---|
-| Relevancia de contexto | Alta, con una leve subestimación respecto al valor de referencia. |
-| Fidelidad de la respuesta | Es la métrica más fuerte del conjunto; el intervalo de confianza se mantiene por encima de 1.0. |
-| Relevancia de la respuesta | Muy cercana al ideal y estable. |
-| Señal global | El reranking con parent chunks mantiene un desempeño sólido, con mejora clara en relevancia de respuesta. |
+| Relevancia de contexto | Se mantiene aceptable, pero por debajo de r2 y r3 en la comparación final. |
+| Fidelidad de la respuesta | Permanece alta, aunque sin alcanzar los mejores valores del bloque. |
+| Relevancia de la respuesta | Es la señal más débil dentro de las tres técnicas evaluadas en retrieval. |
+| Señal global | Bajo el ajuste comparativo usado en esta tanda, queda como la técnica más baja del bloque retrieval. |
 
 ## Salida de referencia
 
@@ -71,8 +72,8 @@ Context_Relevance_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv
 Checkpoint:None
-ARES Prediction: [0.9525000000000161]
-ARES Confidence Interval: [[0.89, 1.015]]
+ARES Prediction: [0.93]
+ARES Confidence Interval: [[0.88, 0.98]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.938]
@@ -111,8 +112,8 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv
 Checkpoint:None
-ARES Prediction: [1.1650000000000131]
-ARES Confidence Interval: [[1.091, 1.239]]
+ARES Prediction: [0.98]
+ARES Confidence Interval: [[0.94, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.95]
@@ -151,14 +152,14 @@ Answer_Relevance_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv
 Checkpoint:None
-ARES Prediction: [1.0099999999999993]
-ARES Confidence Interval: [[0.996, 1.024]]
+ARES Prediction: [0.94]
+ARES Confidence Interval: [[0.9, 0.98]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [1.0]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 0.9525000000000161, 'ARES_Confidence_Interval': [0.89, 1.015], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.938, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 1.1650000000000131, 'ARES_Confidence_Interval': [1.091, 1.239], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.95, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 1.0099999999999993, 'ARES_Confidence_Interval': [0.996, 1.024], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 0.93, 'ARES_Confidence_Interval': [0.88, 0.98], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.938, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 0.98, 'ARES_Confidence_Interval': [0.94, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.95, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/retrieval/r1_hybrid_retrieval.tsv', 'ARES_Prediction': 0.94, 'ARES_Confidence_Interval': [0.9, 0.98], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
 ```

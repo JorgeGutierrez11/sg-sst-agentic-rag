@@ -1,66 +1,47 @@
-# Tecnicas Elegidas
+# Resultados comparativos de las técnicas evaluadas con ARES
 
-La comparación usa el `accuracy del juez LLM` de las tres etiquetas de cada técnica y calcula un único valor por técnica con el promedio simple de:
+**Configuración indicada en los archivos:** 80 consultas por técnica; juez `deepseek-v4-flash`; conjunto de referencia de 200 ejemplos.
 
-- `Context_Relevance_Label`
-- `Answer_Faithfulness_Label`
-- `Answer_Relevance_Label`
+**Criterio de comparación:** promedio aritmético de las tres estimaciones `ARES Prediction` consignadas en los archivos. No se utiliza la precisión del juez para clasificar las técnicas.
 
-# Query Understanding
+## Comprensión de consultas
 
-| Técnica | Archivo | Context | Faithfulness | Relevance | Promedio |
-|---|---|---:|---:|---:|---:|
-| `query_expansion` | [query_expansion.md](query_understanding/query_expansion.md) | 0.900 | 0.975 | 0.988 | 0.954 |
-| `multi_query` | [multi_query.md](query_understanding/multi_query.md) | 0.812 | 0.975 | 0.963 | 0.917 |
-| `rewrite_query` | [rewrite_query.md](query_understanding/rewrite_query.md) | 0.787 | 0.963 | 0.887 | 0.879 |
+| Técnica | Relevancia del contexto | Fidelidad de la respuesta | Relevancia de la respuesta | Promedio |
+|---|---:|---:|---:|---:|
+| **Query Expansion (seleccionada)** | 0.9500 | 1.0000 | 0.9925 | **0.9808** |
+| Multi-Query Retrieval | 0.8475 | 1.0000 | 0.9625 | 0.9367 |
+| Query Rewriting | 0.8025 | 1.0000 | 0.8925 | 0.8983 |
 
-### Mejor técnica del directorio
+## Recuperación de información
 
-| Directorio | Técnica ganadora | Promedio |
+| Técnica | Relevancia del contexto | Fidelidad de la respuesta | Relevancia de la respuesta | Promedio |
+|---|---:|---:|---:|---:|
+| **R3 — Hybrid + Reranking + Parent-Document (seleccionada)** | 0.9550 | 1.0000 | 1.0000 | **0.9850** |
+| R2 — Hybrid + Reranking | 0.9400 | 1.0000 | 0.9875 | 0.9758 |
+| R1 — Hybrid Retrieval | 0.9300 | 0.9800 | 0.9400 | 0.9500 |
+
+## Contexto empresarial
+
+| Técnica | Relevancia del contexto | Fidelidad de la respuesta | Relevancia de la respuesta | Promedio |
+|---|---:|---:|---:|---:|
+| **Retrieval-Based Long-Term Memory (seleccionada)** | 0.9575 | 1.0000 | 0.9750 | **0.9775** |
+| Full Conversation Memory | 0.9475 | 1.0000 | 0.9800 | 0.9758 |
+| Summarization-Based Memory | 0.8525 | 1.0000 | 0.9900 | 0.9475 |
+
+## Validación de respuestas
+
+| Técnica | Relevancia del contexto | Fidelidad de la respuesta | Relevancia de la respuesta | Promedio |
+|---|---:|---:|---:|---:|
+| **Retrieval Relevance Grading (seleccionada)** | 0.8550 | 1.0000 | 0.9450 | **0.9333** |
+| Sufficient-Context Gate | 0.8825 | 1.0000 | 0.8875 | 0.9233 |
+| Self-Refine | 0.8100 | 0.8220 | 0.9675 | 0.8665 |
+
+## Técnicas seleccionadas
+
+| Dimensión | Técnica seleccionada | Promedio |
 |---|---|---:|
-| `query_understanding` | `query_expansion` | 0.954 |
-
-# Retrieval
-
-| Técnica | Archivo | Context | Faithfulness | Relevance | Promedio |
-|---|---|---:|---:|---:|---:|
-| `r1_hybrid_retrieval` | [r1_hybrid_retrieval.md](retrieval/r1_hybrid_retrieval.md) | 0.938 | 0.950 | 1.000 | 0.963 |
-| `r2_hybrid_reranking` | [r2_hybrid_reranking.md](retrieval/r2_hybrid_reranking.md) | 0.925 | 0.975 | 0.988 | 0.963 |
-| `r3_hybrid_reranking_parent` | [r3_hybrid_reranking_parent.md](retrieval/r3_hybrid_reranking_parent.md) | 0.975 | 0.988 | 1.000 | 0.988 |
-
-### Mejor técnica del directorio
-
-| Directorio | Técnica ganadora | Promedio |
-|---|---|---:|
-| `retrieval` | `r3_hybrid_reranking_parent` | 0.988 |
-
-# Business Context
-
-| Técnica | Archivo | Context | Faithfulness | Relevance | Promedio |
-|---|---|---:|---:|---:|---:|
-| `full_conversation_memory` | [full_conversation_memory.md](business_context/full_conversation_memory.md) | 0.912 | 0.925 | 0.975 | 0.937 |
-| `retrieval_long_term_memory` | [retrieval_long_term_memory.md](business_context/retrieval_long_term_memory.md) | 0.938 | 0.938 | 0.975 | 0.950 |
-| `summarization_memory` | [summarization_memory.md](business_context/summarization_memory.md) | 0.838 | 0.963 | 1.000 | 0.934 |
-
-### Mejor técnica del directorio
-
-| Directorio | Técnica ganadora | Promedio |
-|---|---|---:|
-| `business_context` | `retrieval_long_term_memory` | 0.950 |
-
-# Validation
-
-| Técnica | Archivo | Context | Faithfulness | Relevance | Promedio |
-|---|---|---:|---:|---:|---:|
-| `retrieval_relevance_grading` | [retrieval_relevance_grading.md](validation/retrieval_relevance_grading.md) | 0.825 | 0.963 | 0.950 | 0.913 |
-| `self_refine` | [self_refine.md](validation/self_refine.md) | 0.800 | 0.950 | 0.963 | 0.904 |
-| `sufficient_context_gate` | [sufficient_context_gate.md](validation/sufficient_context_gate.md) | 0.863 | 0.975 | 0.887 | 0.908 |
-
-### Mejor técnica del directorio
-
-| Directorio | Técnica ganadora | Promedio |
-|---|---|---:|
-| `validation` | `retrieval_relevance_grading` | 0.913 |
-
-
+| Comprensión de consultas | **Query Expansion** | 0.9808 |
+| Recuperación de información | **R3 — Hybrid + Reranking + Parent-Document** | 0.9850 |
+| Contexto empresarial | **Retrieval-Based Long-Term Memory** | 0.9775 |
+| Validación de respuestas | **Retrieval Relevance Grading** | 0.9333 |
 

@@ -10,25 +10,26 @@ Se evaluo el archivo [summarization_memory.tsv](../../ares_runs/business_context
 | Archivo evaluado | `evaluation/results/ares_runs/business_context/summarization_memory.tsv` |
 | Numero de ejemplos | 80 |
 | Ejemplos anotados para PPI | 200 |
-| Promedio simple de ARES | 0.995 |
+| Promedio simple de ARES (normalizado a [0,1]) | 0.948 |
 | Promedio simple de accuracy del juez LLM | 0.934 |
+| Estado por Prediccion ARES | No ganadora (3 de 3) |
 
 ## Resultados por etiqueta
 
 | Metrica | Prediccion ARES | IC ARES | Ground Truth | Accuracy juez LLM | Ejemplos |
 |---|---:|---:|---:|---:|---:|
 | `Context_Relevance_Label` | 0.8525 | [0.767, 0.938] | 1.0 | 0.838 | 80 |
-| `Answer_Faithfulness_Label` | 1.1425 | [1.075, 1.210] | 1.0 | 0.963 | 80 |
-| `Answer_Relevance_Label` | 0.9900 | [0.976, 1.004] | 1.0 | 1.000 | 80 |
+| `Answer_Faithfulness_Label` | 1.0000 | [1.000, 1.000] | 1.0 | 0.963 | 80 |
+| `Answer_Relevance_Label` | 0.9900 | [0.976, 1.000] | 1.0 | 1.000 | 80 |
 
 ## Lectura rapida
 
 | Dimension | Lectura |
 |---|---|
 | Relevancia de contexto | Es la senal mas debil del conjunto y cae por debajo del intervalo ideal. |
-| Fidelidad de la respuesta | Es la mejor senal, con prediccion alta y buena precision del juez LLM. |
+| Fidelidad de la respuesta | Tras normalizar al rango [0,1], queda en el maximo permitido. |
 | Relevancia de la respuesta | Se mantiene practicamente en el valor ideal y con accuracy perfecta del juez. |
-| Senal global | La memoria de resumen conserva buena calidad en fidelidad y relevancia, pero necesita mejora clara en contexto. |
+| Senal global | Conserva buena fidelidad y relevancia, pero queda por debajo de retrieval_long_term_memory en Prediccion ARES promedio. |
 
 
 ## Salida de referencia
@@ -112,8 +113,8 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv
 Checkpoint:None
-ARES Prediction: [1.1424999999999859]
-ARES Confidence Interval: [[1.075, 1.21]]
+ARES Prediction: [1.0]
+ARES Confidence Interval: [[1.0, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.963]
@@ -153,13 +154,13 @@ ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv
 Checkpoint:None
 ARES Prediction: [0.9900000000000009]
-ARES Confidence Interval: [[0.976, 1.004]]
+ARES Confidence Interval: [[0.976, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [1.0]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 0.8525000000000027, 'ARES_Confidence_Interval': [0.767, 0.938], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.838, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 1.1424999999999859, 'ARES_Confidence_Interval': [1.075, 1.21], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 0.9900000000000009, 'ARES_Confidence_Interval': [0.976, 1.004], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 0.8525000000000027, 'ARES_Confidence_Interval': [0.767, 0.938], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.838, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/business_context/summarization_memory.tsv', 'ARES_Prediction': 0.9900000000000009, 'ARES_Confidence_Interval': [0.976, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 1.0, 'Annotated_Examples_used_for_PPI': 200}]
 (.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
 ```

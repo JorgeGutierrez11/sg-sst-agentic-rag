@@ -12,13 +12,15 @@ Fuente: ejecución de `python evaluation/ares/config.py` sobre `evaluation/resul
 | Etiquetas evaluadas | `Context_Relevance_Label`, `Answer_Faithfulness_Label`, `Answer_Relevance_Label` |
 | Conjunto anotado para PPI | 200 ejemplos |
 | Performance ground truth | 1.0 en las tres etiquetas |
+| Promedio simple de ARES (normalizado a [0,1]) | 0.898 |
+| Estado por Predicción ARES | No ganadora (3 de 3) |
 
 ## Resultados por etiqueta
 
 | Etiqueta | Predicción ARES | Intervalo de confianza | Precisión del juez LLM | Lectura rápida |
 |---|---:|---:|---:|---|
 | `Context_Relevance_Label` | 0.8025 | [0.708, 0.897] | 0.787 | Rendimiento medio-alto, con margen de incertidumbre visible. |
-| `Answer_Faithfulness_Label` | 1.1325 | [1.066, 1.199] | 0.963 | Mejor desempeño relativo; el juez LLM mostró alta concordancia. |
+| `Answer_Faithfulness_Label` | 1.0000 | [1.000, 1.000] | 0.963 | Tras normalización al rango [0,1], alcanza el máximo permitido. |
 | `Answer_Relevance_Label` | 0.8925 | [0.823, 0.962] | 0.887 | Buen nivel de relevancia, cercano al umbral ideal. |
 
 ## SALIDA
@@ -102,8 +104,8 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv
 Checkpoint:None
-ARES Prediction: [1.1325000000000078]
-ARES Confidence Interval: [[1.066, 1.199]]
+ARES Prediction: [1.0]
+ARES Confidence Interval: [[1.0, 1.0]]
 Number of Examples in Evaluation Set: [80]
 Ground Truth Performance: [1.0]
 ARES LLM Judge Accuracy on Ground Truth Labels: [0.963]
@@ -150,5 +152,5 @@ ARES LLM Judge Accuracy on Ground Truth Labels: [0.887]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 0.8025000000000091, 'ARES_Confidence_Interval': [0.708, 0.897], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.787, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 1.1325000000000078, 'ARES_Confidence_Interval': [1.066, 1.199], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 0.8925000000000125, 'ARES_Confidence_Interval': [0.823, 0.962], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.887, 'Annotated_Examples_used_for_PPI': 200}]
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 0.8025000000000091, 'ARES_Confidence_Interval': [0.708, 0.897], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.787, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 1.0, 'ARES_Confidence_Interval': [1.0, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.963, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/ares_runs/query_understanding/rewrite_query.tsv', 'ARES_Prediction': 0.8925000000000125, 'ARES_Confidence_Interval': [0.823, 0.962], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.887, 'Annotated_Examples_used_for_PPI': 200}]
 ```
