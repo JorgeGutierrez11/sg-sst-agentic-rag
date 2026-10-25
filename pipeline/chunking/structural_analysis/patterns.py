@@ -18,8 +18,9 @@ SECTION_PATTERN = re.compile(
     r"^\s{0,3}(?:#{1,6}\s*)?(?:\*\*)?SECCI[ÓO]N\s+(.+?)(?:\*\*)?\s*$",
     LEGAL_PATTERN_FLAGS,
 )
+# Acepta `***` porque markdown_cleaner normaliza los encabezados de artículo a negrita-cursiva.
 ARTICLE_PATTERN = re.compile(
-    r"(?:^\s{0,3}(?:#{1,6}\s*)?[\"“”']?(?:\*\*)?|\s{2,}[\"“”']?\*\*)"
+    r"(?:^\s{0,3}(?:#{1,6}\s*)?[\"“”']?(?:\*{2,3})?|\s{2,}[\"“”']?\*{2,3})"
     r"Art[íi]culo\s+([\w.°º-]+)(?:\*\*)?\.?:?",
     LEGAL_PATTERN_FLAGS,
 )

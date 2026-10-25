@@ -146,6 +146,17 @@ class ChunkingPhase1CLITest(unittest.TestCase):
 
         self.assertEqual(extract_first_boundary_value(text, "article"), "2.2.4.6.37")
 
+    def test_bold_italic_article_headings_from_cleaner_are_detected(self) -> None:
+        text = (
+            "***Artículo 1. Objeto.*** Texto del objeto.  "
+            "***Artículo 2°. Ámbito de aplicación*** . Texto del ámbito.\n\n"
+            "*(DEROGADO) Artículo 18. Caducidad. Texto original.*\n"
+        )
+
+        articles = iter_boundary_matches(text, boundary_types=("article",))
+
+        self.assertEqual([article.value for article in articles], ["1", "2°"])
+
     def test_inline_article_reference_without_boundary_format_is_not_detected(self) -> None:
         text = "El empleador debe cumplir el Artículo 2 de esta norma y conservar evidencias.\n"
 
