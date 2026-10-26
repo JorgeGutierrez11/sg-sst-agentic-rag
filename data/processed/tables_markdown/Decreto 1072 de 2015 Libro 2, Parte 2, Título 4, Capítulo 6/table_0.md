@@ -7,7 +7,7 @@
 | E |             |                      |                           |
 | * |             |                      |                           |
 | * |             |                      |                           |
-+:==+:============+:=====================+:==========================+
++===+=============+======================+===========================+
 | 1 | Evaluación  | Es la autoevaluación | Todos los empleadores     |
 |   | inicial.    | realizada por la     | públicos y privados, los  |
 |   |             | empresa con el fin   | contratantes de personal  |

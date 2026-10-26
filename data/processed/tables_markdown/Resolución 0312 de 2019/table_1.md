@@ -3,7 +3,7 @@
 |               | cincuenta trabajadores            | Verificación**  |
 |               | clasificadas en riesgo I, II o    |                 |
 |               | III**                             |                 |
-+:=============:+:=================================:+:===============:+
++===============+===================================+=================+
 | Asignación de | Asignar una persona que cumpla    | Solicitar       |
 | una persona   | con el siguiente perfil:          | documento       |
 | que diseñe el |                                   | soporte de la   |

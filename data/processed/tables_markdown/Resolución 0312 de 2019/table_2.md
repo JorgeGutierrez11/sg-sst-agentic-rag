@@ -6,7 +6,7 @@
 |          | cincuenta (50) o menos    |                             |
 |          | trabajadores riego IV o   |                             |
 |          | V**                       |                             |
-+:========:+:=========================:+:===========================:+
++==========+===========================+=============================+
 | As       | Asignar una persona que   | Solicitar el documento en   |
 | ignación | cumpla con el siguiente   | el que consta la            |
 | de una   | perfil: El diseño e       | asignación, con la          |

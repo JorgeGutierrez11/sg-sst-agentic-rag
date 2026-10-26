@@ -7,7 +7,7 @@
 | E |         |                       |                      |        |
 | * |         |                       |                      |        |
 | * |         |                       |                      |        |
-+:=:+:=======:+:=====================:+:====================:+:======:+
++===+=========+=======================+======================+========+
 | * | **Eva   | Es la autoevaluación  | Las empresas,        | De     |
 | * | luación | realiza-da por la     | personas o entidades | junio  |
 | 1 | in      | empresa con el fin de | encargadas de        | a      |
