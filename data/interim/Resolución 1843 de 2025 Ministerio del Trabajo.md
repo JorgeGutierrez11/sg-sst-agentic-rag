@@ -755,7 +755,7 @@ El diagnóstico de salud deberá elaborarse de forma general y no podrá incluir
 :::
 
 ::: {custom-style="Body Text"}
-**Artículo** **22. *Pruebas de embarazo en cumplimiento a lo establecido en la Sentencia*** *[[T-202]{custom-style="Hyperlink"}](https://www.alcaldiabogota.gov.co/sisjur//normas/Norma1.jsp?i=156160) **de 2024.*** La exigencia de la práctica de pruebas de embarazo queda prohibida como requisito obligatorio para el acceso o permanencia en cualquier actividad laboral. La prueba de embarazo solo podrá solicitarse, con consentimiento previo de la trabajadora, en los casos en los que el trabajo a desempeñar implique riesgos reales o potenciales que puedan incidir negativamente en el desarrollo normal del embarazo.
+**Artículo** **22. *Pruebas de embarazo en cumplimiento a lo establecido en la Sentencia ****[[T-202]{custom-style="Hyperlink"}](https://www.alcaldiabogota.gov.co/sisjur//normas/Norma1.jsp?i=156160) **de 2024.*** La exigencia de la práctica de pruebas de embarazo queda prohibida como requisito obligatorio para el acceso o permanencia en cualquier actividad laboral. La prueba de embarazo solo podrá solicitarse, con consentimiento previo de la trabajadora, en los casos en los que el trabajo a desempeñar implique riesgos reales o potenciales que puedan incidir negativamente en el desarrollo normal del embarazo.
 :::
 
 ::: {custom-style="Body Text"}
