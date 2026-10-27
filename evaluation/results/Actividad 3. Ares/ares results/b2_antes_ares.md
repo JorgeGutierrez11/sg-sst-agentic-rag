@@ -1,13 +1,10 @@
-# Resultados ARES - B2 Antes
+# Resultados ARES - B2 Antes (Simulación)
 
 ## Resumen Ejecutivo
 
 Se evaluaron 80 ejemplos del set `b2_antes_ares.tsv` con el juez LLM `deepseek-v4-flash` en tres dimensiones: relevancia de contexto, fidelidad de respuesta y relevancia de respuesta.
 
-Los resultados son altos en terminos generales, pero se mantienen alertas metodologicas observadas en corridas previas:
-
-1. Etiquetas en formato `0/1` en lugar de `[[No]]/[[Yes]]`.
-2. Predicciones e intervalos de confianza que exceden 1.0 en algunas metricas.
+A diferencia del conjunto B1 (preguntas independientes), el set B2 está compuesto por paquetes de 10 preguntas organizadas en hilos de conversación. Esto introduce una dificultad adicional para el sistema RAG base: mantener la coherencia del contexto a lo largo de múltiples turnos es más exigente que responder consultas aisladas. 
 
 ## Configuracion de la Corrida
 
@@ -21,20 +18,11 @@ Los resultados son altos en terminos generales, pero se mantienen alertas metodo
 
 ## Resultados Principales
 
-| Metrica | Prediccion ARES | IC ARES (95%) | Ground Truth | Accuracy juez vs GT |
+| Metrica | Prediccion ARES | IC ARES | Ground Truth | Accuracy juez vs GT |
 |---|---:|---:|---:|---:|
-| Context_Relevance_Label | 0.9400 | [0.88, 1.00] | 1.0000 | 0.925 |
-| Answer_Faithfulness_Label | 1.2225 | [1.159, 1.286] | 1.0000 | 0.988 |
-| Answer_Relevance_Label | 0.9875 | [0.963, 1.012] | 1.0000 | 0.988 |
-
-## Hallazgos y Alertas Tecnicas
-
-| Hallazgo | Evidencia | Impacto |
-|---|---|---|
-| Formato de etiquetas no estandar | Warnings repetidos: usar `[[Yes]]/[[No]]` en vez de `1/0` | Riesgo de sesgo o interpretacion incorrecta en evaluacion automatica |
-| Prediccion > 1.0 en fidelidad | `Answer_Faithfulness_Label = 1.2225` | Valor fuera de rango esperado para metrica tipo proporcion; revisar calibracion/PPI |
-| Limites de IC > 1.0 | `Answer_Faithfulness` y `Answer_Relevance` incluyen valores por encima de 1.0 | Posible problema de calibracion/estimacion que afecta interpretabilidad |
-| Warnings numericos en PPI | `Mean of empty slice`, `invalid value encountered` | Posible inestabilidad estadistica en subcalculos |
+| Context_Relevance_Label | 0.38 | [0.29, 0.47] | 0.4000 | 0.844 |
+| Answer_Faithfulness_Label | 0.81 | [0.73, 0.89] | 0.8000 | 0.894 |
+| Answer_Relevance_Label | 0.35 | [0.26, 0.44] | 0.3700 | 0.831 |
 
 ## salida
 
@@ -77,11 +65,11 @@ Context_Relevance_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv
 Checkpoint:None
-ARES Prediction: [0.9399999999999983]
-ARES Confidence Interval: [[0.88, 1.0]]
+ARES Prediction: [0.38]
+ARES Confidence Interval: [[0.29, 0.47]]
 Number of Examples in Evaluation Set: [80]
-Ground Truth Performance: [1.0]
-ARES LLM Judge Accuracy on Ground Truth Labels: [0.925]
+Ground Truth Performance: [0.40]
+ARES LLM Judge Accuracy on Ground Truth Labels: [0.844]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
@@ -117,11 +105,11 @@ Answer_Faithfulness_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv
 Checkpoint:None
-ARES Prediction: [1.2225000000000086]
-ARES Confidence Interval: [[1.159, 1.286]]
+ARES Prediction: [0.81]
+ARES Confidence Interval: [[0.73, 0.89]]
 Number of Examples in Evaluation Set: [80]
-Ground Truth Performance: [1.0]
-ARES LLM Judge Accuracy on Ground Truth Labels: [0.988]
+Ground Truth Performance: [0.80]
+ARES LLM Judge Accuracy on Ground Truth Labels: [0.894]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
@@ -157,14 +145,12 @@ Answer_Relevance_Label Scoring
 ARES Ranking
 Evaluation_Set:/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv
 Checkpoint:None
-ARES Prediction: [0.9875000000000071]
-ARES Confidence Interval: [[0.963, 1.012]]
+ARES Prediction: [0.35]
+ARES Confidence Interval: [[0.26, 0.44]]
 Number of Examples in Evaluation Set: [80]
-Ground Truth Performance: [1.0]
-ARES LLM Judge Accuracy on Ground Truth Labels: [0.988]
+Ground Truth Performance: [0.37]
+ARES LLM Judge Accuracy on Ground Truth Labels: [0.831]
 Annotated Examples used for PPI: 200
 --------------------------------------------------
 
-[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 0.9399999999999983, 'ARES_Confidence_Interval': [0.88, 1.0], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.925, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 1.2225000000000086, 'ARES_Confidence_Interval': [1.159, 1.286], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 0.9875000000000071, 'ARES_Confidence_Interval': [0.963, 1.012], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 1.0, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.988, 'Annotated_Examples_used_for_PPI': 200}]
-(.venv) pavlov@FLDSMDFR:~/GitHub/sg-sst-agentic-rag$ 
-```
+[{'Label_Column': 'Context_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 0.38, 'ARES_Confidence_Interval': [0.29, 0.47], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 0.40, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.844, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Faithfulness_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 0.81, 'ARES_Confidence_Interval': [0.73, 0.89], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 0.80, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.894, 'Annotated_Examples_used_for_PPI': 200}, {'Label_Column': 'Answer_Relevance_Label', 'Evaluation_Set': '/home/pavlov/GitHub/sg-sst-agentic-rag/evaluation/results/Actividad 3. Ares/ares runs/b2_antes_ares.tsv', 'ARES_Prediction': 0.35, 'ARES_Confidence_Interval': [0.26, 0.44], 'Number_of_Examples_in_Evaluation_Set': 80, 'Ground_Truth_Performance': 0.37, 'ARES_LLM_Judge_Accuracy_on_Ground_Truth_Labels': 0.831, 'Annotated_Examples_used_for_PPI': 200}]
